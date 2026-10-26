@@ -11,14 +11,16 @@
 \renewcommand{\ttdefault}{lmtt}
 \usepackage{amsmath,amssymb,amsthm,booktabs,graphicx,longtable,microtype,float}
 \usepackage{url}
-\usepackage[hidelinks]{hyperref}
+\usepackage{hyperref}
+\hypersetup{colorlinks=false,pdfborder={0 0 1},
+  citebordercolor={0 1 0},urlbordercolor={0 1 1},linkbordercolor={1 0 0}}
 \usepackage{orcidlink}
 \hypersetup{pdfauthor={Kevin Lee},pdftitle={An Input Skip Can Reparameterize a VAE Without Improving the Generator},pdfsubject={},pdfkeywords={}}
 \title{An Input Skip Can Reparameterize a VAE Without Improving the Generator}
 \author{%
- Kevin Lee\orcidlink{0009-0004-0388-9260}$^{1,2}$ \\
- [4pt] $^1$University of California at Los Angeles \\
- $^2$NASA Jet Propulsion Laboratory \\
+ Kevin Lee{\hypersetup{pdfborder={0 0 0}}\orcidlink{0009-0004-0388-9260}} \\
+ [4pt] University of California at Los Angeles \\
+ NASA Jet Propulsion Laboratory \\
  \texttt{kevinlee69720@g.ucla.edu}
 }
 \newcommand{\E}{\mathbb{E}}
@@ -36,7 +38,7 @@ An input skip can make a model reconstruct its input more accurately without imp
 \end{abstract}
 
 \section{Introduction}
-A variational autoencoder (VAE) reconstructs an observation through an encoder and a decoder, and generates new observations by sampling a latent variable $z$ from its prior and then sampling from the decoder $p(x\mid z)$ \citep{KingmaWelling2014AutoEncodingVB}. An input skip adds a scalar multiple of the observation directly to its reconstruction: $\hat x=f_\theta(z)+\alpha x$. As the coefficient $\alpha$ grows, the input itself can account for more of the reconstruction. A smaller error can therefore arise without a better distribution of new samples.\footnote{Code and figure data: \url{https://github.com/magnaprog/vae-skip-reparam}.}
+A variational autoencoder (VAE) reconstructs an observation through an encoder and a decoder, and generates new observations by sampling a latent variable $z$ from its prior and then sampling from the decoder $p(x\mid z)$ \citep{KingmaWelling2014AutoEncodingVB}. An input skip adds a scalar multiple of the observation directly to its reconstruction: $\hat x=f_\theta(z)+\alpha x$. As the coefficient $\alpha$ grows, the input itself can account for more of the reconstruction. A smaller error can therefore arise without a better distribution of new samples.\footnote{Available at: \url{https://github.com/magnaprog/vae-skip-reparam}.}
 
 For constant $0\leq\alpha<1$ and Gaussian noise, rescaling the decoder and noise preserves the model's joint distribution and multiplies reconstruction mean squared error (MSE) by $(1-\alpha)^2$. This identity relates two representations of one generator. Separate training can give different generators because Adam and gradient clipping act in different parameter coordinates \citep{KingmaBa2015Adam,Dinh2017SharpMinima}. Comparisons at the same observation variance distinguish these training outcomes from the algebraic reduction in error. The input skip considered here differs from the links of Dieng et al., which carry $z$ into decoder layers to encourage latent dependence \citep{Dieng2019SkipVAE}.
 
