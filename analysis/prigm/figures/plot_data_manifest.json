@@ -10036,11 +10036,11 @@
     74003
   ],
   "schema_version": 1,
-  "scientific_manifest_sha256": "08c8f75c13c6a11c81b1802c318cc072cd43364251790f3d1871779f41782fb2",
+  "scientific_manifest_sha256": "9a25e6e62a0fcb033be87f219a2699fba18d75434fb508ad5ab44e54e27a674d",
   "source_sha256": {
-    "analysis/prigm/figures/prepare_figure_data.py": "b55ff2c36b340720c855612cf35fefdaf9d6d8d3656df08efa6f31149dc44622",
-    "src/build_prigm_paper.py": "6a4b4e3cfaef3fb34009accf178a526e4f83a19a3116685388f625eb5c06220d",
-    "src/build_prigm_v2_paper.py": "d6f4c20beedc1a6766d9f81d6e182580ed4ee1b278721beb4964a9bf3431df61",
+    "analysis/prigm/figures/prepare_figure_data.py": "b50e719367c39bc7fe26af3b63a12fc0d84352a9dbdc7bc2ca7cdebfce252c67",
+    "src/build_prigm_paper.py": "d1101ba5936b600f68593fa989250526a56613eaaa532f3901f60a06e19e7e0b",
+    "src/build_prigm_v2_paper.py": "8ed2855cc130f95a2948875521b0583bdc20324cce3cfe80b39924e50245c58d",
     "src/eval_gaussian_final_checkpoints.py": "17282a2b7a596a5ba399f50b90a8439fd6c12c7191f8b9624c5a76d9ce9e0f64",
     "src/prigm_dart_paper_evidence.py": "524ae2aa96b6bbf4b25348812bc270bb4fcc5a879dc78d3f04e81547879c79af",
     "src/prigm_data.py": "62e954ea8dcd559060e7ad7b56b2b766d5a2b213119e496b330462c9ef367712",
