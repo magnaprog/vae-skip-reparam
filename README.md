@@ -4,7 +4,7 @@ Code, data and numerical results for *An Input Skip Can Reparameterize a VAE Wit
 
 A constant input skip can reduce reconstruction error without changing the distribution a Gaussian variational autoencoder generates. The experiments compare reconstruction and generation on synthetic Gaussian data and NOAA DART records, while varying the skip coefficient and observation variance separately.
 
-This repository contains the model and evaluation routines, four annual DART records, numerical results and the inputs needed to draw all seven figures. The manuscript and development records are maintained separately.
+This repository contains the model and evaluation routines, four annual DART records, numerical results and the inputs needed to draw all ten figures. The manuscript and development records are maintained separately.
 
 ## Draw the figures
 
@@ -17,7 +17,7 @@ python -m pip install -r requirements.txt
 python analysis/prigm/figures/render_figures.py --output-dir runs/figures
 ```
 
-The command writes seven PDFs. It uses the supplied plotting arrays and annual records; it runs on CPU without LaTeX. See the [figure guide](analysis/prigm/figures/README.md) for units and averaging conventions.
+The command writes ten PDFs. It uses the supplied plotting arrays and annual records; it runs on CPU without LaTeX. See the [figure guide](analysis/prigm/figures/README.md) for units and averaging conventions.
 
 ## Models and results
 

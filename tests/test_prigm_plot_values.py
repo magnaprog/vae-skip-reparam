@@ -104,7 +104,7 @@ def copy_public_figures(destination, *, data=True):
     directory.mkdir(parents=True)
     files = ["render_figures.py", "plot_values.py"]
     if data:
-        files += ["plot_summary.json", "plot_data_manifest.json", "plot_data.npz"]
+        files += ["plot_summary.json", "plot_data_manifest.json", "plot_data.npz", "table_figure_data.json"]
     for name in files:
         shutil.copyfile(FIGURES / name, directory / name)
     return directory
@@ -139,7 +139,7 @@ def public_figures(tmp_path_factory):
     return root, directory
 
 
-def test_seven_figure_cli_works_without_manuscript_or_experiment_modules(public_figures):
+def test_ten_figure_cli_works_without_manuscript_or_experiment_modules(public_figures):
     root, directory = public_figures
     assert not (root / "paper").exists() and not (root / "src").exists()
     # Run the real default CLI; verify that it never imports scientific runners.
@@ -157,7 +157,8 @@ assert not any(name.startswith(('build_prigm', 'prigm_')) or name == 'prepare_fi
         "reconstruction_generation.pdf", "full_record_context.pdf",
         "dart_ecdf_historical.pdf", "dart_ecdf_fresh.pdf",
         "dart_spectra_historical.pdf", "dart_spectra_fresh.pdf",
-        "dart_variance_refit.pdf"}
+        "dart_variance_refit.pdf", "dart_ppca_comparison.pdf",
+        "dart_intervals_original.pdf", "dart_intervals_additional.pdf"}
     assert all(path.read_bytes().startswith(b"%PDF-") for path in outputs)
     assert not (root / "paper").exists()
 

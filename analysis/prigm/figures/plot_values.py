@@ -6,6 +6,7 @@ medians and ranges across training seeds. No models are fitted or sampled.
 from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
+from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
@@ -15,6 +16,115 @@ RECORDS = ("23461t2022", "44402t2016", "46407t2011", "52403t2020",
            "dart_44402_2018", "dart_21415_2018", "dart_21418_2018")
 ARMS = ("A", "B", "C", "D")
 SEEDS = (42, 1729, 31415)
+SCORES = ("joint", "centered", "increment")
+
+
+def validate_table_figure_data(data, scientific_sha256):
+    """Validate the seven-record table reductions without changing their values."""
+    def require(ok, message):
+        if not ok:
+            raise ValueError(message)
+
+    def keys(value, expected, label):
+        require(isinstance(value, dict) and set(value) == set(expected), label + " keys differ")
+
+    def number(value):
+        return type(value) in (int, float) and np.isfinite(value)
+
+    def triple(value, label):
+        require(isinstance(value, list) and len(value) == 3
+                and all(number(x) for x in value), label + " requires three finite values")
+
+    def stats(value):
+        keys(value, ("mean", "min", "max", "values"), "Stream statistics")
+        triple(value["values"], "Stream statistics")
+        require(all(number(value[k]) for k in ("mean", "min", "max")), "Invalid stream statistic")
+        require(value["min"] == min(value["values"]) and value["max"] == max(value["values"])
+                and value["mean"] == float(np.mean(value["values"])), "Stream statistics differ")
+
+    keys(data, ("schema_version", "scientific_manifest_sha256", "training_seeds", "records"), "Table figure")
+    require(type(data["schema_version"]) is int and data["schema_version"] == 1,
+            "Unsupported table figure schema")
+    require(data["scientific_manifest_sha256"] == scientific_sha256, "Table figures belong to different evidence")
+    require(data["training_seeds"] == list(SEEDS)
+            and all(type(s) is int for s in data["training_seeds"]), "Training seed order differs")
+    keys(data["records"], RECORDS, "Record")
+    baseline_keys = ("low/ppca_fitted", "low/ppca_matched", "high/ppca_matched",
+                     "low/diagonal_matched", "high/diagonal_matched")
+    for name, record in data["records"].items():
+        keys(record, ("station", "year", "interval_origin_unix", "ppca_comparison",
+                      "neural_scores", "baseline_scores", "intervals"), "Record fields")
+        station = name[5:10] if name.startswith("dart_") else name[:5]
+        require(record["station"] == station and type(record["year"]) is int
+                and record["year"] == int(name[-4:]), "Record station/year differs")
+        origin = record["interval_origin_unix"]
+        require(type(origin) is int and origin == int(datetime(record["year"], 1, 1,
+                tzinfo=timezone.utc).timestamp()), "Interval origin differs")
+        keys(record["baseline_scores"], baseline_keys, "Baseline")
+        for baseline in record["baseline_scores"].values():
+            keys(baseline, ("noise_variance", "scores"), "Baseline fields")
+            require(number(baseline["noise_variance"]) and baseline["noise_variance"] > 0,
+                    "Invalid baseline variance")
+            keys(baseline["scores"], SCORES, "Baseline score")
+            for value in baseline["scores"].values():
+                stats(value)
+        keys(record["neural_scores"], ARMS, "Neural condition")
+        keys(record["ppca_comparison"], ARMS, "Comparison condition")
+        for arm in ARMS:
+            keys(record["neural_scores"][arm], SCORES, "Neural score")
+            keys(record["ppca_comparison"][arm], SCORES, "Comparison score")
+            variance = "low" if arm in ("A", "C") else "high"
+            for score in SCORES:
+                fits = record["neural_scores"][arm][score]
+                require(isinstance(fits, list) and len(fits) == 3, "Expected three neural fits")
+                for fit in fits:
+                    stats(fit)
+                actual = record["ppca_comparison"][arm][score]
+                triple(actual, "PPCA comparison")
+                reference = record["baseline_scores"][variance + "/ppca_matched"]["scores"][score]["mean"]
+                expected = np.array([fit["mean"] - reference for fit in fits])
+                require(np.asarray(actual, dtype=np.float64).tobytes() == expected.tobytes(),
+                        "PPCA comparison differs from matched absolute scores")
+        keys(record["intervals"], ("14", "28"), "Interval duration")
+        counts = []
+        for days in (14, 28):
+            intervals = record["intervals"][str(days)]
+            require(isinstance(intervals, list) and len(intervals) > 0, "Missing intervals")
+            previous_end = origin
+            for item in intervals:
+                keys(item, ("start_unix", "end_unix", "windows", "mass", "base", "high"), "Interval")
+                start, end = item["start_unix"], item["end_unix"]
+                require(type(start) is int and type(end) is int and start >= previous_end
+                        and (start - origin) % (days * 86400) == 0
+                        and end - start == days * 86400, "Invalid interval dates/order")
+                previous_end = end
+                require(type(item["windows"]) is int and item["windows"] > 0, "Invalid window count")
+                require(number(item["mass"]) and 0 < item["mass"] <= 1, "Invalid interval mass")
+                for variance in ("base", "high"):
+                    triple(item[variance], "Interval contrast")
+            require(np.isclose(sum(i["mass"] for i in intervals), 1, rtol=0, atol=1e-12),
+                    "Interval masses do not sum to one")
+            counts.append(sum(i["windows"] for i in intervals))
+            for variance, left, right in (("base", "C", "A"), ("high", "B", "D")):
+                whole = np.array([a["mean"] - b["mean"] for a, b in zip(
+                    record["neural_scores"][left]["joint"], record["neural_scores"][right]["joint"], strict=True)])
+                weighted = sum(i["mass"] * np.asarray(i[variance]) for i in intervals)
+                require(np.allclose(weighted, whole, rtol=1e-12, atol=1e-12),
+                        "Interval contrasts do not reconstruct whole-record scores")
+        require(counts[0] == counts[1], "Interval durations cover different window counts")
+    return data
+
+
+def ppca_comparison_points(record, arm):
+    """One row per training seed, with the three already reduced score differences."""
+    return np.array([record["ppca_comparison"][arm][score] for score in SCORES]).T
+
+
+def interval_points(record, days):
+    """Retain actual interval boundaries and every seed; never interpolate dates."""
+    intervals = record["intervals"][str(days)]
+    return {key: np.asarray([item[key] for item in intervals])
+            for key in ("start_unix", "end_unix", "windows", "mass", "base", "high")}
 
 
 def record_order(records):
