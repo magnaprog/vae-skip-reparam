@@ -21,18 +21,19 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import plot_values
 
-EVIDENCE_SHA = "33a571728e3126a11ef8957e56319a363f130dab8dc7853fbd4f82f19ef2ddeb"
-SUMMARY_SHA = "b5c1b58bb6d4174bc27dcc927a82ce925cf33ca708890bdcab31890c3154ff1d"
-PLOT_MANIFEST_SHA = "9dfca89e722cbd6fc8da71a3c3364d5cfb77347b372bebfa6eb65dc3c0ffff1d"
+EVIDENCE_SHA = "08c8f75c13c6a11c81b1802c318cc072cd43364251790f3d1871779f41782fb2"
+SUMMARY_SHA = "7da6753f0514b7c5ba2e8802d2779c244b2c8dd4f917749723a3fae6e5b8b6b5"
+PLOT_MANIFEST_SHA = "8b77fbf5e8e0ef02ad2f76770b751bbfcbec376857e419024bf14a8f950090de"
 FONT = "DejaVu Serif"
 FONT_SHA = "107244956e9962b9e96faccdc551825e0ae0898ae13737133e1b921a2fd35ffa"
 COLORS = {"A": "#0077BB", "C": "#CC3311", "B": "#009988", "D": "#6A3D9A",
           "train": "#888888", "test": "#111111", "PPCA": "#555555"}
-CONDITION_LABELS = {"A": "No skip/base", "B": "Skip/high",
-                    "C": "Skip/base", "D": "No skip/high"}
+CONDITION_ORDER = ("A", "C", "D", "B")
+CONDITION_LABELS = {"A": "No skip, base variance", "C": "Skip, base variance",
+                    "D": "No skip, high variance", "B": "Skip, high variance"}
 MARKERS = {"A": "^", "B": "o", "C": "s", "D": "v"}
 STYLES = {"train": ":", "test": "-", "PPCA": "-."}
-ROLES = ("train", "test", "A", "B", "C", "D", "PPCA")
+ROLES = ("train", "test", *CONDITION_ORDER, "PPCA")
 SCORES = ("joint", "centered", "increment")
 STYLE = {"font.family": FONT, "mathtext.fontset": "stix", "font.size": 9,
          "axes.labelsize": 9, "axes.titlesize": 9, "xtick.labelsize": 8.5,
@@ -132,8 +133,10 @@ def step_support(grid, *curves):
     return keep
 
 
-def legend_handles(roles=ROLES):
+def legend_handles(roles=ROLES, multiline=False):
     labels = {"train": "Training data", "test": "Test data", "PPCA": "PPCA", **CONDITION_LABELS}
+    if multiline:
+        labels.update({key: value.replace(", ", ",\n") for key, value in CONDITION_LABELS.items()})
     return [Line2D([], [], color=COLORS[k], linestyle=STYLES.get(k, "-"),
                    marker=MARKERS.get(k), markersize=3, markerfacecolor="white",
                    label=labels.get(k, k), linewidth=1) for k in roles]
@@ -142,17 +145,18 @@ def legend_handles(roles=ROLES):
 
 def diagnostic_legend(fig, spectra=False):
     # Keep measured/reference distributions separate from neural conditions.
+    height = fig.get_figheight()
     fig.legend(handles=legend_handles(("train", "test", "PPCA")),
-               loc="upper center", bbox_to_anchor=(.55, 1.005), ncol=3,
-               frameon=False, columnspacing=1.3, handlelength=2.7)
-    fig.legend(handles=legend_handles(("A", "C", "B", "D")),
-               loc="upper center", bbox_to_anchor=(.55, .967), ncol=4,
-               frameon=False, columnspacing=1.1, handlelength=2)
+               loc="upper center", bbox_to_anchor=(.5, 1 - .06 / height), ncol=3,
+               frameon=False, columnspacing=1.3, handlelength=2.7, borderaxespad=0)
+    fig.legend(handles=legend_handles(CONDITION_ORDER, multiline=True),
+               loc="upper center", bbox_to_anchor=(.5, 1 - .29 / height), ncol=4,
+               frameon=False, columnspacing=1.1, handlelength=2, borderaxespad=0)
     if spectra:
         fig.legend(handles=[Line2D([], [], color=".35", linestyle="-", label="Neural samples with noise"),
                             Line2D([], [], color=".35", linestyle="--", label="Decoder means")],
-                   loc="upper center", bbox_to_anchor=(.55, .927), ncol=2,
-                   frameon=False, columnspacing=1.1, handlelength=2.7)
+                   loc="upper center", bbox_to_anchor=(.5, 1 - .70 / height), ncol=2,
+                   frameon=False, columnspacing=1.1, handlelength=2.7, borderaxespad=0)
 
 def save(fig, directory, name, digest):
     # Do not tight-crop: every output is 396 PDF points wide, matching the paper.
@@ -167,8 +171,8 @@ def comparison(directory, records):
     fig, axes = plt.subplots(1, 3, figsize=(5.5, 2.75), sharey=True)
     for ax, score, title in zip(axes, SCORES, ("Full windows", "After mean\nsubtraction", "Time increments")):
         for pair, offset, color, marker, label in (
-                ("C-A", -.12, COLORS["C"], "s", r"Base ($\sigma_0^2$)"),
-                ("B-D", .12, COLORS["B"], "o", r"High ($25\sigma_0^2$)")):
+                ("C-A", -.12, COLORS["C"], "s", r"Base variance ($\sigma_0^2$)"),
+                ("B-D", .12, COLORS["B"], "o", r"High variance ($25\sigma_0^2$)")):
             stats = [records[n]["contrasts"][pair + "/original"]["scores"][score]["optimizer_seeds"] for n in names]
             middle = np.array([s["median"] for s in stats])
             error = np.array([[s["median"] - s["min"] for s in stats], [s["max"] - s["median"] for s in stats]])
@@ -182,9 +186,9 @@ def comparison(directory, records):
     axes[0].set_yticks(np.arange(7), [f"{records[n]['station']}/{records[n]['year']}" for n in names])
     axes[0].invert_yaxis()
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, title="Observation variance", title_fontsize=9,
+    fig.legend(handles, labels, title="Skip minus no skip", title_fontsize=9,
                loc="upper center", bbox_to_anchor=(.58, 1.015), ncol=2, frameon=False)
-    fig.text(.57, .02, "Energy score difference: skip minus no skip\n(standardized coordinates)",
+    fig.text(.57, .02, "Energy score difference: skip minus no skip\n(dimensionless coordinates)",
              fontsize=9, ha="center")
     fig.tight_layout(rect=(0, .12, 1, .85), pad=.5, w_pad=.8)
     save(fig, directory, "reconstruction_generation", EVIDENCE_SHA)
@@ -241,17 +245,17 @@ def diagnostics(directory, records, reduced):
                              transform=axes[row, 0].transAxes, ha="left", va="bottom", fontsize=9)
         diagnostic_legend(fig)
         fig.subplots_adjust(left=.115, right=.985, bottom=.105 if fresh else .08,
-                            top=.835 if fresh else .865, hspace=.60, wspace=.24)
+                            top=.8 if fresh else .837, hspace=.60, wspace=.24)
         for col, label in enumerate(("Window mean", "Window SD", "Time increment norm")):
             box = axes[0, col].get_position()
-            fig.text((box.x0 + box.x1) / 2, .89 if fresh else .908,
+            fig.text((box.x0 + box.x1) / 2, .855 if fresh else .88,
                      label, ha="center", fontsize=9)
         save(fig, directory, "dart_ecdf_" + group, EVIDENCE_SHA)
 
         fig, axes = plt.subplots(len(names), 2, figsize=(5.5, 1.48 * len(names) + 1.15), squeeze=False)
         frequency = np.arange(1, 97) / 2
         for row, name in enumerate(names):
-            for col, arms in enumerate((("A", "C"), ("B", "D"))):
+            for col, arms in enumerate((CONDITION_ORDER[:2], CONDITION_ORDER[2:])):
                 ax = axes[row, col]
                 for role in ("train", "test", "PPCA", *arms, *(a + " means" for a in arms)):
                     power = plot_values.power_arrays(reduced[name][role])
@@ -281,7 +285,7 @@ def diagnostics(directory, records, reduced):
                              transform=axes[row, 0].transAxes, ha="left", va="bottom", fontsize=9)
         diagnostic_legend(fig, spectra=True)
         fig.subplots_adjust(left=.14, right=.985, bottom=.09 if fresh else .07,
-                            top=.775 if fresh else .795, hspace=.32, wspace=.34)
+                            top=.74 if fresh else .767, hspace=.32, wspace=.34)
         for col, label in enumerate(("Neural observation variance\n" + r"Base ($\sigma_0^2$)",
                                      "Neural observation variance\n" + r"High ($25\sigma_0^2$)")):
             box = axes[0, col].get_position()
@@ -292,11 +296,11 @@ def diagnostics(directory, records, reduced):
 def variance(directory, records):
     fig, axes = plt.subplots(1, 4, figsize=(5.5, 7.15), sharey=True)
     labels = []
-    for row, (name, arm) in enumerate((n, a) for n in plot_values.record_order(records) for a in plot_values.ARMS):
+    for row, (name, arm) in enumerate((n, a) for n in plot_values.record_order(records) for a in CONDITION_ORDER):
         record = records[name]
         labels.append(CONDITION_LABELS[arm])
-        if arm == plot_values.ARMS[0]:
-            axes[0].text(-1.52, row + 1.5, f"{record['station']}\n{record['year']}",
+        if arm == CONDITION_ORDER[0]:
+            axes[0].text(-2.75, row + 1.5, f"{record['station']}\n{record['year']}",
                          transform=axes[0].get_yaxis_transform(), ha="right", va="center", fontsize=8.5)
         ratios, deltas = plot_values.refit_points(record, arm)
         for seed, offset in enumerate((-.2, 0, .2)):
@@ -322,10 +326,10 @@ def variance(directory, records):
     axes[0].xaxis.set_minor_formatter(NullFormatter())
     axes[0].set_yticks(range(len(labels)), labels)
     axes[0].invert_yaxis()
-    fig.subplots_adjust(left=.315, right=.985, bottom=.09, top=.91, wspace=.35)
+    fig.subplots_adjust(left=.42, right=.985, bottom=.09, top=.91, wspace=.35)
     fig.text(.5, .98, r"Original observation variance: base = $\sigma_0^2$; high = $25\sigma_0^2$",
              ha="center", fontsize=8.5)
-    fig.text(.74, .02, "Energy score change ($10^{-3}$)\n(replacement minus original)",
+    fig.text(.74, .012, "Energy score change ($10^{-3}$)\n(replacement minus original)",
              ha="center", fontsize=9)
     save(fig, directory, "dart_variance_refit", EVIDENCE_SHA)
 
