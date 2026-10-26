@@ -1,38 +1,20 @@
-# Retrospective energy analysis
+# DART energy-score results
 
-The [summary](energy_analysis_results.json) and [CSV reductions](reductions/) contain the retained energy-score and covariance comparisons for all 84 DART fits. They can be inspected directly. Recomputing them requires saved arrays and receipts that are not included in this public tree.
+The JSON summary and CSV files contain the energy-score and covariance comparisons for all 84 DART fits.
 
-For each scoring geometry, the energy score is the mean distance from generated samples to observations minus half the mean distance between distinct generated samples. The variance analysis changes observation variance while keeping each encoder and decoder the same, then calculates the change in each term. The combined score is proper for each transformed distribution with finite first moments; interpreting the separate distance terms as calibration measures would require further evidence.
-
-## Files and interpretation
+The energy score is the mean distance from model samples to observations minus half the mean distance between independent model samples. Lower scores indicate better distributional agreement. The name comes from energy statistics; it does not denote physical ocean energy. See Gneiting and Raftery, 2007, [Strictly Proper Scoring Rules, Prediction, and Estimation](https://doi.org/10.1198/016214506000001437).
 
 | Files | Contents |
 | --- | --- |
-| `energy_terms_*.csv` | Both distance terms and their combined score, by fit and sampling stream |
-| `reset_contrasts_*.csv` | Changes after estimating observation variance, using the same sampling streams |
-| `skip_contrasts_*.csv` | Comparisons at the same original observation variance |
-| `PPCA_*.csv` | PPCA baseline scores and neural comparisons |
-| `covariance_structure.csv` | Empirical covariance fractions in the leading sixteen directions |
+| `energy_analysis_results.json` | Summary across records and fits |
+| `reductions/energy_terms_*.csv` | Two distance terms and their combined score |
+| `reductions/variance_changes_*.csv` | Changes after estimating observation variance |
+| `reductions/skip_comparisons_*.csv` | Skip comparisons at the same observation variance |
+| `reductions/ppca_*.csv` | PPCA scores and comparisons with neural models |
+| `reductions/covariance_structure.csv` | Fractions of training covariance in the leading sixteen directions |
 
-The scripts call the distance terms `A` and `B`; the paper uses `D_T` and `S_T` to distinguish them from model conditions. `B` is half the mean distance between distinct model samples. Changes are computed within sampling stream before averaging within each training seed. Separate medians of the two terms need not subtract to the median score.
+In the CSV columns, `A` is the mean model-to-data distance and `B` is half the mean distance between distinct model samples. These distance-term names are separate from model-condition codes. `joint` denotes full windows, `centered` denotes windows after subtraction of their own means, and `increment` denotes time differences. `reset` refers to replacing observation variance while keeping encoder and decoder weights the same.
 
-PPCA and neural samples use separate streams, so their comparison uses stream means without pairing streams. Covariance fractions use the leading sixteen directions of weighted training covariance. These retrospective summaries do not establish the cause of training differences, Gaussianity or population confidence intervals.
+Changes are computed within each sampling stream and then averaged within each training seed. Medians of the two terms need not subtract to the median energy score. PPCA and neural models use separate sampling streams, so comparisons use their stream means. Covariance fractions use the leading sixteen directions of the training covariance with the stated window weights.
 
-## Recompute with retained inputs
-
-The calculation needs the original evidence manifest with SHA256 `db618b2d01b7cd7263058c4e554f957e61fd0580d7663a608e787f45b261a42c`, the original core prepared arrays, and the extension prepared arrays plus all four diagnostic bundles. The original manifest and those complete inputs are not bundled. The current paper manifest cannot replace the original pinned manifest.
-
-With these inputs available, run from the repository root, substituting their actual locations and fresh output paths:
-
-```bash
-python analysis/prigm/energy_two_term_analysis.py \
-  --manifest /path/to/original-evidence.json \
-  --core /path/to/retained-core --dart-work /path/to/retained-dart \
-  --output runs/energy-analysis
-python analysis/prigm/summarize_energy_analysis.py \
-  --input-root runs/energy-analysis --output runs/energy-summary.json
-```
-
-The original CPU execution used Python 3.11.8, NumPy 1.26.4 and SciPy 1.14.1. The analysis authenticates consumed inputs and checks recomputed scores. The summary script additionally needs `output_manifest.json`, `verification.json`, `protocol.json` and `input_receipts.json` from that execution; the public CSV directory alone is insufficient. Protocol and input receipts contain local paths and should remain with the private run records.
-
-The [analysis manifest](manifest.json) hashes these public files separately from their original evidence input. A documentation change updates its README entry without changing the scientific reductions or their producer identities.
+The two distance terms help explain score changes, but neither term alone is a proper score. Variation across three training seeds describes these fits; it is not a population confidence interval. Recomputing the results requires the original prepared arrays and generated samples.

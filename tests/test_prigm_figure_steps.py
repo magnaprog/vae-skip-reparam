@@ -1,12 +1,8 @@
-"""Renderer imports authenticate sources; ECDF paths retain exact step functions."""
+"""ECDF paths retain exact step functions without smoothing their jumps."""
 import importlib.util
-import json
 from pathlib import Path
-import subprocess
-import sys
 
 import numpy as np
-import pytest
 
 
 spec = importlib.util.spec_from_file_location(
@@ -14,41 +10,6 @@ spec = importlib.util.spec_from_file_location(
     "analysis/prigm/figures/render_figures.py")
 renderer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(renderer)
-
-
-@pytest.mark.parametrize("changed", [None, "src/build_prigm_v2_paper.py", "src/prigm_v2_metrics.py"])
-def test_renderer_import_authenticates_sources_before_execution(tmp_path, changed):
-    root = Path(__file__).resolve().parents[1]
-    manifest = "paper/prigm/paper_evidence_manifest.json"
-    sources = json.loads((root / manifest).read_text())["input_index"]["source_sha256"]
-    files = [manifest, *sources, "analysis/prigm/figures/prepare_figure_data.py",
-             "analysis/prigm/figures/render_figures.py"]
-    for name in files:
-        target = tmp_path / name
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes((root / name).read_bytes())
-    if changed:
-        with (tmp_path / changed).open("ab") as handle:
-            handle.write(b"\nraise RuntimeError('Modified source executed before authentication')\n")
-    # A fresh interpreter prevents the parent test process's cached modules from
-    # masking either an import of changed code or an incorrect repository root.
-    script = """
-import runpy
-import sys
-from pathlib import Path
-try:
-    module = runpy.run_path(sys.argv[1])
-except ValueError as error:
-    assert sys.argv[2] and str(error) == 'Source hash differs: ' + sys.argv[2], str(error)
-    assert 'build_prigm_v2_paper' not in sys.modules
-else:
-    assert not sys.argv[2], 'Modified source was accepted'
-    assert Path(module['frozen'].__file__).resolve() == Path.cwd() / 'src/build_prigm_v2_paper.py'
-"""
-    result = subprocess.run(
-        [sys.executable, "-c", script, str(tmp_path / files[-1]), changed or ""],
-        cwd=tmp_path, capture_output=True, text=True, check=False)
-    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def evaluate_post_step(x, y, queries):

@@ -1,19 +1,6 @@
-# Local environments, caches and run outputs
 .venv*/
 __pycache__/
 *.py[cod]
 .pytest_cache/
 runs/
-
-# LaTeX build products; retain the released PDF
-paper/prigm/*.aux
-paper/prigm/*.bbl
-paper/prigm/*.blg
-paper/prigm/*.log
-paper/prigm/*.out
-paper/prigm/*.fls
-paper/prigm/*.fdb_latexmk
-paper/prigm/*.synctex.gz
-paper/prigm/*.toc
-
 .DS_Store
