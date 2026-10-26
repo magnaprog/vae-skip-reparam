@@ -21,9 +21,9 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import plot_values
 
-EVIDENCE_SHA = "08c8f75c13c6a11c81b1802c318cc072cd43364251790f3d1871779f41782fb2"
-SUMMARY_SHA = "7da6753f0514b7c5ba2e8802d2779c244b2c8dd4f917749723a3fae6e5b8b6b5"
-PLOT_MANIFEST_SHA = "8b77fbf5e8e0ef02ad2f76770b751bbfcbec376857e419024bf14a8f950090de"
+EVIDENCE_SHA = "9a25e6e62a0fcb033be87f219a2699fba18d75434fb508ad5ab44e54e27a674d"
+SUMMARY_SHA = "de171a46edf0def8b7ef0e8d516f556eb2f3ab5b2ea248bbf12b9a01240b4e43"
+PLOT_MANIFEST_SHA = "d1fba6e7895bafd9625dd4fa000b824d915a63a865e7fa8c37f396eb29c1cb93"
 FONT = "DejaVu Serif"
 FONT_SHA = "107244956e9962b9e96faccdc551825e0ae0898ae13737133e1b921a2fd35ffa"
 COLORS = {"A": "#0077BB", "C": "#CC3311", "B": "#009988", "D": "#6A3D9A",
@@ -239,14 +239,14 @@ def diagnostics(directory, records, reduced):
                     ax.tick_params(labelleft=False)
                 ax.locator_params(axis="x", nbins=3)
                 if row == len(names)-1:
-                    ax.set_xlabel(("Mean minus\ntraining mean (m)", "Window SD (m)", "Time increment\nnorm (m)")[feature])
+                    ax.set_xlabel(("Mean minus\ntraining mean (m)", "Standard deviation\nwithin a window (m)", "Time increment\nnorm (m)")[feature])
             axes[row, 0].set_ylabel("ECDF")
             axes[row, 0].text(0, 1.055, f"{records[name]['station']} / {records[name]['year']}",
                              transform=axes[row, 0].transAxes, ha="left", va="bottom", fontsize=9)
         diagnostic_legend(fig)
         fig.subplots_adjust(left=.115, right=.985, bottom=.105 if fresh else .08,
                             top=.8 if fresh else .837, hspace=.60, wspace=.24)
-        for col, label in enumerate(("Window mean", "Window SD", "Time increment norm")):
+        for col, label in enumerate(("Window mean", "Standard deviation", "Time increment norm")):
             box = axes[0, col].get_position()
             fig.text((box.x0 + box.x1) / 2, .855 if fresh else .88,
                      label, ha="center", fontsize=9)
