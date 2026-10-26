@@ -36,9 +36,9 @@ python src/prigm_experiment.py campaign --run-root runs/core \
 | Code | Input skip | Observation variance |
 | --- | --- | --- |
 | A | None | Base |
-| B | 0.8 | 25 times base |
 | C | 0.8 | Base |
 | D | None | 25 times base |
+| B | 0.8 | 25 times base |
 
 The CLI option `--arm` selects a condition. Its spelling and the result keys remain consistent with the saved experiments.
 

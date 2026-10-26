@@ -8,6 +8,8 @@ python analysis/prigm/figures/render_figures.py --output-dir runs/figures
 
 The PDFs use DejaVu Serif and STIX math at a width of 5.5 inches. Labels are 9 pt; ticks and legends are 8.5 pt. The dependency versions in `requirements.txt` preserve the fonts and plotting behavior used for the paper.
 
+Conditions appear in this order: no skip at base variance, skip at base variance, no skip at high variance, and skip at high variance. This puts each skip comparison beside its baseline at the same observation variance.
+
 ## Values and units
 
 | Input | Meaning |
