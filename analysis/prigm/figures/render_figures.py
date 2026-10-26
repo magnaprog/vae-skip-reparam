@@ -1,8 +1,4 @@
-"""Render the seven DART figures from authenticated, retained plot inputs.
-
-This CPU renderer changes presentation only. Historical builders and their
-outputs remain archived. See README.md for provenance and font requirements.
-"""
+"""Render seven DART figures on CPU from the bundled summaries and plot cache."""
 from __future__ import annotations
 
 import argparse
@@ -23,11 +19,11 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from prepare_figure_data import load_frozen
-
-frozen = load_frozen(ROOT / "paper/prigm/paper_evidence_manifest.json", root=ROOT)[1]
+import plot_values
 
 EVIDENCE_SHA = "33a571728e3126a11ef8957e56319a363f130dab8dc7853fbd4f82f19ef2ddeb"
+SUMMARY_SHA = "b5c1b58bb6d4174bc27dcc927a82ce925cf33ca708890bdcab31890c3154ff1d"
+PLOT_MANIFEST_SHA = "9dfca89e722cbd6fc8da71a3c3364d5cfb77347b372bebfa6eb65dc3c0ffff1d"
 FONT = "DejaVu Serif"
 FONT_SHA = "107244956e9962b9e96faccdc551825e0ae0898ae13737133e1b921a2fd35ffa"
 COLORS = {"A": "#0077BB", "C": "#CC3311", "B": "#009988", "D": "#6A3D9A",
@@ -53,11 +49,17 @@ def sha(path):
 
 
 def load_inputs(directory):
-    manifest_path = ROOT / "paper/prigm/paper_evidence_manifest.json"
-    if sha(manifest_path) != EVIDENCE_SHA:
-        raise ValueError("Scientific evidence identity differs")
-    evidence = json.loads(manifest_path.read_text())
-    metadata = json.loads((directory / "plot_data_manifest.json").read_text())
+    directory = Path(directory)
+    summary_path = directory / "plot_summary.json"
+    if sha(summary_path) != SUMMARY_SHA:
+        raise ValueError("Plot summary hash differs")
+    summary = json.loads(summary_path.read_text())
+    if summary["schema_version"] != 1 or summary["scientific_manifest_sha256"] != EVIDENCE_SHA:
+        raise ValueError("Plot summary belongs to different evidence")
+    metadata_path = directory / "plot_data_manifest.json"
+    if sha(metadata_path) != PLOT_MANIFEST_SHA:
+        raise ValueError("Plot manifest hash differs")
+    metadata = json.loads(metadata_path.read_text())
     if metadata["scientific_manifest_sha256"] != EVIDENCE_SHA:
         raise ValueError("Plot data belongs to different evidence")
     path = directory / "plot_data.npz"
@@ -96,7 +98,8 @@ def load_inputs(directory):
                     streams.append(stream)
                 result.append(streams)
             reduced[name][role] = result
-    if used != set(arrays) or set(reduced) != set(evidence["dart_extension"]["records"]):
+    if (used != set(arrays) or set(reduced) != set(summary["records"])
+            or set(reduced) != set(plot_values.RECORDS)):
         raise ValueError("Incomplete plot coverage")
     for case in reduced.values():
         if set(case) != set(ROLES) | {a + " means" for a in "ABCD"}:
@@ -105,18 +108,14 @@ def load_inputs(directory):
             expected = (1, 1) if role in ("train", "test") else (1, 3) if role == "PPCA" else (3, 3)
             if len(fits) != expected[0] or any(len(fit) != expected[1] for fit in fits):
                 raise ValueError("Incorrect fit/stream coverage")
-    return evidence, reduced
+    return summary, reduced
 
 
 def ecdf_arrays(case, feature):
     fits = [fit for role in ROLES for fit in case[role]]
-    grid, _ = frozen._dart_ecdf_summary(fits, feature)
+    grid, _ = plot_values.ecdf_summary(fits, feature)
     grid = np.r_[np.nextafter(grid[0], -np.inf), grid]
-    return grid, {role: frozen._dart_ecdf_on_grid(case[role], feature, grid) for role in ROLES}
-
-
-def power_arrays(fits):
-    return np.array([np.mean([stream["power"] for stream in fit], axis=0) for fit in fits])
+    return grid, {role: plot_values.ecdf_on_grid(case[role], feature, grid) for role in ROLES}
 
 
 def step_support(grid, *curves):
@@ -164,7 +163,7 @@ def save(fig, directory, name, digest):
 
 
 def comparison(directory, records):
-    names = frozen._dart_order(records)
+    names = plot_values.record_order(records)
     fig, axes = plt.subplots(1, 3, figsize=(5.5, 2.75), sharey=True)
     for ax, score, title in zip(axes, SCORES, ("Full windows", "After mean\nsubtraction", "Time increments")):
         for pair, offset, color, marker, label in (
@@ -191,13 +190,13 @@ def comparison(directory, records):
     save(fig, directory, "reconstruction_generation", EVIDENCE_SHA)
 
 
-def context(directory, evidence):
+def context(directory, summary):
     fig, axes = plt.subplots(2, 2, figsize=(5.5, 4.6))
-    records = evidence["dart_extension"]["records"]
-    sources = evidence["core"]["public_source_sha256"]
-    for ax, name in zip(axes.flat, frozen.DATASETS[1:]):
+    records = summary["records"]
+    sources = summary["annual_sources"]
+    for ax, name in zip(axes.flat, plot_values.RECORDS[:4]):
         relative = next(path for path in sources if Path(path).name == name + ".txt")
-        c = frozen.legacy.read_observed_context(ROOT / relative, sources[relative])
+        c = plot_values.read_observed_context(ROOT / relative, sources[relative])
         ax.scatter(c["days"], c["heights"], s=.35, linewidths=0, color="#008CFF", rasterized=True)
         ax.set_xlim(min(1, c["days"].min()), max(366 + calendar.isleap(c["year"]), c["days"].max()))
         ax.set_title(f"{records[name]['station']}/{records[name]['year']}")
@@ -213,7 +212,7 @@ def context(directory, evidence):
 
 def diagnostics(directory, records, reduced):
     for group, fresh in (("historical", False), ("fresh", True)):
-        names = [n for n in frozen._dart_order(records) if (records[n]["target"] == "six_UTC_bins_equal") == fresh]
+        names = [n for n in plot_values.record_order(records) if (records[n]["target"] == "six_UTC_bins_equal") == fresh]
         fig, axes = plt.subplots(len(names), 3, figsize=(5.5, 1.52 * len(names) + .95), squeeze=False)
         for row, name in enumerate(names):
             for feature, ax in enumerate(axes[row]):
@@ -255,7 +254,7 @@ def diagnostics(directory, records, reduced):
             for col, arms in enumerate((("A", "C"), ("B", "D"))):
                 ax = axes[row, col]
                 for role in ("train", "test", "PPCA", *arms, *(a + " means" for a in arms)):
-                    power = power_arrays(reduced[name][role])
+                    power = plot_values.power_arrays(reduced[name][role])
                     arm = role.split()[0]
                     positive = lambda x: np.ma.masked_less_equal(x, 0)
                     ax.fill_between(frequency, positive(power.min(0)), positive(power.max(0)), color=COLORS[arm], alpha=.12, linewidth=0)
@@ -293,13 +292,13 @@ def diagnostics(directory, records, reduced):
 def variance(directory, records):
     fig, axes = plt.subplots(1, 4, figsize=(5.5, 7.15), sharey=True)
     labels = []
-    for row, (name, arm) in enumerate((n, a) for n in frozen._dart_order(records) for a in frozen.ARMS):
+    for row, (name, arm) in enumerate((n, a) for n in plot_values.record_order(records) for a in plot_values.ARMS):
         record = records[name]
         labels.append(CONDITION_LABELS[arm])
-        if arm == frozen.ARMS[0]:
+        if arm == plot_values.ARMS[0]:
             axes[0].text(-1.52, row + 1.5, f"{record['station']}\n{record['year']}",
                          transform=axes[0].get_yaxis_transform(), ha="right", va="center", fontsize=8.5)
-        ratios, deltas = frozen._dart_refit_points(record, arm)
+        ratios, deltas = plot_values.refit_points(record, arm)
         for seed, offset in enumerate((-.2, 0, .2)):
             y = row + offset
             axes[0].plot(ratios[seed], y, marker=MARKERS[arm], color=COLORS[arm], markersize=3, linewidth=0)
@@ -334,18 +333,18 @@ def variance(directory, records):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-dir", type=Path, default=Path(__file__).parent)
-    parser.add_argument("--output-dir", type=Path, default=ROOT / "paper/prigm/figures/presentation")
+    parser.add_argument("--output-dir", type=Path, default=ROOT / "runs/figures")
     args = parser.parse_args()
     font_path = font_manager.findfont(font_manager.FontProperties(family=FONT), fallback_to_default=False)
     if sha(font_path) != FONT_SHA:
         raise ValueError("Expected Matplotlib's bundled DejaVu Serif 2.35; see README.md")
-    evidence, reduced = load_inputs(args.data_dir)
+    summary, reduced = load_inputs(args.data_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     with plt.rc_context(STYLE):
-        comparison(args.output_dir, evidence["dart_extension"]["records"])
-        context(args.output_dir, evidence)
-        diagnostics(args.output_dir, evidence["dart_extension"]["records"], reduced)
-        variance(args.output_dir, evidence["dart_extension"]["records"])
+        comparison(args.output_dir, summary["records"])
+        context(args.output_dir, summary)
+        diagnostics(args.output_dir, summary["records"], reduced)
+        variance(args.output_dir, summary["records"])
 
 
 if __name__ == "__main__":

@@ -1,9 +1,0 @@
-# Direct dependencies observed in the Linux/Python 3.12.3 CPU review environment.
-# For public PDF verification and CPU tests; not the TensorFlow 2.15 training env.
-# This is a direct-dependency snapshot, not a complete transitive lock file.
-numpy==2.4.4
-scipy==1.17.1
-pandas==3.0.2
-matplotlib==3.10.9
-Pillow==10.2.0
-pytest==9.0.3

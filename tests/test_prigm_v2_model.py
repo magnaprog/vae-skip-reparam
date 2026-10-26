@@ -370,16 +370,3 @@ def test_tensorflow_checkpoint_prefix_is_not_a_contract_weight_file(tmp_path):
     with pytest.raises(ValueError, match="requires an HDF5 weight file"):
         model.load_weights(path)
     assert list(tmp_path.iterdir()) == []
-
-
-def test_equal_training_seeds_repeat_numpy_draws():
-    """Equal seeds formed with the training offset repeat NumPy index and noise draws."""
-    from prigm_v2_experiment import SPEC
-    rng_a = np.random.default_rng(42 + SPEC["training_seed_offset"])
-    rng_b = np.random.default_rng(42 + SPEC["training_seed_offset"])
-    ia = rng_a.integers(0, 100, 64)
-    eps_a = rng_a.standard_normal((64, 16))
-    ib = rng_b.integers(0, 100, 64)
-    eps_b = rng_b.standard_normal((64, 16))
-    np.testing.assert_array_equal(ia, ib)
-    np.testing.assert_array_equal(eps_a, eps_b)

@@ -1,72 +1,43 @@
 # VAE skip reparameterization
 
-Code and figure inputs for [*An Input Skip Can Reparameterize a VAE Without Improving the Generator*](paper/prigm/main.pdf), by Kevin Lee, PriGM 2026.
+Code, data and numerical results for *An Input Skip Can Reparameterize a VAE Without Improving the Generator*, Kevin Lee, PriGM 2026.
 
-A constant input skip can reduce a VAE's reconstruction error while preserving its generative distribution. The paper derives this equivalence for a Gaussian conditional density and examines separately trained models on a synthetic Gaussian dataset and DART pressure records.
+A constant input skip can reduce reconstruction error without changing the distribution a Gaussian variational autoencoder generates. The experiments compare reconstruction and generation on synthetic Gaussian data and NOAA DART records, while varying the skip coefficient and observation variance separately.
 
-| Task | Included inputs | Requirements |
-| --- | --- | --- |
-| Render all seven figures | Plotting arrays, summaries and four annual records | CPU Python environment |
-| Compile the paper | LaTeX, bibliography, tables and figures | LaTeX |
-| Inspect the energy analysis | Summary and complete CSV reductions | JSON/CSV reader |
-| Train a new model from the original experiment | Model code, Gaussian generator and four annual records | Separate TensorFlow environment and an available GPU |
+This repository contains the model and evaluation routines, four annual DART records, numerical results and the inputs needed to draw all seven figures. The manuscript and development records are maintained separately.
 
-The full reported study also uses retained checkpoints, generated samples, extension preparation records and historical launchers that are not included. The plotting cache supports figure reproduction; it does not contain those complete experiment inputs.
+## Draw the figures
 
-## CPU setup
-
-Run commands from the repository root. The direct dependency snapshot was checked on Linux with Python 3.12.3; it is not a complete transitive lock.
+From the repository root, create a CPU environment:
 
 ```bash
 python3.12 -m venv .venv
 . .venv/bin/activate
-python -m pip install -r requirements-release.txt
+python -m pip install -r requirements.txt
+python analysis/prigm/figures/render_figures.py --output-dir runs/figures
 ```
 
-## Render the figures
+The command writes seven PDFs. It uses the supplied plotting arrays and annual records; it runs on CPU without LaTeX. See the [figure guide](analysis/prigm/figures/README.md) for units and averaging conventions.
 
-```bash
-PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 python \
-  analysis/prigm/figures/render_figures.py \
-  --output-dir runs/figures-preview
-```
+## Models and results
 
-The seven PDFs are written to `runs/figures-preview`, leaving the retained paper figures intact. Rendering needs no GPU. The [figure guide](analysis/prigm/figures/README.md) explains the arrays, units and comparison procedure.
+The [training guide](TRAINING.md) describes a separate TensorFlow environment and commands for a new Gaussian or DART experiment. The original experiment has 60 fits. Additional model, data and scoring routines are included for the subsequent comparisons.
 
-## Compile the paper
+The [energy-score results](analysis/prigm/README.md) contain comparisons for all 84 DART fits. Complete retraining of the full study also needs the preparation inputs and launchers for the additional 2018 records; the plotting arrays contain the information needed to reproduce the figures.
 
-Install `latexmk`, pdfLaTeX and BibTeX with the manuscript's LaTeX packages, then run:
-
-```bash
-latexmk -g -cd -pdf -recorder -interaction=nonstopmode -halt-on-error \
-  paper/prigm/main.tex
-```
-
-The output is `paper/prigm/main.pdf`. The [paper guide](paper/README.md#verify-a-build) gives the verification command and explains the saved submission manifest.
+See [data sources](datasets/README.md) for the NOAA records. HEIGHT is bottom pressure expressed as equivalent water column height in meters.
 
 ## Tests
 
-A focused CPU check covers the numerical metrics and figure data:
-
 ```bash
 PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 python -m pytest \
-  -q -rs -p no:cacheprovider \
-  tests/test_prigm_metrics.py tests/test_prigm_v2_metrics.py \
-  tests/test_prigm_figure_data.py tests/test_prigm_figure_steps.py
+  -q -rs -p no:cacheprovider tests
 ```
 
-Use the same command with `tests` in place of the four filenames for the full public suite. TensorFlow/HDF5 checks need optional dependencies; checks of unbundled acquisition files skip when those files are absent. Some builder fixtures use substantial temporary space. `-rs` reports skips.
+The CPU environment runs the data, metric and plotting checks; pytest lists any skipped checks. For model tests, use the separate installation and command in the [training guide](TRAINING.md#test-the-models).
 
-## Training and results
+## Citation and license
 
-The [training instructions](paper/README.md#train-a-new-model-from-the-original-experiment) use a separate Python 3.11 / TensorFlow 2.15 environment and include a short smoke run. The full original core contains 60 fits. The additional 36 DART fits need separate extension inputs and preparation.
+Kevin Lee. *An Input Skip Can Reparameterize a VAE Without Improving the Generator*. 2nd Workshop on Principles of Generative Modeling, NeurIPS 2026.
 
-`datasets/` contains four NOAA DART annual records. HEIGHT expresses bottom pressure as equivalent water column height. The retained windows and model scores do not establish event labels, cleaning accuracy or warning performance. The [bibliography](paper/prigm/references.bib) identifies the NOAA data sources.
-
-The [energy analysis](analysis/prigm/README.md) contains the saved comparisons and explains the inputs needed to recompute them. The [scientific manifest](paper/prigm/paper_evidence_manifest.json) records evidence identities and numerical results.
-
-## Citation and licensing
-
-Cite Kevin Lee, *An Input Skip Can Reparameterize a VAE Without Improving the Generator*, PriGM 2026.
-
-Software and associated documentation use the [MIT license](LICENSE). NOAA data and the NeurIPS template retain their source attribution. The repository does not declare a separate manuscript license; see the [license boundaries](paper/README.md#license-boundaries).
+Software and documentation use the [MIT license](LICENSE). NOAA records retain their source attribution.
