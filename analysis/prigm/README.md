@@ -6,12 +6,13 @@ The energy score is the mean distance from model samples to observations minus h
 
 | Files | Contents |
 | --- | --- |
-| `energy_analysis_results.json` | Summary across records and fits |
+| `energy_analysis_results.json` | Results across records and fits |
 | `reductions/energy_terms_*.csv` | Two distance terms and their combined score |
 | `reductions/variance_changes_*.csv` | Changes after estimating observation variance |
 | `reductions/skip_comparisons_*.csv` | Skip comparisons at the same observation variance |
 | `reductions/ppca_*.csv` | Probabilistic principal component analysis (PPCA) scores and comparisons with neural models |
 | `reductions/covariance_structure.csv` | Fractions of training covariance in the leading sixteen directions |
+| `figures/table_figure_data.json` | Absolute neural and baseline scores, PPCA differences, and interval scores with coverage |
 
 In the CSV columns, `A` is the mean model-to-data distance and `B` is half the mean distance between distinct model samples. These distance-term names are separate from model-condition codes. `joint` denotes full windows, `centered` denotes windows after subtraction of their own means, and `increment` denotes time differences. `reset` refers to replacing observation variance while keeping encoder and decoder weights the same.
 
