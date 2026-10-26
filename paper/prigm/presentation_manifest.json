@@ -1,0 +1,199 @@
+{
+  "combined_input_sha256": "1a20c43a29e640ff590e4c0f553bc7f08f2fad46fe6e2dab0e18806e20104fee",
+  "energy_term_table": {
+    "all_relations_hold": true,
+    "fits_per_variance_group_per_geometry": 42,
+    "historical_scientific_manifest_sha256": "db618b2d01b7cd7263058c4e554f957e61fd0580d7663a608e787f45b261a42c",
+    "reduction_sha256": "5986234043a7bc8e0af8c3afb9acc63e483d51cb4f446273f2405327e8a52eb0",
+    "rows_checked": 252,
+    "scope": "Unchanged historical reduction; its hash, 252 sign relations and six group counts rechecked; no new diagnostic analysis"
+  },
+  "extraction_crosscheck": {
+    "all_array_bytes_identical": true,
+    "archive_bytes_identical": true,
+    "arrays": 1113,
+    "code_equal": false,
+    "current_cache_manifest_sha256": "9dfca89e722cbd6fc8da71a3c3364d5cfb77347b372bebfa6eb65dc3c0ffff1d",
+    "current_cache_sha256": "d8e9cd7d38cb97e4bb3d523c0fe96ba14232becce4f659658809f401abdbade8",
+    "current_versions": {
+      "numpy": "2.4.4",
+      "pandas": "3.0.2",
+      "python": "3.12.3",
+      "scipy": "1.17.1"
+    },
+    "exact_arrays": 1113,
+    "index_equal": true,
+    "max_abs_by_field": {
+      "features": 0.0,
+      "power": 0.0,
+      "weights": 0.0
+    },
+    "reference_cache_manifest_sha256": "035256686a63b5cca53f2363a92eebbb694c267680bbcbcee7b0e9071a67af9a",
+    "reference_cache_sha256": "d8e9cd7d38cb97e4bb3d523c0fe96ba14232becce4f659658809f401abdbade8",
+    "reference_scientific_manifest_sha256": "67afbd77ebdacc5777abd45a4770b7c82e0562253285ed4721a72c11d702f73b",
+    "reference_versions": {
+      "numpy": "2.4.4",
+      "pandas": "3.0.2",
+      "python": "3.12.3",
+      "scipy": "1.17.1"
+    },
+    "scope": "Fresh maintained extraction against previous maintained installed cache, authenticated by baseline manifest; not a fresh original-source extraction",
+    "source_files_equal": true,
+    "values": 1198588
+  },
+  "fonts": {
+    "DejaVuSerif.ttf": {
+      "family": "DejaVu Serif",
+      "sha256": "107244956e9962b9e96faccdc551825e0ae0898ae13737133e1b921a2fd35ffa",
+      "style": "normal"
+    },
+    "STIXGeneral.ttf": {
+      "family": "STIXGeneral",
+      "sha256": "167378031e2dddc6216d67819c9260e9a06ffc4c478e4e23cb98a6fd44b183c2",
+      "style": "normal"
+    },
+    "STIXGeneralItalic.ttf": {
+      "family": "STIXGeneral",
+      "sha256": "6cfcb333d22b7c3c623bdfd40174f14c85c3d6731ca6166c1edc80140eae8527",
+      "style": "italic"
+    }
+  },
+  "inputs_sha256": {
+    "analysis/prigm/figures/compare_plot_arrays.py": "3824b749be4b0b68c6f6e818db0bed25f3de20085b70fc53d42ff7e14a680a36",
+    "analysis/prigm/figures/equivalence.json": "78b216bcdba1fd41247ad785e2acc98fb819dcadf1e1af64fa3fa7ed9dc0836a",
+    "analysis/prigm/figures/plot_data.npz": "d8e9cd7d38cb97e4bb3d523c0fe96ba14232becce4f659658809f401abdbade8",
+    "analysis/prigm/figures/plot_data_manifest.json": "9dfca89e722cbd6fc8da71a3c3364d5cfb77347b372bebfa6eb65dc3c0ffff1d",
+    "analysis/prigm/figures/prepare_figure_data.py": "1b5e4dfcc5181ab7c0b937a1e478cbaa0b0b3931874db377981e0e4299541c22",
+    "analysis/prigm/figures/render_figures.py": "a0b5db17f01a04fd9b6cf5ea5e00e319cd38b715375e678b11265de1cb4499f5"
+  },
+  "original_source_extraction_crosscheck": {
+    "carried_forward_without_rerunning": true,
+    "private_comparison_receipt_sha256": "c112abffcc7fc997d445c96498ae2c46e59830a1d18fb5ed618892f698979fc4",
+    "recorded_comparison": {
+      "arrays": 1113,
+      "code_equal": false,
+      "current_cache_sha256": "d8e9cd7d38cb97e4bb3d523c0fe96ba14232becce4f659658809f401abdbade8",
+      "current_versions": {
+        "numpy": "2.4.4",
+        "pandas": "3.0.2",
+        "python": "3.12.3",
+        "scipy": "1.17.1"
+      },
+      "exact_arrays": 1113,
+      "index_equal": true,
+      "max_abs_by_field": {
+        "features": 0,
+        "power": 0,
+        "weights": 0
+      },
+      "previous_server_cache_comparison": {
+        "all_array_bytes_identical": false,
+        "arrays": 1113,
+        "elements": 1198588,
+        "exact_arrays": 574,
+        "max_abs_by_field": {
+          "features": 0,
+          "power": 5.551115123125783e-17,
+          "weights": 0
+        },
+        "reference_cache_sha256": "d7785c231ffc763aee02bb72900f5d8f085b47fa55cfae51c45b85070be6820c",
+        "reference_versions": {
+          "numpy": "1.26.4",
+          "pandas": "2.2.3",
+          "python": "3.11.8",
+          "scipy": "1.14.1"
+        }
+      },
+      "reference_cache_manifest_sha256": "3d3dd2250893b659d0079119a7d7aa9be999426497fc9cbabd4a804a959d9805",
+      "reference_cache_sha256": "d8e9cd7d38cb97e4bb3d523c0fe96ba14232becce4f659658809f401abdbade8",
+      "reference_scientific_manifest_sha256": "db618b2d01b7cd7263058c4e554f957e61fd0580d7663a608e787f45b261a42c",
+      "reference_versions": {
+        "numpy": "2.4.4",
+        "pandas": "3.0.2",
+        "python": "3.12.3",
+        "scipy": "1.17.1"
+      },
+      "scope": "Maintained extraction versus original-source extraction in the same CPU environment; historical raw inputs unchanged",
+      "source_files_equal": true,
+      "values": 1198588
+    },
+    "recorded_in_presentation_manifest_sha256": "50c3c7a816d911efcd3e63208b2a4d5c0242906922f54c6ee281d22998f25ef0",
+    "review_record": "prigm-review-20261024",
+    "review_record_date": "2026-10-24",
+    "scope": "Retained original-source comparison from the dated review; not rerun during this renewal"
+  },
+  "pisces_reference_commit": "67e981f46013373ecc44d171063d4e69d04d152d",
+  "presentation_revision": {
+    "numerical_equivalence_sha256": "78b216bcdba1fd41247ad785e2acc98fb819dcadf1e1af64fa3fa7ed9dc0836a",
+    "previous_manifest_sha256": "e18eabf644a24c4ca7618452013b3d9e5f99b4a04aa7d90d87600e6e87930224",
+    "reviewed_date": "2026-10-26",
+    "scope": "Descriptive condition labels, comparison direction, spectral headings and spacing; same scientific inputs and numeric plotting arrays."
+  },
+  "render_versions": {
+    "matplotlib": "3.10.9",
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "scipy": "1.17.1"
+  },
+  "replacements": {
+    "figures/dart_ecdf_fresh.png": {
+      "path": "figures/presentation/dart_ecdf_fresh.pdf",
+      "sha256": "982f7da1189c5a0598bbe9c5c575e0754ceaaee5ffd022e4aedf9136d2fa851b"
+    },
+    "figures/dart_ecdf_historical.png": {
+      "path": "figures/presentation/dart_ecdf_historical.pdf",
+      "sha256": "2a1ab54a6854da635a9bcb19cfc7f6e09ddc697ec36cdadb6af438cdbace9b38"
+    },
+    "figures/dart_spectra_fresh.png": {
+      "path": "figures/presentation/dart_spectra_fresh.pdf",
+      "sha256": "92a0197250faa424d5171a5d368e5cfb5df77380a1bd1cbd362cbb27d32c3672"
+    },
+    "figures/dart_spectra_historical.png": {
+      "path": "figures/presentation/dart_spectra_historical.pdf",
+      "sha256": "f801cddba7fc42ebc08a6b330e9076a9eef284228bbc0f479a297de4bc8eaacf"
+    },
+    "figures/dart_variance_refit.png": {
+      "path": "figures/presentation/dart_variance_refit.pdf",
+      "sha256": "efbc2dd33575bfd028eaffc12a533c7ee0a0360f76e8ab0d1008ec88e152ce33"
+    },
+    "figures/full_record_context.png": {
+      "path": "figures/presentation/full_record_context.pdf",
+      "sha256": "5dabcdaae5f8723856ab21cd9e36f39611ca89f2d4379c947ec767503796fc94"
+    },
+    "figures/reconstruction_generation.png": {
+      "path": "figures/presentation/reconstruction_generation.pdf",
+      "sha256": "f53b0da86b8138b52744a183f69f15f6baa4126d1377f2f6addf2e00660339dd"
+    }
+  },
+  "schema_version": 1,
+  "scientific_manifest_sha256": "33a571728e3126a11ef8957e56319a363f130dab8dc7853fbd4f82f19ef2ddeb",
+  "style": {
+    "canvas_width_inches": 5.5,
+    "condition_labels": {
+      "A": "No skip/base",
+      "B": "Skip/high",
+      "C": "Skip/base",
+      "D": "No skip/high"
+    },
+    "ecdf_paths": "Exact post-step functions; redundant constant-segment vertices omitted",
+    "frequency_axis": "logarithmic; all 96 bins retained",
+    "markers": {
+      "A": "^",
+      "B": "o",
+      "C": "s",
+      "D": "v"
+    },
+    "mathtext_fontset": "stix",
+    "palette": {
+      "A": "#0077BB",
+      "B": "#009988",
+      "C": "#CC3311",
+      "D": "#6A3D9A",
+      "context_data": "#008CFF"
+    },
+    "pdf_fonttype": 42,
+    "text_family": "DejaVu Serif",
+    "text_points": 9,
+    "ticks_and_legends_points": 8.5
+  }
+}

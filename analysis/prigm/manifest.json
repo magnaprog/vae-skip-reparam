@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "purpose": "Retrospective DART energy and covariance analysis using the original experiment evidence",
+  "frozen_evidence_sha256": "db618b2d01b7cd7263058c4e554f957e61fd0580d7663a608e787f45b261a42c",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3554,
+      "sha256": "d4cf789e5361464d19998277f2a4660ddb7d7231566dddbe15beab6ca1537874"
+    },
+    {
+      "path": "energy_analysis_results.json",
+      "bytes": 15647,
+      "sha256": "c408bf040e8a92dc8bbdd62f77dbd686e3b400e39d98fff0ac5157677effdd36"
+    },
+    {
+      "path": "energy_two_term_analysis.py",
+      "bytes": 26956,
+      "sha256": "95ef0f45a9f7d79b96ace872cc543a35ec133d9477d55d44b658ca5093a15bc1"
+    },
+    {
+      "path": "reductions/PPCA_matched_comparisons.csv",
+      "bytes": 24074,
+      "sha256": "f12483023236b2dcebbe59c116f30efb508ad198e64a835a9131b66c43006c1d"
+    },
+    {
+      "path": "reductions/PPCA_reference_means.csv",
+      "bytes": 8229,
+      "sha256": "4609711de2324a2afac92830332f4fa64a77f1273c6ec018e916f5b2d6f781a0"
+    },
+    {
+      "path": "reductions/PPCA_reference_streams.csv",
+      "bytes": 11164,
+      "sha256": "b9891da9d43c7d5d75d959aac48aadbf23d2e1029bad9d4d2ca98768f1f72190"
+    },
+    {
+      "path": "reductions/covariance_structure.csv",
+      "bytes": 3788,
+      "sha256": "741d993dc0b57299c41841fbf4b8c876237f2a3927bc49bf4959e879edd39244"
+    },
+    {
+      "path": "reductions/energy_terms_fits.csv",
+      "bytes": 108002,
+      "sha256": "6bba605a9d4e4d51e9d7e28d434dc364897071c455ceaf28b224a026d44d6882"
+    },
+    {
+      "path": "reductions/energy_terms_streams.csv",
+      "bytes": 298174,
+      "sha256": "d3d8873564b87cd13586979b185f432ed4f80387e3fa9c4836ca3a0f6eecd4d9"
+    },
+    {
+      "path": "reductions/reset_contrasts_fits.csv",
+      "bytes": 57544,
+      "sha256": "5986234043a7bc8e0af8c3afb9acc63e483d51cb4f446273f2405327e8a52eb0"
+    },
+    {
+      "path": "reductions/reset_contrasts_seed_summary.csv",
+      "bytes": 18916,
+      "sha256": "213588a5e8bb8c179577e681b00134a95366085ee8c15202592b4a6249973af5"
+    },
+    {
+      "path": "reductions/reset_contrasts_streams.csv",
+      "bytes": 93252,
+      "sha256": "f80e9b01e34b7638f45aeefeb7618cc2a256aad10427c47798da7f92dd4d6870"
+    },
+    {
+      "path": "reductions/skip_contrasts_fits.csv",
+      "bytes": 27717,
+      "sha256": "c3d7fe682805e48e15361e36ec6ec2a1f07f7e970414519971953055c78bcb5c"
+    },
+    {
+      "path": "reductions/skip_contrasts_seed_summary.csv",
+      "bytes": 9161,
+      "sha256": "1d264c0a0ee49859342d528e446b788ea2c3c36dabdbff5f6c991b863cfac616"
+    },
+    {
+      "path": "reductions/skip_contrasts_streams.csv",
+      "bytes": 38853,
+      "sha256": "27762eed6cab48b9301c64b98c7d36e4611ea91521952a1fe6570a1ebc9bad5b"
+    },
+    {
+      "path": "summarize_energy_analysis.py",
+      "bytes": 7710,
+      "sha256": "83cd30f60aee697f756003e1be60da87d51972a88cd5494054b2a608d3b396dc"
+    }
+  ]
+}
