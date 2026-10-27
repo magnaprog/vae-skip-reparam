@@ -469,8 +469,7 @@ def intervals(directory, records):
                 for x, count, mass in zip(starts, values["windows"], values["mass"], strict=True):
                     coverage.text(x, .70, mdates.num2date(x, tz=timezone.utc).strftime("%b\n%d"),
                                   ha="center", va="center", fontsize=8.5)
-                    coverage.text(x, .32, str(int(count)), ha="center", va="center", fontsize=8.5,
-                                  fontweight="bold" if count == 1 else "normal")
+                    coverage.text(x, .32, str(int(count)), ha="center", va="center", fontsize=8.5)
                     weight = f"{float(f'{100 * mass:.3g}'):.2f}".rstrip("0").rstrip(".")
                     coverage.text(x, .06, weight, ha="center", va="center", fontsize=8.5)
                 if col == 0:
