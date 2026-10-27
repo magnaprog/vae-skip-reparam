@@ -42,8 +42,7 @@ Run the data, metric and plotting tests in the CPU environment. For model tests,
 @inproceedings{lee2026inputskip,
   author    = {Lee, Kevin},
   title     = {An Input Skip Can Reparameterize a {VAE} Without Improving the Generator},
-  booktitle = {40th Conference on Neural Information Processing Systems ({NeurIPS} 2026)
-               Workshop: 2nd Workshop on Principles of Generative Modeling ({PriGM})},
+  booktitle = {{NeurIPS} 2026 Workshop on Principles of Generative Modeling ({PriGM})},
   year      = {2026}
 }
 ```
