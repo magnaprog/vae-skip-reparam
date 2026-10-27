@@ -20,11 +20,11 @@ Conditions appear in this order: no skip at base variance, skip at base variance
 | `table_figure_data.json` | Comparisons with PPCA, absolute scores and scores within time intervals |
 | `datasets/*.txt` | NOAA annual observations for the context figure |
 
-Each feature array contains window mean minus training mean, standard deviation within a window, and the norm of time increments, all in meters. Spectral arrays contain 96 bin powers in square meters at positive frequencies from 0.5 to 48 cycles per day. The arrays are already in physical units.
+Each feature array contains window mean minus training mean, standard deviation within a window, and the norm of time increments, all in meters. Spectral arrays contain 96 bin powers in square meters at positive frequencies from 0.5 to 48 cycles per day. The arrays are already in physical units. The increment feature is the Euclidean norm of differences at lags 1, 4, 16, 48 and 96 observations, with each lag's differences divided by $\sqrt{192-\ell}$ for lag $\ell$.
 
 The original records use equal window weights. The 2018 records use weights for Coordinated Universal Time (UTC) start hours. Generated windows have equal weights within each sample set.
 
-For each fit, curves average three sampling streams. Neural curves then show the median and full range across three training seeds. Probabilistic principal component analysis curves average streams from one fit. Empirical distribution functions retain ties and the zero left limit. Spectral powers are averaged before plotting on logarithmic axes. Dashed neural spectra show decoder means; solid curves include observation noise.
+For each fit, curves average three sampling streams. Neural curves then show the median and full range across three training seeds. Probabilistic principal component analysis curves average streams from one fit whose noise variance is estimated from the training covariance. Empirical distribution functions retain ties and the zero left limit. Spectral powers are averaged before plotting on logarithmic axes. Dashed neural spectra show decoder means; solid curves include observation noise.
 
 The plotting arrays support these figures. They do not contain the complete generated windows or network weights needed to repeat model evaluation.
 

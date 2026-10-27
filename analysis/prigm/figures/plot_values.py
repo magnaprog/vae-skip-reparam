@@ -144,9 +144,14 @@ def weighted_ecdf(values, weights, grid):
     return mass[np.searchsorted(values[order], grid, side="right")]
 
 
+def ecdf_grid(fits, feature):
+    """Return the exact union of the streams' feature values."""
+    return np.unique(np.concatenate([stream["features"][:, feature] for fit in fits for stream in fit]))
+
+
 def ecdf_summary(fits, feature):
     """Evaluate each fit on the exact union of its streams' feature values."""
-    grid = np.unique(np.concatenate([stream["features"][:, feature] for fit in fits for stream in fit]))
+    grid = ecdf_grid(fits, feature)
     return grid, ecdf_on_grid(fits, feature, grid)
 
 

@@ -1,4 +1,4 @@
-"""DART v2 cohort qualification per plan section 4.2/4.3 (CPU, numpy/pandas).
+"""DART record eligibility, window preparation and synthetic data generation.
 
 Eligibility uses only data criteria, never model scores. The coverage
 denominator is every expected quarter-hour UTC slot in the complete

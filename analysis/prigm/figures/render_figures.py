@@ -23,10 +23,10 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import plot_values
 
-EVIDENCE_SHA = "9a25e6e62a0fcb033be87f219a2699fba18d75434fb508ad5ab44e54e27a674d"
-SUMMARY_SHA = "de171a46edf0def8b7ef0e8d516f556eb2f3ab5b2ea248bbf12b9a01240b4e43"
-PLOT_MANIFEST_SHA = "d1fba6e7895bafd9625dd4fa000b824d915a63a865e7fa8c37f396eb29c1cb93"
-TABLE_FIGURE_SHA = "9bb221d5063d5f8119277cc34fe85dae4ab7f691a8e377cc46287e028877adc0"
+EVIDENCE_SHA = "a73117bf43a049628455b72e27d55634c6e97d38d51a238fe679d55a0b4d0b6f"
+SUMMARY_SHA = "91c0bf8adbca844f53aaf85e18db4cb36834e69c2d3e3676b5069fe3cf0c8696"
+PLOT_MANIFEST_SHA = "5fbeaef79372cd88b870d19a613f38248ac5464362951df62d4daba1eb30a112"
+TABLE_FIGURE_SHA = "e0d5c53b085630303435824a57217e896a97dbac53fd7ce1b1ee3903a1614d86"
 FONT = "DejaVu Serif"
 FONT_SHA = "107244956e9962b9e96faccdc551825e0ae0898ae13737133e1b921a2fd35ffa"
 COLORS = {"A": "#0077BB", "C": "#CC3311", "B": "#009988", "D": "#6A3D9A",
@@ -134,7 +134,7 @@ def load_inputs(directory):
 
 def ecdf_arrays(case, feature):
     fits = [fit for role in ROLES for fit in case[role]]
-    grid, _ = plot_values.ecdf_summary(fits, feature)
+    grid = plot_values.ecdf_grid(fits, feature)
     grid = np.r_[np.nextafter(grid[0], -np.inf), grid]
     return grid, {role: plot_values.ecdf_on_grid(case[role], feature, grid) for role in ROLES}
 
