@@ -16,7 +16,9 @@ The energy score is the mean distance from model samples to observations minus h
 
 ## Reading the values
 
-Scores use dimensionless coordinates obtained by subtracting the training mean from HEIGHT and dividing by the training standard deviation. Multiplying a score by that standard deviation converts it to meters. In the CSV columns, `A` is the mean distance from model samples to observations, and `B` is half the mean distance between distinct model samples. These distance terms are separate from the model condition codes. Their difference is the energy score.
+Scores use dimensionless coordinates obtained by subtracting the training mean from HEIGHT and dividing by the training standard deviation. Multiplying a score by that standard deviation converts it to meters. In the CSV columns, `A` is the mean distance from model samples to observations, and `B` is half the mean distance between distinct model samples. These distance-term symbols are separate from the descriptive model condition names. Their difference is the energy score.
+
+The model conditions are `no_skip_base`, `skip_base`, `no_skip_high` and `skip_high`, in that order. Base and high denote observation variance, as defined in [Model training](../../TRAINING.md#gaussian-and-dart-experiments). Skip comparisons subtract `no_skip_base` from `skip_base` and `no_skip_high` from `skip_high`.
 
 The `joint` evaluation uses full windows, `centered` subtracts each window's own mean, and `increment` uses time differences across several lags. The label `reset` denotes replacement of observation variance while keeping encoder and decoder weights the same.
 

@@ -18,7 +18,7 @@ Prepare a short run on CPU, then train one Gaussian model on an available GPU:
 ```bash
 python src/prigm_experiment.py prepare --run-root runs/smoke --purpose smoke
 CUDA_VISIBLE_DEVICES='GPU-REPLACE-ME' python src/prigm_experiment.py train --run-root runs/smoke \
-  --dataset gaussian --arm A --seed 42 --gpu-uuid 'GPU-REPLACE-ME'
+  --dataset gaussian --condition no_skip_base --seed 42 --gpu-uuid 'GPU-REPLACE-ME'
 ```
 
 Replace both UUID placeholders with the same GPU assigned to this run. The short run checks execution with fewer training steps and samples than the experiments in the paper.
@@ -33,14 +33,16 @@ python src/prigm_experiment.py campaign --run-root runs/core \
   --gpu-uuids 'GPU-UUID-0' 'GPU-UUID-1' 'GPU-UUID-2' 'GPU-UUID-3'
 ```
 
-| Code | Input skip | Observation variance |
-| --- | --- | --- |
-| A | None | Base |
-| C | 0.8 | Base |
-| D | None | 25 times base |
-| B | 0.8 | 25 times base |
+| Condition | Input skip | Observation variance | Residual variance |
+| --- | --- | --- | --- |
+| `no_skip_base` | None | Base | Base |
+| `skip_base` | 0.8 | Base | 0.04 times base |
+| `no_skip_high` | None | 25 times base | 25 times base |
+| `skip_high` | 0.8 | 25 times base | Base |
 
-The `--arm` option selects a condition using the codes above. Base observation variance comes from probabilistic principal component analysis (PPCA) of the training data.
+The `--condition` option selects one of the conditions above. Base observation variance comes from probabilistic principal component analysis (PPCA) of the training data.
+
+The names `base` and `high` refer to observation variance. With skip coefficient `alpha` and `b = 1 - alpha`, the residual is `b*x - f(z)`, and `observation_variance = residual_variance / b**2`. A skip of 0.8 gives `b = 0.2`, so residual variance is 0.04 times observation variance. These are conditional noise variances; the generator's marginal variance also includes variation in its decoder mean.
 
 The run directory saves the preparation settings, copies of the training code, training histories, network weights and evaluations. An interrupted fit restarts in a new attempt directory, without resuming the optimizer and random number state.
 

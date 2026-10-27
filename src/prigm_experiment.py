@@ -25,7 +25,7 @@ from prigm_metrics import (energy_score, fit_ppca, gaussian_kl,
 ROOT = Path(__file__).resolve().parents[1]
 CODE_FILES = tuple(f"src/prigm_{name}.py" for name in ("data", "metrics", "model", "experiment"))
 DATASETS = ("gaussian", "23461t2022", "44402t2016", "46407t2011", "52403t2020")
-ARMS = ("A", "B", "C", "D")
+CONDITIONS = ("no_skip_base", "skip_base", "no_skip_high", "skip_high")
 SEEDS = (42, 1729, 31415)
 JOB_ARTIFACTS = ("configuration.json", "history.json", "progress.json", "best.weights.h5",
                  "final.weights.h5", "summary.json", "evaluation.npz",
@@ -39,7 +39,7 @@ SPEC = {
     "variance_floor": 0.0001, "validation_samples": 64,
     "evaluation_samples": 256, "stability_samples": 1024,
     "stability_windows": 32, "prior_samples": 512,
-    "training_seeds": list(SEEDS), "arms": list(ARMS),
+    "training_seeds": list(SEEDS), "conditions": list(CONDITIONS),
     "checkpoint_criterion": "minimum_validation_negative_importance_log_score",
     "validation_sampling_seed": 41001, "evaluation_sampling_seed": 42001,
     "stability_sampling_seed": 42002, "prior_sampling_seed": 43001,
@@ -88,8 +88,9 @@ def verify_run(run_root):
     """Check the run's settings, inputs and saved code against this implementation."""
     root = Path(run_root).resolve()
     manifest = read_json(root / "run_manifest.json")
-    if manifest.get("schema_version") != 1:
-        raise ValueError("Unsupported PriGM manifest")
+    if manifest.get("schema_version") != 2:
+        raise ValueError("Unsupported PriGM run manifest: schema_version=2 with "
+                         "descriptive condition names is required; prepare a fresh run")
     if manifest["datasets"] != list(DATASETS) or manifest["specification"] != specification(manifest["purpose"]):
         raise ValueError("Manifest differs from the experiment settings")
     if set(manifest["code_sha256"]) != set(CODE_FILES):
@@ -142,7 +143,7 @@ def prepare(run_root, purpose="core"):
         )
     atomic_json(root / "prepared" / "metadata.json", metadata)
     manifest = {
-        "schema_version": 1, "purpose": purpose, "run_id": str(uuid.uuid4()),
+        "schema_version": 2, "purpose": purpose, "run_id": str(uuid.uuid4()),
         "created_utc": datetime.now(timezone.utc).isoformat(), "specification": spec,
         "datasets": list(DATASETS),
         "code_sha256": {name: sha256(ROOT / name) for name in CODE_FILES},
@@ -212,10 +213,10 @@ def gpu_runtime(expected_uuid):
             "numpy": np.__version__, "deterministic_ops_requested": True}
 
 
-def job_id(dataset, arm, seed):
-    if dataset not in DATASETS or arm not in ARMS or seed not in SEEDS:
+def job_id(dataset, condition, seed):
+    if dataset not in DATASETS or condition not in CONDITIONS or seed not in SEEDS:
         raise ValueError("Job is outside the experiment's dataset, condition and seed combinations")
-    return f"{dataset}_{arm}_{seed}"
+    return f"{dataset}_{condition}_{seed}"
 
 
 def verified_completion(root, identifier):
@@ -236,8 +237,8 @@ def verified_completion(root, identifier):
             raise ValueError(f"Completed job artifact changed: {identifier}/{name}")
     for filename in ("configuration.json", "summary.json"):
         record = read_json(attempt / filename)
-        if job_id(record["dataset"], record["arm"], record["seed"]) != identifier:
-            raise ValueError("Completed job identity does not match its matrix slot")
+        if job_id(record["dataset"], record["condition"], record["seed"]) != identifier:
+            raise ValueError("Completed job identity does not match its condition slot")
     return attempt
 
 
@@ -291,9 +292,12 @@ def evaluate_job(model, data, spec, directory):
 
 def mapped_control(model, data):
     from prigm_model import GaussianVAE
-    target_arm = {"A": "C", "C": "A", "B": "D", "D": "B"}[model.arm]
+    target_condition = {
+        "no_skip_base": "skip_base", "skip_base": "no_skip_base",
+        "no_skip_high": "skip_high", "skip_high": "no_skip_high",
+    }[model.condition]
     mapped = GaussianVAE(input_dim=model.input_dim, latent_dim=model.latent_dim,
-                         arm=target_arm, base_variance=float(data["base_variance"]), seed=42)
+                         condition=target_condition, base_variance=float(data["base_variance"]), seed=42)
     mapped.map_from(model)
     x = data["validation"][:8].astype(np.float32)
     z = np.random.default_rng(2002).standard_normal((len(x), model.latent_dim)).astype(np.float32)
@@ -306,15 +310,15 @@ def mapped_control(model, data):
         raise RuntimeError("Mapped density identity failed")
     if not np.allclose(model.decode_mean(z), mapped.decode_mean(z), rtol=3e-5, atol=2e-5):
         raise RuntimeError("Mapped sampling-mean identity failed")
-    return {"target_arm": target_arm, "max_absolute_log_density_difference": difference,
+    return {"target_condition": target_condition, "max_absolute_log_density_difference": difference,
             "max_absolute_sample_mean_difference": mean_difference,
             "relative_log_density_tolerance": 3e-5, "absolute_log_density_tolerance": 0.01}
 
 
-def train(run_root, dataset, arm, seed, gpu_uuid):
+def train(run_root, dataset, condition, seed, gpu_uuid):
     root = Path(run_root).resolve()
     manifest = verify_run(root)
-    identifier = job_id(dataset, arm, seed)
+    identifier = job_id(dataset, condition, seed)
     if verified_completion(root, identifier):
         print(f"VERIFIED REUSE {identifier}", flush=True)
         return
@@ -338,7 +342,7 @@ def train(run_root, dataset, arm, seed, gpu_uuid):
         tf.keras.utils.set_random_seed(seed)
         data = load_prepared(root, dataset)
         model = GaussianVAE(input_dim=spec["window"], latent_dim=spec["latent_dim"],
-                            arm=arm, base_variance=float(data["base_variance"]), seed=seed)
+                            condition=condition, base_variance=float(data["base_variance"]), seed=seed)
         optimizer = tf.keras.optimizers.Adam(learning_rate=spec["learning_rate"])
         optimizer.build(model.trainable_variables)
         rng = np.random.default_rng(seed + 50000)
@@ -361,7 +365,7 @@ def train(run_root, dataset, arm, seed, gpu_uuid):
             return loss, tf.reduce_mean(terms["kl"]), norm
 
         atomic_json(directory / "configuration.json", {
-            "dataset": dataset, "arm": arm, "seed": seed, "runtime": runtime,
+            "dataset": dataset, "condition": condition, "seed": seed, "runtime": runtime,
             "specification": spec, "alpha": model.alpha,
             "residual_variance": model.residual_variance,
             "observation_variance": model.residual_variance / model.b ** 2,
@@ -415,7 +419,7 @@ def train(run_root, dataset, arm, seed, gpu_uuid):
         if not np.isclose(reloaded_score, best, rtol=1e-6, atol=1e-5):
             raise RuntimeError("Reloaded checkpoint does not reproduce selected validation score")
         summary = evaluate_job(model, data, spec, directory)
-        summary.update(dataset=dataset, arm=arm, seed=seed, best_step=best_step,
+        summary.update(dataset=dataset, condition=condition, seed=seed, best_step=best_step,
                        steps_run=step, best_validation_score=best,
                        elapsed_seconds=time.monotonic() - started,
                        mapped_control=mapped_control(model, data))
@@ -462,15 +466,15 @@ def summarize(run_root):
     files.extend(root / "source" / name for name in CODE_FILES)
     for dataset in manifest["datasets"]:
         for seed in SEEDS:
-            for arm in ARMS:
-                identifier = job_id(dataset, arm, seed)
+            for condition in CONDITIONS:
+                identifier = job_id(dataset, condition, seed)
                 attempt = verified_completion(root, identifier)
                 if attempt is None:
                     raise RuntimeError(f"Missing completed job: {identifier}")
                 summaries.append(read_json(attempt / "summary.json"))
                 files.append(root / "jobs" / identifier / "complete.json")
                 files.extend(attempt / name for name in JOB_ARTIFACTS)
-    output = {"schema_version": 1, "purpose": manifest["purpose"],
+    output = {"schema_version": 2, "purpose": manifest["purpose"],
               "run_manifest_sha256": sha256(root / "run_manifest.json"),
               "specification": manifest["specification"], "results": summaries,
               "baselines": baseline_results(root, manifest),
@@ -489,7 +493,8 @@ def campaign(run_root, gpu_uuids):
     manifest = verify_run(root)
     if len(gpu_uuids) != 4 or len(set(gpu_uuids)) != 4:
         raise ValueError("Campaign requires four distinct GPU UUIDs")
-    jobs = [(dataset, arm, seed) for dataset in manifest["datasets"] for seed in SEEDS for arm in ARMS]
+    jobs = [(dataset, condition, seed) for dataset in manifest["datasets"]
+            for seed in SEEDS for condition in CONDITIONS]
     np.random.default_rng(20260905).shuffle(jobs)
     pending = deque(jobs)
     guard = threading.Lock()
@@ -522,15 +527,15 @@ def campaign(run_root, gpu_uuids):
             with guard:
                 if stop.is_set() or interrupted or not pending:
                     return
-                dataset, arm, seed = pending.popleft()
-            identifier = job_id(dataset, arm, seed)
+                dataset, condition, seed = pending.popleft()
+            identifier = job_id(dataset, condition, seed)
             log = root / "logs" / f"{identifier}-{uuid.uuid4().hex}.log"
             try:
                 environment = dict(os.environ, CUDA_VISIBLE_DEVICES=gpu, TF_CPP_MIN_LOG_LEVEL="2",
                                    TF_DETERMINISTIC_OPS="1", OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="2",
                                    PYTHONDONTWRITEBYTECODE="1")
                 command = [sys.executable, str(Path(__file__).resolve()), "train", "--run-root", str(root),
-                           "--dataset", dataset, "--arm", arm, "--seed", str(seed), "--gpu-uuid", gpu]
+                           "--dataset", dataset, "--condition", condition, "--seed", str(seed), "--gpu-uuid", gpu]
                 print(f"START {identifier} {gpu}", flush=True)
                 with log.open("x") as stream:
                     with guard:
@@ -590,7 +595,7 @@ def main():
     fit = commands.add_parser("train")
     fit.add_argument("--run-root", required=True)
     fit.add_argument("--dataset", choices=DATASETS, required=True)
-    fit.add_argument("--arm", choices=ARMS, required=True)
+    fit.add_argument("--condition", choices=CONDITIONS, required=True)
     fit.add_argument("--seed", type=int, choices=SEEDS, required=True)
     fit.add_argument("--gpu-uuid", required=True)
     execute = commands.add_parser("campaign")
@@ -602,7 +607,7 @@ def main():
     if args.command == "prepare":
         prepare(args.run_root, args.purpose)
     elif args.command == "train":
-        train(args.run_root, args.dataset, args.arm, args.seed, args.gpu_uuid)
+        train(args.run_root, args.dataset, args.condition, args.seed, args.gpu_uuid)
     elif args.command == "campaign":
         campaign(args.run_root, args.gpu_uuids)
     else:

@@ -70,9 +70,9 @@ def test_refit_ratios_and_subtraction_keep_seed_score_and_stream_axes():
             original["scores"][score] = {"weighted": {"values": [10., 20., 30.]}}
             delta = (index + 1) * (score_index + 1)
             refit["scores"][score] = {"weighted": {"values": [10. + delta, 20., 30. - delta]}}
-        record["models"][f"A/{seed}/original"] = original
-        record["models"][f"A/{seed}/variance_refit"] = refit
-    ratios, deltas = values.refit_points(record, "A")
+        record["models"][f"no_skip_base/{seed}/original"] = original
+        record["models"][f"no_skip_base/{seed}/variance_refit"] = refit
+    ratios, deltas = values.refit_points(record, "no_skip_base")
     np.testing.assert_array_equal(ratios, [1., 2., 3.])
     expected = np.array([[[seed * score, 0., -seed * score] for score in (1, 2, 3)]
                          for seed in (1, 2, 3)])
@@ -199,3 +199,33 @@ def test_changed_annual_record_rejected_with_public_summary(public_figures, tmp_
     path.write_bytes((ROOT / relative).read_bytes() + b"\n")
     with pytest.raises(ValueError, match="Public source hash differs"):
         values.read_observed_context(path, expected)
+
+
+def test_serialized_conditions_have_descriptive_names_and_fixed_order():
+    expected = ("no_skip_base", "skip_base", "no_skip_high", "skip_high")
+    assert values.CONDITIONS == expected
+    metadata = json.loads((FIGURES / "plot_data_manifest.json").read_text())
+    assert metadata["schema_version"] == 2
+    for case in metadata["distribution_index"].values():
+        assert tuple(role for role in case if role in expected) == expected
+        assert set(case) == {"train", "test", "PPCA", *expected,
+                             *(condition + " means" for condition in expected)}
+    with np.load(FIGURES / "plot_data.npz", allow_pickle=False) as archive:
+        assert set(archive.files) == set(metadata["arrays"])
+        assert {key.split("/")[1] for key in archive.files} == {
+            "train", "test", "PPCA", *expected,
+            *(condition + "_means" for condition in expected)}
+    summary = json.loads((FIGURES / "plot_summary.json").read_text())
+    assert summary["schema_version"] == 2
+    for record in summary["records"].values():
+        assert tuple(dict.fromkeys(key.split("/")[0] for key in record["models"])) == expected
+        assert set(record["contrasts"]) == {
+            "skip_base-no_skip_base/original", "skip_high-no_skip_high/original"}
+
+
+@pytest.mark.parametrize("legacy_name", ["A", "B", "C", "D"])
+def test_letter_condition_aliases_are_not_accepted(legacy_name):
+    # Historical letters belong only at the authenticated private reader.
+    summary = json.loads((FIGURES / "plot_summary.json").read_text())
+    with pytest.raises(KeyError):
+        values.refit_points(summary["records"][values.RECORDS[0]], legacy_name)

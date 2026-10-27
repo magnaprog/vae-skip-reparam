@@ -65,12 +65,6 @@
     }
   ],
   "coverage": {
-    "arms": [
-      "A",
-      "B",
-      "C",
-      "D"
-    ],
     "matched_PPCA_fit_geometry_comparisons": 252,
     "original_and_reset_stream_geometry_rows": 1512,
     "prior_streams": [
@@ -95,7 +89,13 @@
       1729,
       31415
     ],
-    "unique_fits": 84
+    "unique_fits": 84,
+    "conditions": [
+      "no_skip_base",
+      "skip_base",
+      "no_skip_high",
+      "skip_high"
+    ]
   },
   "definitions": {
     "A": "Weighted mean observation-to-sample distance",
@@ -106,7 +106,7 @@
     "reduction": "Average the three streams within each fit before these descriptive fit counts and ranges",
     "reset": "Reset minus original within the same fixed fit and stream",
     "scope": "Standardized coordinates; finite retained windows and samples; no new fitting, neural execution, or causal/population inference",
-    "skip": "C-A or B-D at original matched observation variance and paired training seed/stream"
+    "skip": "skip_base-no_skip_base or skip_high-no_skip_high at original matched observation variance and paired training seed/stream"
   },
   "limits": [
     "Neither energy term alone is a proper score or calibration diagnostic.",
@@ -117,10 +117,10 @@
     {
       "geometry": "joint",
       "minimum_at": {
-        "arm": "D",
         "record": "46407t2011",
         "seed": "31415",
-        "variance_group": "high"
+        "variance_group": "high",
+        "condition": "no_skip_high"
       },
       "neural_minus_PPCA": {
         "count": 84,
@@ -135,10 +135,10 @@
     {
       "geometry": "centered",
       "minimum_at": {
-        "arm": "D",
         "record": "44402t2016",
         "seed": "31415",
-        "variance_group": "high"
+        "variance_group": "high",
+        "condition": "no_skip_high"
       },
       "neural_minus_PPCA": {
         "count": 84,
@@ -153,10 +153,10 @@
     {
       "geometry": "increment",
       "minimum_at": {
-        "arm": "D",
         "record": "44402t2016",
         "seed": "42",
-        "variance_group": "high"
+        "variance_group": "high",
+        "condition": "no_skip_high"
       },
       "neural_minus_PPCA": {
         "count": 84,
@@ -358,7 +358,7 @@
       "variance_group": "high"
     }
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "skip_term_summaries": [
     {
       "delta_A": {
@@ -389,7 +389,7 @@
         "zero": 0
       },
       "geometry": "joint",
-      "pair": "C-A"
+      "pair": "skip_base-no_skip_base"
     },
     {
       "delta_A": {
@@ -420,7 +420,7 @@
         "zero": 0
       },
       "geometry": "centered",
-      "pair": "C-A"
+      "pair": "skip_base-no_skip_base"
     },
     {
       "delta_A": {
@@ -451,7 +451,7 @@
         "zero": 0
       },
       "geometry": "increment",
-      "pair": "C-A"
+      "pair": "skip_base-no_skip_base"
     },
     {
       "delta_A": {
@@ -482,7 +482,7 @@
         "zero": 0
       },
       "geometry": "joint",
-      "pair": "B-D"
+      "pair": "skip_high-no_skip_high"
     },
     {
       "delta_A": {
@@ -513,7 +513,7 @@
         "zero": 0
       },
       "geometry": "centered",
-      "pair": "B-D"
+      "pair": "skip_high-no_skip_high"
     },
     {
       "delta_A": {
@@ -544,7 +544,7 @@
         "zero": 0
       },
       "geometry": "increment",
-      "pair": "B-D"
+      "pair": "skip_high-no_skip_high"
     }
   ]
 }

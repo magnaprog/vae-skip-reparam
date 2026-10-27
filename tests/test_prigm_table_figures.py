@@ -20,7 +20,7 @@ SPEC = importlib.util.spec_from_file_location("table_figure_renderer", FIGURES /
 renderer = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(renderer)
 values = renderer.plot_values
-ORDER = ("A", "C", "D", "B")
+ORDER = ("no_skip_base", "skip_base", "no_skip_high", "skip_high")
 SEEDS = (42, 1729, 31415)
 SCORES = ("joint", "centered", "increment")
 
@@ -37,9 +37,9 @@ def evidence():
     return json.loads((FIGURES / "table_figure_data.json").read_text())["records"]
 
 
-def expected_ppca(source, arm):
-    level = {"A": "low", "C": "low", "D": "high", "B": "high"}[arm]
-    return np.array([[source["neural_scores"][arm][score][seed]["mean"]
+def expected_ppca(source, condition):
+    level = {"no_skip_base": "low", "skip_base": "low", "no_skip_high": "high", "skip_high": "high"}[condition]
+    return np.array([[source["neural_scores"][condition][score][seed]["mean"]
                       - source["baseline_scores"][level + "/ppca_matched"]["scores"][score]["mean"]
                       for score in SCORES] for seed in range(3)])
 
@@ -55,7 +55,7 @@ def test_per_fit_values_agree_with_independent_released_reductions(data):
     for fit in fits:
         reference = references[(fit["record"], fit["variance_group"], fit["geometry"])]
         expected = float(fit["ES"]) - reference
-        actual = values.ppca_comparison_points(data["records"][fit["record"]], fit["arm"])[
+        actual = values.ppca_comparison_points(data["records"][fit["record"]], fit["condition"])[
             SEEDS.index(int(fit["seed"])), SCORES.index(fit["geometry"])]
         # The CSV recomputes energy terms. Its scores differ from the plotting
         # inputs by at most 1.21e-13 through floating-point rounding.
@@ -63,7 +63,7 @@ def test_per_fit_values_agree_with_independent_released_reductions(data):
 
 
 @pytest.mark.parametrize("change", ["missing_record", "extra_record", "wrong_station", "wrong_year",
-                                   "seed_order", "boolean_schema", "missing_condition", "extra_score",
+                                   "seed_order", "boolean_schema", "old_schema", "legacy_condition", "missing_condition", "extra_score",
                                    "short_seed_axis", "nonfinite", "boolean_score", "condition_swap",
                                    "pooled_fits", "wrong_baseline", "bad_stream_mean"])
 def test_bad_ppca_contract_is_rejected(data, change):
@@ -81,26 +81,30 @@ def test_bad_ppca_contract_is_rejected(data, change):
         broken["training_seeds"].reverse()
     elif change == "boolean_schema":
         broken["schema_version"] = True
+    elif change == "old_schema":
+        broken["schema_version"] = 1
+    elif change == "legacy_condition":
+        record["ppca_comparison"]["A"] = record["ppca_comparison"].pop("no_skip_base")
     elif change == "missing_condition":
-        del record["ppca_comparison"]["D"]
+        del record["ppca_comparison"]["no_skip_high"]
     elif change == "extra_score":
-        record["ppca_comparison"]["A"]["extra"] = [0., 0., 0.]
+        record["ppca_comparison"]["no_skip_base"]["extra"] = [0., 0., 0.]
     elif change == "short_seed_axis":
-        record["ppca_comparison"]["A"]["joint"].pop()
+        record["ppca_comparison"]["no_skip_base"]["joint"].pop()
     elif change == "nonfinite":
-        record["ppca_comparison"]["A"]["joint"][0] = float("nan")
+        record["ppca_comparison"]["no_skip_base"]["joint"][0] = float("nan")
     elif change == "boolean_score":
-        record["ppca_comparison"]["A"]["joint"][0] = True
+        record["ppca_comparison"]["no_skip_base"]["joint"][0] = True
     elif change == "condition_swap":
-        record["ppca_comparison"]["A"], record["ppca_comparison"]["C"] = (
-            record["ppca_comparison"]["C"], record["ppca_comparison"]["A"])
+        record["ppca_comparison"]["no_skip_base"], record["ppca_comparison"]["skip_base"] = (
+            record["ppca_comparison"]["skip_base"], record["ppca_comparison"]["no_skip_base"])
     elif change == "pooled_fits":
-        fits = record["ppca_comparison"]["A"]["joint"]
-        record["ppca_comparison"]["A"]["joint"] = [float(np.mean(fits))] * 3
+        fits = record["ppca_comparison"]["no_skip_base"]["joint"]
+        record["ppca_comparison"]["no_skip_base"]["joint"] = [float(np.mean(fits))] * 3
     elif change == "wrong_baseline":
         record["baseline_scores"]["low/ppca_matched"] = record["baseline_scores"]["high/ppca_matched"]
     else:
-        record["neural_scores"]["A"]["joint"][0]["mean"] += 1
+        record["neural_scores"]["no_skip_base"]["joint"][0]["mean"] += 1
     with pytest.raises(ValueError):
         values.validate_table_figure_data(broken, renderer.EVIDENCE_SHA)
 
@@ -123,22 +127,22 @@ def test_reader_rejects_wrong_science_and_duplicate_keys(data, tmp_path, monkeyp
 
 
 def check_ppca_artists(fig, records, evidence):
-    rows = [(name, arm) for name in values.RECORDS for arm in ORDER]
+    rows = [(name, condition) for name in values.RECORDS for condition in ORDER]
     assert len(fig.axes) == 3
     for panel, ax in enumerate(fig.axes):
         dots = [line for line in ax.lines if line.get_marker() in renderer.MARKERS.values()]
         assert len(dots) == 84 and not ax.collections  # no interval/CI artists
-        for row, (name, arm) in enumerate(rows):
-            expected = expected_ppca(evidence[name], arm)
+        for row, (name, condition) in enumerate(rows):
+            expected = expected_ppca(evidence[name], condition)
             for seed, offset in enumerate((-.2, 0, .2)):
                 point = dots[row * 3 + seed]
                 np.testing.assert_array_equal(point.get_xdata(), [expected[seed, panel]])
                 np.testing.assert_array_equal(point.get_ydata(), [row + offset])
-                assert point.get_color() == renderer.COLORS[arm]
-                assert point.get_marker() == renderer.MARKERS[arm]
+                assert point.get_color() == renderer.COLORS[condition]
+                assert point.get_marker() == renderer.MARKERS[condition]
                 assert point.get_linestyle() == "-" and point.get_linewidth() == 0
         assert any(list(line.get_xdata()) == [0, 0] for line in ax.lines)
-    assert [t.get_text() for t in fig.axes[0].get_yticklabels()] == [renderer.CONDITION_LABELS[arm] for _, arm in rows]
+    assert [t.get_text() for t in fig.axes[0].get_yticklabels()] == [renderer.CONDITION_LABELS[condition] for _, condition in rows]
     assert fig.get_figwidth() == 5.5
 
 
@@ -157,7 +161,7 @@ def test_ppca_plot_uses_every_fit_in_explicit_condition_order(data, evidence, mo
 def test_plot_oracle_rejects_wrong_condition_payload_with_correct_row(data, evidence, monkeypatch, tmp_path):
     original = values.ppca_comparison_points
     monkeypatch.setattr(values, "ppca_comparison_points",
-                        lambda record, arm: original(record, {"A": "C", "C": "A"}.get(arm, arm)))
+                        lambda record, condition: original(record, {"no_skip_base": "skip_base", "skip_base": "no_skip_base"}.get(condition, condition)))
     captured = []
     monkeypatch.setattr(renderer, "save", lambda fig, *args: captured.append(fig))
     with plt.rc_context(renderer.STYLE):

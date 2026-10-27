@@ -14,7 +14,7 @@ import pandas as pd
 
 RECORDS = ("23461t2022", "44402t2016", "46407t2011", "52403t2020",
            "dart_44402_2018", "dart_21415_2018", "dart_21418_2018")
-ARMS = ("A", "B", "C", "D")
+CONDITIONS = ('no_skip_base', 'skip_base', 'no_skip_high', 'skip_high')
 SEEDS = (42, 1729, 31415)
 SCORES = ("joint", "centered", "increment")
 
@@ -43,7 +43,7 @@ def validate_table_figure_data(data, scientific_sha256):
                 and value["mean"] == float(np.mean(value["values"])), "Stream statistics differ")
 
     keys(data, ("schema_version", "scientific_manifest_sha256", "training_seeds", "records"), "Table figure")
-    require(type(data["schema_version"]) is int and data["schema_version"] == 1,
+    require(type(data["schema_version"]) is int and data["schema_version"] == 2,
             "Unsupported table figure schema")
     require(data["scientific_manifest_sha256"] == scientific_sha256, "Table figures belong to different evidence")
     require(data["training_seeds"] == list(SEEDS)
@@ -68,18 +68,18 @@ def validate_table_figure_data(data, scientific_sha256):
             keys(baseline["scores"], SCORES, "Baseline score")
             for value in baseline["scores"].values():
                 stats(value)
-        keys(record["neural_scores"], ARMS, "Neural condition")
-        keys(record["ppca_comparison"], ARMS, "Comparison condition")
-        for arm in ARMS:
-            keys(record["neural_scores"][arm], SCORES, "Neural score")
-            keys(record["ppca_comparison"][arm], SCORES, "Comparison score")
-            variance = "low" if arm in ("A", "C") else "high"
+        keys(record["neural_scores"], CONDITIONS, "Neural condition")
+        keys(record["ppca_comparison"], CONDITIONS, "Comparison condition")
+        for condition in CONDITIONS:
+            keys(record["neural_scores"][condition], SCORES, "Neural score")
+            keys(record["ppca_comparison"][condition], SCORES, "Comparison score")
+            variance = "low" if condition in ("no_skip_base", "skip_base") else "high"
             for score in SCORES:
-                fits = record["neural_scores"][arm][score]
+                fits = record["neural_scores"][condition][score]
                 require(isinstance(fits, list) and len(fits) == 3, "Expected three neural fits")
                 for fit in fits:
                     stats(fit)
-                actual = record["ppca_comparison"][arm][score]
+                actual = record["ppca_comparison"][condition][score]
                 triple(actual, "PPCA comparison")
                 reference = record["baseline_scores"][variance + "/ppca_matched"]["scores"][score]["mean"]
                 expected = np.array([fit["mean"] - reference for fit in fits])
@@ -105,7 +105,7 @@ def validate_table_figure_data(data, scientific_sha256):
             require(np.isclose(sum(i["mass"] for i in intervals), 1, rtol=0, atol=1e-12),
                     "Interval masses do not sum to one")
             counts.append(sum(i["windows"] for i in intervals))
-            for variance, left, right in (("base", "C", "A"), ("high", "B", "D")):
+            for variance, left, right in (("base", "skip_base", "no_skip_base"), ("high", "skip_high", "no_skip_high")):
                 whole = np.array([a["mean"] - b["mean"] for a, b in zip(
                     record["neural_scores"][left]["joint"], record["neural_scores"][right]["joint"], strict=True)])
                 weighted = sum(i["mass"] * np.asarray(i[variance]) for i in intervals)
@@ -115,9 +115,9 @@ def validate_table_figure_data(data, scientific_sha256):
     return data
 
 
-def ppca_comparison_points(record, arm):
+def ppca_comparison_points(record, condition):
     """One row per training seed, with the three already reduced score differences."""
-    return np.array([record["ppca_comparison"][arm][score] for score in SCORES]).T
+    return np.array([record["ppca_comparison"][condition][score] for score in SCORES]).T
 
 
 def interval_points(record, days):
@@ -166,12 +166,12 @@ def power_arrays(fits):
     return np.array([np.mean([stream["power"] for stream in fit], axis=0) for fit in fits])
 
 
-def refit_points(record, arm):
+def refit_points(record, condition):
     """Variance ratios and replacement-minus-original scores, seed then stream."""
     ratios, deltas = [], []
     for seed in SEEDS:
-        original = record["models"][f"{arm}/{seed}/original"]
-        refit = record["models"][f"{arm}/{seed}/variance_refit"]
+        original = record["models"][f"{condition}/{seed}/original"]
+        refit = record["models"][f"{condition}/{seed}/variance_refit"]
         ratios.append(refit["variance_fit"]["pooled"] / original["observation_variance"])
         deltas.append([(np.asarray(refit["scores"][score]["weighted"]["values"])
                         - np.asarray(original["scores"][score]["weighted"]["values"]))
