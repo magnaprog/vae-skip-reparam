@@ -114,9 +114,9 @@ def test_comparison_and_refit_draw_descriptive_labels(monkeypatch, tmp_path, nam
                 points = [[line for line in ax.lines if line.get_marker() in renderer.MARKERS.values()]
                           for ax in fig.axes]
                 assert all(len(lines) == 84 for lines in points)
-                for row, (record, arm) in enumerate((record, arm)
-                        for record in renderer.plot_values.record_order(records) for arm in ("A", "C", "D", "B")):
-                    ratios, deltas = renderer.plot_values.refit_points(records[record], arm)
+                for row, (record, condition) in enumerate((record, condition)
+                        for record in renderer.plot_values.record_order(records) for condition in ("no_skip_base", "skip_base", "no_skip_high", "skip_high")):
+                    ratios, deltas = renderer.plot_values.refit_points(records[record], condition)
                     for seed, offset in enumerate((-.2, 0, .2)):
                         index = row * 3 + seed
                         for panel, lines in enumerate(points):
@@ -124,8 +124,8 @@ def test_comparison_and_refit_draw_descriptive_labels(monkeypatch, tmp_path, nam
                             expected = ratios[seed] if panel == 0 else deltas[seed, panel - 1].mean()
                             np.testing.assert_array_equal(point.get_xdata(), [expected])
                             np.testing.assert_array_equal(point.get_ydata(), [row + offset])
-                            assert point.get_color() == renderer.COLORS[arm]
-                            assert point.get_marker() == renderer.MARKERS[arm]
+                            assert point.get_color() == renderer.COLORS[condition]
+                            assert point.get_marker() == renderer.MARKERS[condition]
                             if panel:
                                 values = deltas[seed, panel - 1]
                                 segment, = fig.axes[panel].collections[index].get_segments()

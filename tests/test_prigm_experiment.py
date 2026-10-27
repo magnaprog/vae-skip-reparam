@@ -6,6 +6,7 @@ import sys
 import signal
 import subprocess
 import time
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -29,7 +30,7 @@ def prepared_run(tmp_path, monkeypatch):
     for name in ["metadata.json", *(f"{dataset}.npz" for dataset in experiment.DATASETS)]:
         (run / "prepared" / name).write_bytes(b"input identity fixture")
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "purpose": "smoke",
         "datasets": list(experiment.DATASETS),
         "specification": experiment.specification("smoke"),
@@ -46,6 +47,39 @@ def prepared_run(tmp_path, monkeypatch):
 def test_verify_run_accepts_consistent_source_and_inputs(prepared_run):
     run, _, manifest = prepared_run
     assert experiment.verify_run(run) == manifest
+
+
+@pytest.mark.parametrize("schema_version", [None, 1, 3])
+def test_verify_run_rejects_old_or_unknown_schema_before_loading_inputs(tmp_path, schema_version):
+    experiment.atomic_json(tmp_path / "run_manifest.json", {"schema_version": schema_version})
+    with pytest.raises(ValueError, match="schema_version=2.*descriptive condition names.*fresh run"):
+        experiment.verify_run(tmp_path)
+
+
+def test_verify_run_rejects_old_condition_field_in_new_schema(prepared_run):
+    run, _, manifest = prepared_run
+    manifest["specification"] = dict(manifest["specification"])
+    manifest["specification"]["arms"] = manifest["specification"].pop("conditions")
+    experiment.atomic_json(run / "run_manifest.json", manifest)
+    with pytest.raises(ValueError, match="Manifest differs"):
+        experiment.verify_run(run)
+
+
+def test_prepare_writes_and_verifies_descriptive_condition_manifest(tmp_path, monkeypatch):
+    train = np.random.default_rng(17).standard_normal((32, 192))
+    data = SimpleNamespace(
+        train=train, validation=train[:8], test=train[8:16], mean=0.0, scale=1.0,
+        starts={}, oracle_covariance=None, metadata={"fixture": "synthetic"},
+    )
+    monkeypatch.setattr(experiment, "prepare_dataset", lambda name, root: data)
+    root = tmp_path / "prepared-run"
+    experiment.prepare(root, purpose="smoke")
+    manifest = experiment.verify_run(root)
+    assert manifest["schema_version"] == 2
+    assert manifest["specification"]["conditions"] == [
+        "no_skip_base", "skip_base", "no_skip_high", "skip_high",
+    ]
+    assert "arms" not in manifest["specification"]
 
 
 @pytest.mark.parametrize("changed", ["implementation", "saved_source", "input", "settings"])
@@ -99,66 +133,68 @@ def test_smoke_and_core_have_separate_settings():
     smoke = experiment.specification("smoke")
     assert core["max_steps"] == 10000
     assert smoke["max_steps"] == 4
-    assert core["arms"] == ["A", "B", "C", "D"]
+    assert core["conditions"] == ["no_skip_base", "skip_base", "no_skip_high", "skip_high"]
+    assert smoke["conditions"] == core["conditions"]
+    assert not hasattr(experiment, "ARMS")
     with pytest.raises(ValueError):
         experiment.specification("unreviewed")
 
 
 def test_completion_rejects_tampered_artifact(tmp_path):
     experiment.atomic_json(tmp_path / "run_manifest.json", {"example": 1})
-    root = tmp_path / "jobs" / "gaussian_A_42"
+    root = tmp_path / "jobs" / "gaussian_no_skip_base_42"
     directory = root / "attempt-1"
     directory.mkdir(parents=True)
     for name in experiment.JOB_ARTIFACTS:
-        experiment.atomic_json(directory / name, {"dataset": "gaussian", "arm": "A", "seed": 42})
+        experiment.atomic_json(directory / name, {"dataset": "gaussian", "condition": "no_skip_base", "seed": 42})
     completion = {
         "run_manifest_sha256": experiment.sha256(tmp_path / "run_manifest.json"),
         "attempt": directory.name,
         "artifact_sha256": {name: experiment.sha256(directory / name) for name in experiment.JOB_ARTIFACTS},
     }
     experiment.atomic_json(root / "complete.json", completion)
-    assert experiment.verified_completion(tmp_path, "gaussian_A_42") == directory
+    assert experiment.verified_completion(tmp_path, "gaussian_no_skip_base_42") == directory
     experiment.atomic_json(directory / "summary.json", {"value": 2})
     with pytest.raises(ValueError, match="artifact changed"):
-        experiment.verified_completion(tmp_path, "gaussian_A_42")
+        experiment.verified_completion(tmp_path, "gaussian_no_skip_base_42")
 
 
 def test_completion_rejects_manifest_change(tmp_path):
     experiment.atomic_json(tmp_path / "run_manifest.json", {"example": 1})
-    directory = tmp_path / "jobs" / "gaussian_A_42"
+    directory = tmp_path / "jobs" / "gaussian_no_skip_base_42"
     directory.mkdir(parents=True)
     experiment.atomic_json(directory / "complete.json", {
         "run_manifest_sha256": "0" * 64, "attempt": "attempt-1", "artifact_sha256": {},
     })
     with pytest.raises(ValueError, match="different run"):
-        experiment.verified_completion(tmp_path, "gaussian_A_42")
+        experiment.verified_completion(tmp_path, "gaussian_no_skip_base_42")
 
 
 def test_completion_rejects_empty_artifact_manifest(tmp_path):
     experiment.atomic_json(tmp_path / "run_manifest.json", {"example": 1})
-    directory = tmp_path / "jobs" / "gaussian_A_42"
+    directory = tmp_path / "jobs" / "gaussian_no_skip_base_42"
     directory.mkdir(parents=True)
     experiment.atomic_json(directory / "complete.json", {
         "run_manifest_sha256": experiment.sha256(tmp_path / "run_manifest.json"),
         "attempt": "attempt-1", "artifact_sha256": {},
     })
     with pytest.raises(ValueError, match="Incomplete job"):
-        experiment.verified_completion(tmp_path, "gaussian_A_42")
+        experiment.verified_completion(tmp_path, "gaussian_no_skip_base_42")
 
 
 def test_completion_rejects_misplaced_job(tmp_path):
     experiment.atomic_json(tmp_path / "run_manifest.json", {"example": 1})
-    directory = tmp_path / "jobs" / "gaussian_B_42" / "attempt-1"
+    directory = tmp_path / "jobs" / "gaussian_skip_high_42" / "attempt-1"
     directory.mkdir(parents=True)
     for name in experiment.JOB_ARTIFACTS:
-        experiment.atomic_json(directory / name, {"dataset": "gaussian", "arm": "A", "seed": 42})
+        experiment.atomic_json(directory / name, {"dataset": "gaussian", "condition": "no_skip_base", "seed": 42})
     experiment.atomic_json(directory.parent / "complete.json", {
         "run_manifest_sha256": experiment.sha256(tmp_path / "run_manifest.json"),
         "attempt": directory.name,
         "artifact_sha256": {name: experiment.sha256(directory / name) for name in experiment.JOB_ARTIFACTS},
     })
-    with pytest.raises(ValueError, match="matrix slot"):
-        experiment.verified_completion(tmp_path, "gaussian_B_42")
+    with pytest.raises(ValueError, match="condition slot"):
+        experiment.verified_completion(tmp_path, "gaussian_skip_high_42")
 
 
 def test_campaign_launch_exception_stops_queue(tmp_path, monkeypatch):
@@ -168,6 +204,9 @@ def test_campaign_launch_exception_stops_queue(tmp_path, monkeypatch):
 
     def failing_launch(*args, **kwargs):
         launched.append(args)
+        command = args[0]
+        assert command[command.index("--condition") + 1] in experiment.CONDITIONS
+        assert "--arm" not in command
         raise OSError("synthetic launch failure")
 
     monkeypatch.setattr(experiment.subprocess, "Popen", failing_launch)
@@ -184,10 +223,71 @@ def test_atomic_json_never_publishes_nonfinite_payload(tmp_path):
     assert json.loads(path.read_text()) == {"value": 3}
 
 
-def test_job_identity_stays_inside_protocol():
-    assert experiment.job_id("gaussian", "C", 1729) == "gaussian_C_1729"
+@pytest.mark.parametrize("condition", experiment.CONDITIONS)
+def test_job_identity_stays_inside_protocol(condition):
+    assert experiment.job_id("gaussian", condition, 1729) == f"gaussian_{condition}_1729"
     with pytest.raises(ValueError):
-        experiment.job_id("../unrelated", "C", 1729)
+        experiment.job_id("../unrelated", condition, 1729)
+
+
+@pytest.mark.parametrize("condition", ["A", "B", "C", "D"])
+def test_job_identity_rejects_letter_conditions(condition):
+    with pytest.raises(ValueError, match="condition"):
+        experiment.job_id("gaussian", condition, 1729)
+
+
+def test_train_help_lists_only_descriptive_conditions_in_order():
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "src/prigm_experiment.py"), "train", "--help"],
+        check=True, capture_output=True, text=True,
+    )
+    assert "--condition {no_skip_base,skip_base,no_skip_high,skip_high}" in result.stdout
+    assert "--arm" not in result.stdout
+
+
+@pytest.mark.parametrize("condition", experiment.CONDITIONS)
+def test_train_cli_passes_descriptive_condition(monkeypatch, condition):
+    called = []
+    monkeypatch.setattr(experiment, "train", lambda *args: called.append(args))
+    monkeypatch.setattr(sys, "argv", [
+        "prigm_experiment.py", "train", "--run-root", "run", "--dataset", "gaussian",
+        "--condition", condition, "--seed", "42", "--gpu-uuid", "fixture",
+    ])
+    experiment.main()
+    assert called == [("run", "gaussian", condition, 42, "fixture")]
+
+
+@pytest.mark.parametrize("arguments", [
+    ["--condition", "A"], ["--condition", "B"],
+    ["--condition", "C"], ["--condition", "D"],
+    ["--condition", "no_skip_base", "--arm", "no_skip_base"],
+])
+def test_train_cli_rejects_old_names_before_training(monkeypatch, arguments):
+    monkeypatch.setattr(experiment, "train", lambda *args: pytest.fail("training must not start"))
+    monkeypatch.setattr(sys, "argv", [
+        "prigm_experiment.py", "train", "--run-root", "run", "--dataset", "gaussian",
+        "--seed", "42", "--gpu-uuid", "fixture", *arguments,
+    ])
+    with pytest.raises(SystemExit) as error:
+        experiment.main()
+    assert error.value.code == 2
+
+
+@pytest.mark.parametrize("condition,partner", [
+    ("no_skip_base", "skip_base"), ("skip_base", "no_skip_base"),
+    ("no_skip_high", "skip_high"), ("skip_high", "no_skip_high"),
+])
+def test_mapped_control_switches_skip_at_the_same_variance(condition, partner):
+    tf = pytest.importorskip("tensorflow")
+    from prigm_model import GaussianVAE
+
+    with tf.device("/CPU:0"):
+        model = GaussianVAE(input_dim=5, latent_dim=3, condition=condition, base_variance=0.37)
+        data = {"base_variance": 0.37,
+                "validation": np.random.default_rng(7).standard_normal((8, 5))}
+        control = experiment.mapped_control(model, data)
+    assert control["target_condition"] == partner
+    assert "target_arm" not in control
 
 
 @pytest.mark.parametrize("failure_mode", ["worker_exit", "thread_start"])

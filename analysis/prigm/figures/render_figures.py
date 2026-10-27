@@ -23,18 +23,18 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import plot_values
 
-EVIDENCE_SHA = "a73117bf43a049628455b72e27d55634c6e97d38d51a238fe679d55a0b4d0b6f"
-SUMMARY_SHA = "91c0bf8adbca844f53aaf85e18db4cb36834e69c2d3e3676b5069fe3cf0c8696"
-PLOT_MANIFEST_SHA = "53a12054dca1c73316a57c311e88a8858f98d9c5465cfb647bb8cdb7c0a1847e"
-TABLE_FIGURE_SHA = "e0d5c53b085630303435824a57217e896a97dbac53fd7ce1b1ee3903a1614d86"
+EVIDENCE_SHA = "db4240102f981aeffa4ad409a4bceaf5c9b236f7f7bee0e530608fba3db31e19"
+SUMMARY_SHA = "6d7903876ad49f5410871279574e4c9b76488739ecf5b0a3a473a4eb5d3b47ab"
+PLOT_MANIFEST_SHA = "e91ac530748e9e3306995fc4c9d471a9e89d52a2f63c4a11682ac772634b7804"
+TABLE_FIGURE_SHA = "079cc9fea1b882bce188aedc9c41bd2d30bcb3a9eeb23eebd56880105ebb3beb"
 FONT = "DejaVu Serif"
 FONT_SHA = "107244956e9962b9e96faccdc551825e0ae0898ae13737133e1b921a2fd35ffa"
-COLORS = {"A": "#0077BB", "C": "#CC3311", "B": "#009988", "D": "#6A3D9A",
+COLORS = {"no_skip_base": "#0077BB", "skip_base": "#CC3311", "no_skip_high": "#6A3D9A", "skip_high": "#009988",
           "train": "#888888", "test": "#111111", "PPCA": "#555555"}
-CONDITION_ORDER = ("A", "C", "D", "B")
-CONDITION_LABELS = {"A": "No skip, base variance", "C": "Skip, base variance",
-                    "D": "No skip, high variance", "B": "Skip, high variance"}
-MARKERS = {"A": "^", "B": "o", "C": "s", "D": "v"}
+CONDITION_ORDER = ("no_skip_base", "skip_base", "no_skip_high", "skip_high")
+CONDITION_LABELS = {"no_skip_base": "No skip, base variance", "skip_base": "Skip, base variance",
+                    "no_skip_high": "No skip, high variance", "skip_high": "Skip, high variance"}
+MARKERS = {"no_skip_base": "^", "skip_base": "s", "no_skip_high": "v", "skip_high": "o"}
 STYLES = {"train": ":", "test": "-", "PPCA": "-."}
 ROLES = ("train", "test", *CONDITION_ORDER, "PPCA")
 SCORES = ("joint", "centered", "increment")
@@ -75,13 +75,13 @@ def load_inputs(directory):
     if sha(summary_path) != SUMMARY_SHA:
         raise ValueError("Plot summary hash differs")
     summary = json.loads(summary_path.read_text())
-    if summary["schema_version"] != 1 or summary["scientific_manifest_sha256"] != EVIDENCE_SHA:
+    if summary["schema_version"] != 2 or summary["scientific_manifest_sha256"] != EVIDENCE_SHA:
         raise ValueError("Plot summary belongs to different evidence")
     metadata_path = directory / "plot_data_manifest.json"
     if sha(metadata_path) != PLOT_MANIFEST_SHA:
         raise ValueError("Plot manifest hash differs")
     metadata = json.loads(metadata_path.read_text())
-    if metadata["scientific_manifest_sha256"] != EVIDENCE_SHA:
+    if metadata["schema_version"] != 2 or metadata["scientific_manifest_sha256"] != EVIDENCE_SHA:
         raise ValueError("Plot data belongs to different evidence")
     path = directory / "plot_data.npz"
     if sha(path) != metadata["cache_sha256"]:
@@ -123,7 +123,7 @@ def load_inputs(directory):
             or set(reduced) != set(plot_values.RECORDS)):
         raise ValueError("Incomplete plot coverage")
     for case in reduced.values():
-        if set(case) != set(ROLES) | {a + " means" for a in "ABCD"}:
+        if set(case) != set(ROLES) | {condition + " means" for condition in CONDITION_ORDER}:
             raise ValueError("Incorrect distribution roles")
         for role, fits in case.items():
             expected = (1, 1) if role in ("train", "test") else (1, 3) if role == "PPCA" else (3, 3)
@@ -191,8 +191,8 @@ def comparison(directory, records):
     fig, axes = plt.subplots(1, 3, figsize=(5.5, 2.75), sharey=True)
     for ax, score, title in zip(axes, SCORES, ("Full windows", "After mean\nsubtraction", "Time increments")):
         for pair, offset, color, marker, label in (
-                ("C-A", -.12, COLORS["C"], "s", r"Base variance ($\sigma_0^2$)"),
-                ("B-D", .12, COLORS["B"], "o", r"High variance ($25\sigma_0^2$)")):
+                ("skip_base-no_skip_base", -.12, COLORS["skip_base"], "s", r"Base variance ($\sigma_0^2$)"),
+                ("skip_high-no_skip_high", .12, COLORS["skip_high"], "o", r"High variance ($25\sigma_0^2$)")):
             stats = [records[n]["contrasts"][pair + "/original"]["scores"][score]["optimizer_seeds"] for n in names]
             middle = np.array([s["median"] for s in stats])
             error = np.array([[s["median"] - s["min"] for s in stats], [s["max"] - s["median"] for s in stats]])
@@ -248,7 +248,7 @@ def diagnostics(directory, records, reduced):
                     line = step_support(grid, middle)
                     ax.fill_between(grid[envelope], low[envelope], high[envelope], step="post", color=COLORS[role], alpha=.13, linewidth=0)
                     # Marks identify curves without changing their exact step support.
-                    fraction = {"A": .10, "C": .16, "D": .22, "B": .28}.get(role, .1)
+                    fraction = {"no_skip_base": .10, "skip_base": .16, "no_skip_high": .22, "skip_high": .28}.get(role, .1)
                     marks = np.unique(((fraction + np.arange(4) * .2) * (int(line.sum()) - 1)).astype(int))
                     ax.step(grid[line], middle[line], where="post", color=COLORS[role],
                             linestyle=STYLES.get(role, "-"), linewidth=.85, marker=MARKERS.get(role),
@@ -278,16 +278,16 @@ def diagnostics(directory, records, reduced):
         fig, axes = plt.subplots(len(names), 2, figsize=(5.5, 1.48 * len(names) + 1.15), squeeze=False)
         frequency = np.arange(1, 97) / 2
         for row, name in enumerate(names):
-            for col, arms in enumerate((CONDITION_ORDER[:2], CONDITION_ORDER[2:])):
+            for col, conditions in enumerate((CONDITION_ORDER[:2], CONDITION_ORDER[2:])):
                 ax = axes[row, col]
-                for role in ("train", "test", "PPCA", *arms, *(a + " means" for a in arms)):
+                for role in ("train", "test", "PPCA", *conditions, *(a + " means" for a in conditions)):
                     power = plot_values.power_arrays(reduced[name][role])
-                    arm = role.split()[0]
+                    condition = role.split()[0]
                     positive = lambda x: np.ma.masked_less_equal(x, 0)
-                    ax.fill_between(frequency, positive(power.min(0)), positive(power.max(0)), color=COLORS[arm], alpha=.12, linewidth=0)
-                    ax.plot(frequency, positive(np.median(power, axis=0)), color=COLORS[arm],
+                    ax.fill_between(frequency, positive(power.min(0)), positive(power.max(0)), color=COLORS[condition], alpha=.12, linewidth=0)
+                    ax.plot(frequency, positive(np.median(power, axis=0)), color=COLORS[condition],
                             linestyle="--" if role.endswith(" means") else STYLES.get(role, "-"),
-                            linewidth=.85, marker=MARKERS.get(arm), markevery=([1, 5, 15, 47, 95] if arm in ("A", "B") else [0, 3, 11, 31, 79]),
+                            linewidth=.85, marker=MARKERS.get(condition), markevery=([1, 5, 15, 47, 95] if condition in ("no_skip_base", "skip_high") else [0, 3, 11, 31, 79]),
                             markersize=2.3, markeredgewidth=.5, markerfacecolor="white")
                 ax.set_xscale("log")
                 ax.set_yscale("log", nonpositive="mask")
@@ -322,20 +322,20 @@ def diagnostics(directory, records, reduced):
 def variance(directory, records):
     fig, axes = plt.subplots(1, 4, figsize=(5.5, 7.15), sharey=True)
     labels = []
-    for row, (name, arm) in enumerate((n, a) for n in plot_values.record_order(records) for a in CONDITION_ORDER):
+    for row, (name, condition) in enumerate((n, a) for n in plot_values.record_order(records) for a in CONDITION_ORDER):
         record = records[name]
-        labels.append(CONDITION_LABELS[arm])
-        if arm == CONDITION_ORDER[0]:
+        labels.append(CONDITION_LABELS[condition])
+        if condition == CONDITION_ORDER[0]:
             axes[0].text(-2.75, row + 1.5, f"{record['station']}\n{record['year']}",
                          transform=axes[0].get_yaxis_transform(), ha="right", va="center", fontsize=8.5)
-        ratios, deltas = plot_values.refit_points(record, arm)
+        ratios, deltas = plot_values.refit_points(record, condition)
         for seed, offset in enumerate((-.2, 0, .2)):
             y = row + offset
-            axes[0].plot(ratios[seed], y, marker=MARKERS[arm], color=COLORS[arm], markersize=3, linewidth=0)
+            axes[0].plot(ratios[seed], y, marker=MARKERS[condition], color=COLORS[condition], markersize=3, linewidth=0)
             for col in range(3):
                 values = deltas[seed, col]
-                axes[col+1].hlines(y, values.min(), values.max(), color=COLORS[arm], linewidth=.65)
-                axes[col+1].plot(values.mean(), y, marker=MARKERS[arm], color=COLORS[arm], markersize=3, linewidth=0)
+                axes[col+1].hlines(y, values.min(), values.max(), color=COLORS[condition], linewidth=.65)
+                axes[col+1].plot(values.mean(), y, marker=MARKERS[condition], color=COLORS[condition], markersize=3, linewidth=0)
     for col, ax in enumerate(axes):
         ax.axvline(1 if col == 0 else 0, color=".55", linewidth=.7, linestyle=":")
         for boundary in np.arange(3.5, 27, 4):
@@ -364,17 +364,17 @@ def ppca_comparison(directory, records):
     """Show all 84 neural fits against PPCA at the same observation variance."""
     fig, axes = plt.subplots(1, 3, figsize=(5.5, 7.15), sharey=True)
     labels = []
-    for row, (name, arm) in enumerate((n, a) for n in plot_values.record_order(records)
+    for row, (name, condition) in enumerate((n, a) for n in plot_values.record_order(records)
                                     for a in CONDITION_ORDER):
         record = records[name]
-        labels.append(CONDITION_LABELS[arm])
-        if arm == CONDITION_ORDER[0]:
+        labels.append(CONDITION_LABELS[condition])
+        if condition == CONDITION_ORDER[0]:
             axes[0].text(-1.95, row + 1.5, f"{record['station']}\n{record['year']}",
                          transform=axes[0].get_yaxis_transform(), ha="right", va="center", fontsize=8.5)
-        values = plot_values.ppca_comparison_points(record, arm)
+        values = plot_values.ppca_comparison_points(record, condition)
         for seed, offset in enumerate((-.2, 0, .2)):
             for col, ax in enumerate(axes):
-                ax.plot(values[seed, col], row + offset, marker=MARKERS[arm], color=COLORS[arm],
+                ax.plot(values[seed, col], row + offset, marker=MARKERS[condition], color=COLORS[condition],
                         markersize=3, linewidth=0)
     for col, ax in enumerate(axes):
         ax.axvline(0, color=".55", linewidth=.7, linestyle=":")
@@ -394,7 +394,7 @@ def ppca_comparison(directory, records):
 def intervals(directory, records):
     """Plot dated interval means, with counts and evaluation-weight shares."""
     seed_markers = ("o", "s", "^")
-    contrasts = (("base", COLORS["C"]), ("high", COLORS["B"]))
+    contrasts = (("base", COLORS["skip_base"]), ("high", COLORS["skip_high"]))
     for group, names in (("original", plot_values.RECORDS[:4]),
                          ("additional", plot_values.RECORDS[4:])):
         original = group == "original"

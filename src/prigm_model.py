@@ -11,14 +11,15 @@ from numbers import Integral
 import tensorflow as tf
 
 
-def arm_settings(arm, base_variance):
+def condition_settings(condition, base_variance):
     """Return the skip and noise settings; base_variance is sigma_0**2.
 
     The caller estimates the base variance and applies its minimum once.
-    Condition C multiplies that value by b**2 to obtain the residual variance.
+    The skip_base condition multiplies that value by b**2 to obtain the
+    residual variance.
     """
-    if arm not in ("A", "B", "C", "D"):
-        raise ValueError("arm must be one of A, B, C, D")
+    if condition not in ("no_skip_base", "skip_base", "no_skip_high", "skip_high"):
+        raise ValueError("condition must be one of no_skip_base, skip_base, no_skip_high, skip_high")
     try:
         base_variance = float(base_variance)
     except (TypeError, ValueError) as exc:
@@ -26,12 +27,12 @@ def arm_settings(arm, base_variance):
     if not math.isfinite(base_variance) or base_variance <= 0:
         raise ValueError("base_variance must be finite and positive")
 
-    alpha = 0.8 if arm in ("B", "C") else 0.0
+    alpha = 0.8 if condition in ("skip_base", "skip_high") else 0.0
     b = 1.0 - alpha
     residual_variance = base_variance
-    if arm == "C":
+    if condition == "skip_base":
         residual_variance *= b**2
-    elif arm == "D":
+    elif condition == "no_skip_high":
         residual_variance /= (1.0 - 0.8)**2
     observation_variance = residual_variance / b**2
     if not all(math.isfinite(v) and v > 0 for v in
@@ -59,7 +60,7 @@ class GaussianVAE(tf.keras.Model):
     settings before loading. Store those settings separately from the weights.
     """
 
-    def __init__(self, input_dim=192, latent_dim=16, arm="A",
+    def __init__(self, input_dim=192, latent_dim=16, condition="no_skip_base",
                  base_variance=1.0, seed=42):
         super().__init__(name="gaussian_vae")
         for name, value in (("input_dim", input_dim), ("latent_dim", latent_dim)):
@@ -67,10 +68,10 @@ class GaussianVAE(tf.keras.Model):
                 raise ValueError(f"{name} must be a positive integer")
         if isinstance(seed, bool) or not isinstance(seed, Integral):
             raise ValueError("seed must be an integer")
-        settings = arm_settings(arm, base_variance)
+        settings = condition_settings(condition, base_variance)
         self.input_dim = int(input_dim)
         self.latent_dim = int(latent_dim)
-        self.arm = arm
+        self.condition = condition
         self.base_variance = float(base_variance)
         self.seed = int(seed)
         self.alpha = settings["alpha"]

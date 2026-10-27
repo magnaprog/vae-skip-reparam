@@ -12,7 +12,10 @@ tf = pytest.importorskip("tensorflow")
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from prigm_model import GaussianVAE, arm_settings
+from prigm_model import GaussianVAE, condition_settings
+
+
+CONDITIONS = ("no_skip_base", "skip_base", "no_skip_high", "skip_high")
 
 
 @pytest.fixture(autouse=True)
@@ -21,15 +24,15 @@ def cpu_device():
         yield
 
 
-@pytest.mark.parametrize("arm,alpha,residual,observation", [
-    ("A", 0.0, 1.0, 1.0),
-    ("B", 0.8, 1.0, 25.0),
-    ("C", 0.8, 0.04, 1.0),
-    ("D", 0.0, 25.0, 25.0),
+@pytest.mark.parametrize("condition,alpha,residual,observation", [
+    ("no_skip_base", 0.0, 1.0, 1.0),
+    ("skip_base", 0.8, 0.04, 1.0),
+    ("no_skip_high", 0.0, 25.0, 25.0),
+    ("skip_high", 0.8, 1.0, 25.0),
 ])
 @pytest.mark.parametrize("base_variance", [1.0, 0.37, 0.0001])
-def test_arm_settings(arm, alpha, residual, observation, base_variance):
-    assert arm_settings(arm, base_variance) == pytest.approx({
+def test_condition_settings(condition, alpha, residual, observation, base_variance):
+    assert condition_settings(condition, base_variance) == pytest.approx({
         "alpha": alpha,
         "b": 1.0 - alpha,
         "residual_variance": residual * base_variance,
@@ -40,23 +43,40 @@ def test_arm_settings(arm, alpha, residual, observation, base_variance):
 @pytest.mark.parametrize("variance", [0.0, -1.0, np.nan, np.inf, -np.inf, None])
 def test_invalid_noise_rejected(variance):
     with pytest.raises(ValueError, match="finite and positive"):
-        arm_settings("A", variance)
+        condition_settings("no_skip_base", variance)
 
 
-def test_invalid_arm_and_dimensions_rejected():
-    with pytest.raises(ValueError, match="arm"):
-        arm_settings("E", 1.0)
+def test_invalid_condition_and_dimensions_rejected():
+    with pytest.raises(ValueError, match="condition"):
+        condition_settings("unknown", 1.0)
     with pytest.raises(ValueError, match="derived variances"):
-        arm_settings("B", 1e308)
+        condition_settings("skip_high", 1e308)
     for arguments in ({"input_dim": 0}, {"latent_dim": -1}, {"input_dim": 2.5}):
         with pytest.raises(ValueError, match="positive integer"):
             GaussianVAE(**arguments)
 
 
+@pytest.mark.parametrize("condition", ["A", "B", "C", "D"])
+def test_letter_conditions_are_rejected(condition):
+    with pytest.raises(ValueError, match="condition must be one of no_skip_base"):
+        condition_settings(condition, 1.0)
+    with pytest.raises(ValueError, match="condition must be one of no_skip_base"):
+        GaussianVAE(condition=condition)
+
+
+def test_old_model_api_is_not_an_alias():
+    import prigm_model
+
+    assert not hasattr(prigm_model, "arm_settings")
+    with pytest.raises(TypeError, match="arm"):
+        GaussianVAE(arm="no_skip_base")
+
+
 def test_default_architecture():
     model = GaussianVAE()
     assert isinstance(model, tf.keras.Model)
-    assert (model.input_dim, model.latent_dim, model.arm) == (192, 16, "A")
+    assert (model.input_dim, model.latent_dim, model.condition) == (192, 16, "no_skip_base")
+    assert not hasattr(model, "arm")
     assert [layer.units for layer in model.encoder_hidden] == [128, 64]
     assert [layer.units for layer in model.decoder_hidden] == [64, 128]
     for layer in (*model.encoder_hidden, *model.decoder_hidden):
@@ -70,13 +90,13 @@ def test_default_architecture():
 
 
 @pytest.mark.parametrize("seed", [42, 1729])
-def test_all_arms_share_initial_observation_means_and_other_weights(seed):
-    models = {arm: GaussianVAE(input_dim=5, latent_dim=3, arm=arm, seed=seed)
-              for arm in "ABCD"}
+def test_all_conditions_share_initial_observation_means_and_other_weights(seed):
+    models = {condition: GaussianVAE(input_dim=5, latent_dim=3, condition=condition, seed=seed)
+              for condition in CONDITIONS}
     rng = np.random.default_rng(17)
     x = rng.normal(size=(4, 5)).astype("float32")
     z = rng.normal(size=(4, 3)).astype("float32")
-    reference = models["A"]
+    reference = models["no_skip_base"]
     for model in models.values():
         np.testing.assert_allclose(model.decode_mean(z), reference.decode_mean(z),
                                    rtol=3e-6, atol=1e-6)
@@ -107,7 +127,7 @@ def test_all_arms_share_initial_observation_means_and_other_weights(seed):
 
 
 def test_log_variance_bounds_constrain_posterior_not_data_or_mean():
-    model = GaussianVAE(input_dim=3, latent_dim=2, arm="B")
+    model = GaussianVAE(input_dim=3, latent_dim=2, condition="skip_high")
     model.mean_head.kernel.assign(tf.zeros_like(model.mean_head.kernel))
     model.mean_head.bias.assign([20.0, -20.0])
     model.logvar_head.kernel.assign(tf.zeros_like(model.logvar_head.kernel))
@@ -123,9 +143,9 @@ def test_log_variance_bounds_constrain_posterior_not_data_or_mean():
         assert np.all(np.isfinite(term))
 
 
-@pytest.mark.parametrize("arm", list("ABCD"))
-def test_likelihood_matches_manual_normalized_gaussian(arm):
-    model = GaussianVAE(input_dim=3, latent_dim=2, arm=arm, base_variance=0.7)
+@pytest.mark.parametrize("condition", CONDITIONS)
+def test_likelihood_matches_manual_normalized_gaussian(condition):
+    model = GaussianVAE(input_dim=3, latent_dim=2, condition=condition, base_variance=0.7)
     # Nonzero bias checks affine, not just linear, mean transformations.
     model.residual_head.bias.assign([0.1, -0.2, 0.3])
     x = np.array([[0.5, -1.0, 2.0], [1.5, 0.0, -0.2]], dtype="float32")
@@ -150,7 +170,7 @@ def test_likelihood_matches_manual_normalized_gaussian(arm):
 
 @pytest.mark.parametrize("leading_shape", [(), (4,), (2, 4), (2, 3, 4)])
 def test_decoder_preserves_arbitrary_leading_dimensions(leading_shape):
-    model = GaussianVAE(input_dim=5, latent_dim=2, arm="C")
+    model = GaussianVAE(input_dim=5, latent_dim=2, condition="skip_base")
     z = tf.reshape(tf.range(int(np.prod(leading_shape)) * 2, dtype=tf.float32),
                    leading_shape + (2,)) / 10.0
     actual = tf.function(model.decode_residual)(z)
@@ -162,20 +182,22 @@ def test_decoder_preserves_arbitrary_leading_dimensions(leading_shape):
     assert density.shape == leading_shape
 
 
-@pytest.mark.parametrize("source_arm,target_arm", [("A", "C"), ("D", "B"),
-                                                   ("C", "A"), ("B", "D")])
-def test_mapping_copies_actual_weights_and_preserves_distribution(source_arm, target_arm):
-    source = GaussianVAE(input_dim=5, latent_dim=3, arm=source_arm, base_variance=0.3)
-    target = GaussianVAE(input_dim=5, latent_dim=3, arm=target_arm,
+@pytest.mark.parametrize("source_condition,target_condition", [
+    ("no_skip_base", "skip_base"), ("skip_base", "no_skip_base"),
+    ("no_skip_high", "skip_high"), ("skip_high", "no_skip_high"),
+])
+def test_mapping_copies_actual_weights_and_preserves_distribution(source_condition, target_condition):
+    source = GaussianVAE(input_dim=5, latent_dim=3, condition=source_condition, base_variance=0.3)
+    target = GaussianVAE(input_dim=5, latent_dim=3, condition=target_condition,
                          base_variance=0.3, seed=99)
     rng = np.random.default_rng(123)
     for weight in source.weights:
         weight.assign_add(rng.normal(scale=0.02, size=weight.shape).astype("float32"))
     source_before = [weight.numpy().copy() for weight in source.weights]
-    settings_before = (target.arm, target.alpha, target.b, target.residual_variance,
+    settings_before = (target.condition, target.alpha, target.b, target.residual_variance,
                        target.observation_variance)
     assert target.map_from(source) is target
-    assert settings_before == (target.arm, target.alpha, target.b, target.residual_variance,
+    assert settings_before == (target.condition, target.alpha, target.b, target.residual_variance,
                                target.observation_variance)
     for actual, expected in zip(source.weights, source_before):
         np.testing.assert_array_equal(actual, expected)
@@ -201,10 +223,10 @@ def test_mapping_copies_actual_weights_and_preserves_distribution(source_arm, ta
 
 
 @pytest.mark.parametrize("arguments", [
-    {"input_dim": 6, "latent_dim": 3, "arm": "C"},
-    {"input_dim": 5, "latent_dim": 2, "arm": "C"},
-    {"input_dim": 5, "latent_dim": 3, "arm": "B"},
-    {"input_dim": 5, "latent_dim": 3, "arm": "C", "base_variance": 1.001},
+    {"input_dim": 6, "latent_dim": 3, "condition": "skip_base"},
+    {"input_dim": 5, "latent_dim": 2, "condition": "skip_base"},
+    {"input_dim": 5, "latent_dim": 3, "condition": "skip_high"},
+    {"input_dim": 5, "latent_dim": 3, "condition": "skip_base", "base_variance": 1.001},
 ])
 def test_incompatible_mapping_rejected_before_assigning_weights(arguments):
     source = GaussianVAE(input_dim=5, latent_dim=3)
@@ -216,9 +238,9 @@ def test_incompatible_mapping_rejected_before_assigning_weights(arguments):
         np.testing.assert_array_equal(actual, expected)
 
 
-@pytest.mark.parametrize("arm", list("ABCD"))
-def test_loss_uses_explicit_noise_analytic_kl_and_dimension_reductions(arm):
-    model = GaussianVAE(input_dim=3, latent_dim=2, arm=arm, base_variance=0.4)
+@pytest.mark.parametrize("condition", CONDITIONS)
+def test_loss_uses_explicit_noise_analytic_kl_and_dimension_reductions(condition):
+    model = GaussianVAE(input_dim=3, latent_dim=2, condition=condition, base_variance=0.4)
     model.mean_head.kernel.assign(tf.zeros_like(model.mean_head.kernel))
     model.mean_head.bias.assign([0.5, -0.25])
     model.logvar_head.kernel.assign(tf.zeros_like(model.logvar_head.kernel))
@@ -254,9 +276,9 @@ def test_loss_uses_explicit_noise_analytic_kl_and_dimension_reductions(arm):
     assert not np.allclose(terms["nll"], model.loss_terms(x, np.zeros_like(epsilon))["nll"])
 
 
-@pytest.mark.parametrize("arm", list("ABCD"))
-def test_graph_gradient_update_and_real_hdf5_weights_roundtrip(arm, tmp_path):
-    model = GaussianVAE(input_dim=5, latent_dim=3, arm=arm, base_variance=0.2)
+@pytest.mark.parametrize("condition", CONDITIONS)
+def test_graph_gradient_update_and_real_hdf5_weights_roundtrip(condition, tmp_path):
+    model = GaussianVAE(input_dim=5, latent_dim=3, condition=condition, base_variance=0.2)
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
     x = tf.random.stateless_normal((4, 5), seed=(13, 1))
     epsilon = tf.random.stateless_normal((4, 3), seed=(13, 2))
@@ -277,11 +299,11 @@ def test_graph_gradient_update_and_real_hdf5_weights_roundtrip(arm, tmp_path):
     assert np.isfinite(update(x, epsilon))
     assert int(optimizer.iterations.numpy()) == 1
     assert any(not np.array_equal(old, new) for old, new in zip(before, model.trainable_weights))
-    path = tmp_path / f"{arm}.weights.h5"
+    path = tmp_path / f"{condition}.weights.h5"
     model.save_weights(str(path))
     with path.open("rb") as handle:
         assert handle.read(8) == b"\x89HDF\r\n\x1a\n"
-    restored = GaussianVAE(input_dim=5, latent_dim=3, arm=arm, base_variance=0.2, seed=99)
+    restored = GaussianVAE(input_dim=5, latent_dim=3, condition=condition, base_variance=0.2, seed=99)
     restored.load_weights(str(path))
     for actual, expected in zip(restored.weights, model.weights):
         np.testing.assert_array_equal(actual, expected)
