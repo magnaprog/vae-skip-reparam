@@ -1,4 +1,4 @@
-"""Frozen four-arm PriGM experiment, with separate preparation and GPU workers."""
+"""Prepare data and train the four input-skip and observation-variance conditions."""
 import argparse
 from collections import deque
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
@@ -50,7 +50,7 @@ SPEC = {
 def sha256(path):
     path = Path(path)
     if path.is_symlink() or not path.is_file():
-        raise ValueError(f"Expected a regular artifact: {path}")
+        raise ValueError(f"Expected a regular file: {path}")
     h = hashlib.sha256()
     with path.open("rb") as stream:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
@@ -84,33 +84,23 @@ def specification(purpose):
     return spec
 
 
-def verify_run(run_root, check_code=True, *, historical_identity=None):
-    """Read a run; historical_identity must come from independently approved pins.
-
-    Training uses the default current-source equality. Historical evidence readers
-    also authenticate their current derivation code before supplying this identity.
-    """
+def verify_run(run_root):
+    """Check the run's settings, inputs and saved code against this implementation."""
     root = Path(run_root).resolve()
     manifest = read_json(root / "run_manifest.json")
     if manifest.get("schema_version") != 1:
         raise ValueError("Unsupported PriGM manifest")
     if manifest["datasets"] != list(DATASETS) or manifest["specification"] != specification(manifest["purpose"]):
-        raise ValueError("Manifest differs from the frozen protocol")
+        raise ValueError("Manifest differs from the experiment settings")
     if set(manifest["code_sha256"]) != set(CODE_FILES):
         raise ValueError("Incomplete source identity")
     if set(manifest["prepared_sha256"]) != {"metadata.json", *(name + ".npz" for name in DATASETS)}:
         raise ValueError("Incomplete prepared-data identity")
-    if historical_identity is not None:
-        if (check_code is not True or type(historical_identity) is not dict
-                or set(historical_identity) != {"manifest_sha256", "code_sha256"}
-                or sha256(root / "run_manifest.json") != historical_identity["manifest_sha256"]
-                or manifest["code_sha256"] != historical_identity["code_sha256"]):
-            raise ValueError("Historical core identity differs from approved pins")
     for name, expected in manifest["code_sha256"].items():
         if sha256(root / "source" / name) != expected:
-            raise ValueError(f"Archived experiment source changed: {name}")
-        if check_code and historical_identity is None and sha256(ROOT / name) != expected:
-            raise ValueError(f"Frozen experiment source changed: {name}")
+            raise ValueError(f"Saved experiment source changed: {name}")
+        if sha256(ROOT / name) != expected:
+            raise ValueError(f"Experiment source changed: {name}")
     for name, expected in manifest["prepared_sha256"].items():
         if sha256(root / "prepared" / name) != expected:
             raise ValueError(f"Prepared dataset changed: {name}")
@@ -224,7 +214,7 @@ def gpu_runtime(expected_uuid):
 
 def job_id(dataset, arm, seed):
     if dataset not in DATASETS or arm not in ARMS or seed not in SEEDS:
-        raise ValueError("Job is outside the frozen experiment matrix")
+        raise ValueError("Job is outside the experiment's dataset, condition and seed combinations")
     return f"{dataset}_{arm}_{seed}"
 
 
@@ -488,7 +478,7 @@ def summarize(run_root):
     atomic_json(root / "results.json", output)
     atomic_json(root / "archive_manifest.json", {
         "schema_version": 1,
-        "scope": "Successful job artifacts, prepared inputs, frozen source, manifest and results; live logs excluded.",
+        "scope": "Completed jobs, prepared inputs, source code, settings and results.",
         "artifact_sha256": {str(p.relative_to(root)): sha256(p) for p in sorted(files)},
     })
     print(f"ALL DONE: {len(summaries)} verified jobs; {root / 'results.json'}", flush=True)

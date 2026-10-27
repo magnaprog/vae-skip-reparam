@@ -1,4 +1,4 @@
-"""Public figure inputs and numerical contracts, with no private study artifacts."""
+"""Check figure inputs, array dimensions and numerical reductions."""
 from hashlib import sha256
 import importlib.util
 import json
@@ -154,10 +154,10 @@ assert not any(name.startswith(('build_prigm', 'prigm_')) or name == 'prepare_fi
     assert result.returncode == 0, result.stdout + result.stderr
     outputs = list((root / "runs/figures").iterdir())
     assert {path.name for path in outputs} == {
-        "reconstruction_generation.pdf", "full_record_context.pdf",
-        "dart_ecdf_historical.pdf", "dart_ecdf_fresh.pdf",
-        "dart_spectra_historical.pdf", "dart_spectra_fresh.pdf",
-        "dart_variance_refit.pdf", "dart_ppca_comparison.pdf",
+        "dart_energy_score_differences.pdf", "dart_original_height_records.pdf",
+        "dart_feature_distributions_original.pdf", "dart_feature_distributions_2018.pdf",
+        "dart_spectra_original.pdf", "dart_spectra_2018.pdf",
+        "dart_observation_variance.pdf", "dart_ppca_comparison.pdf",
         "dart_intervals_original.pdf", "dart_intervals_additional.pdf"}
     assert all(path.read_bytes().startswith(b"%PDF-") for path in outputs)
     assert not (root / "paper").exists()

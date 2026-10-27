@@ -234,7 +234,7 @@ class DartFixtureTest(unittest.TestCase):
         for kwargs in ({"window": 0}, {"stride": 0}, {"stride": 1.5}, {"window": True}):
             with self.assertRaises(ValueError):
                 prepare_dart(self.path, **kwargs)
-        with self.assertRaisesRegex(ValueError, "approved DART boundaries"):
+        with self.assertRaisesRegex(ValueError, "DART partition dates"):
             prepare_dart(self.path.with_name("unknown.txt"))
         with self.assertRaisesRegex(ValueError, "Unknown PriGM dataset"):
             prepare_dataset("unknown", self.path.parent)

@@ -111,8 +111,7 @@
   "limits": [
     "Neither energy term alone is a proper score or calibration diagnostic.",
     "Medians of the two terms need not subtract to the median score.",
-    "Training covariance concentration does not establish Gaussianity or explain the neural score gap.",
-    "The accepted evidence manifest is preserved; this is a separately bound additive analysis."
+    "Training covariance concentration does not establish Gaussianity or explain the neural score gap."
   ],
   "matched_PPCA_comparison": [
     {
@@ -170,14 +169,6 @@
       }
     }
   ],
-  "provenance": {
-    "analysis_script_sha256": "95ef0f45a9f7d79b96ace872cc543a35ec133d9477d55d44b658ca5093a15bc1",
-    "consumed_logical_input_hashes_sha256": "f44f6a243f585b54e1fe3a0353d8e47f4a1f201bf34940963791a184dda63cd4",
-    "frozen_evidence_sha256": "db618b2d01b7cd7263058c4e554f957e61fd0580d7663a608e787f45b261a42c",
-    "input_files": 236,
-    "inputs_rehashed_after_completion": true,
-    "summary_script_sha256": "83cd30f60aee697f756003e1be60da87d51972a88cd5494054b2a608d3b396dc"
-  },
   "purpose": "Retrospective energy accounting and covariance description of seven DART records",
   "reset_term_summaries": [
     {
@@ -555,41 +546,5 @@
       "geometry": "increment",
       "pair": "B-D"
     }
-  ],
-  "verification": {
-    "atol": 1e-10,
-    "checks": {
-      "neural_per_window_score": {
-        "comparisons": 1512,
-        "elements": 187488,
-        "max_abs_error": 0.0
-      },
-      "neural_weighted_stream_score": {
-        "comparisons": 1512,
-        "elements": 1512,
-        "max_abs_error": 1.4210854715202004e-14
-      },
-      "paired_reset_accounting": {
-        "comparisons": 756,
-        "elements": 756,
-        "max_abs_error": 1.5987211554602254e-14
-      },
-      "paired_skip_accounting": {
-        "comparisons": 378,
-        "elements": 378,
-        "max_abs_error": 2.398081733190338e-14
-      },
-      "reference_per_window_score": {
-        "comparisons": 126,
-        "elements": 15624,
-        "max_abs_error": 0.0
-      },
-      "reference_weighted_stream_score": {
-        "comparisons": 126,
-        "elements": 126,
-        "max_abs_error": 8.881784197001252e-15
-      }
-    },
-    "rtol": 1e-10
-  }
+  ]
 }

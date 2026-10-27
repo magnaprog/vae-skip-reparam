@@ -1,8 +1,8 @@
-"""Single-pass Gaussian VAEs for the four controlled PriGM training arms.
+"""Gaussian VAEs with four combinations of input skip and observation variance.
 
 The normalized conditional density is b**d * N(b*x; f(z), residual_variance*I),
-where b = 1 - alpha. Arm settings are fixed Python scalars, not model weights.
-There is no input clipping, regularization penalty, or extra KL multiplier.
+where b = 1 - alpha. The skip coefficient and variances are Python scalars.
+Training minimizes the negative ELBO with unit KL weight.
 """
 
 import math
@@ -12,10 +12,10 @@ import tensorflow as tf
 
 
 def arm_settings(arm, base_variance):
-    """Return the fixed bypass and noise settings; base_variance is sigma_0**2.
+    """Return the skip and noise settings; base_variance is sigma_0**2.
 
-    The caller fits/floors the base variance once. In particular, C's residual
-    variance is not floored again after multiplying by b**2.
+    The caller estimates the base variance and applies its minimum once.
+    Condition C multiplies that value by b**2 to obtain the residual variance.
     """
     if arm not in ("A", "B", "C", "D"):
         raise ValueError("arm must be one of A, B, C, D")
@@ -46,18 +46,17 @@ def arm_settings(arm, base_variance):
 
 
 class GaussianVAE(tf.keras.Model):
-    """Dense diagonal-Gaussian posterior and nonlinear residual-mean decoder.
+    """Dense Gaussian encoder and nonlinear decoder for the residual mean.
 
     The decoder has two ReLU hidden layers and an affine output layer.
 
-    Posterior log-variance is bounded to [-12, 12], defining a constrained
-    Gaussian variational family. Neither observations nor posterior means are
-    clipped. Sampling noise is supplied by the caller, so scoring/training
-    does not consume an implicit RNG stream.
+    The encoder has diagonal covariance and clips log variance to [-12, 12].
+    Observations and posterior means retain their full range. The caller
+    supplies sampling noise to control the random draws used in training and scoring.
 
     Weights are built and the residual head scaled once in __init__. Save/load
-    with a real .weights.h5 path and reconstruct the same arm/dimensions/noise
-    settings before loading; a weights-only file does not store those settings.
+    with a .weights.h5 path and construct the same condition, dimensions and noise
+    settings before loading. Store those settings separately from the weights.
     """
 
     def __init__(self, input_dim=192, latent_dim=16, arm="A",
@@ -137,7 +136,7 @@ class GaussianVAE(tf.keras.Model):
         return self.decode_residual(z) / self.b
 
     def call(self, x, training=None):
-        """Deterministic self-reconstruction using the posterior mean code."""
+        """Reconstruct the input using the posterior mean."""
         x = self._tensor(x, self.input_dim)
         mean, _ = self.encode(x)
         return self.alpha * x + self.decode_residual(mean)
@@ -188,12 +187,11 @@ class GaussianVAE(tf.keras.Model):
         }
 
     def map_from(self, source):
-        """Copy a matched distribution, rescaling only the residual head.
+        """Transfer a distribution by rescaling the residual output layer.
 
         Requires equal dimensions and observation variance, up to float-roundoff
-        tolerance. Assign real network weights, never model-wide set_weights:
-        the target retains its own arm/noise settings. This is a checkpoint
-        control, not a claim of matched optimizer states or training dynamics.
+        tolerance. Assign network weights while retaining this model's skip
+        and noise settings. Optimizer state is outside this mapping.
         """
         if not isinstance(source, GaussianVAE):
             raise TypeError("source must be a GaussianVAE")

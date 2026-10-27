@@ -1,4 +1,4 @@
-"""Frozen PriGM data preparation, independent of legacy DART preprocessing."""
+"""Prepare Gaussian samples and DART windows for training and evaluation."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -68,24 +68,24 @@ def _pack_split(indices, seconds, heights, window, stride, mean, scale):
 
 
 def prepare_dart(path, window=192, stride=16):
-    """Pack observed routine reports using fixed UTC splits and training stats.
+    """Form windows from routine observations using UTC splits and training statistics.
 
-    The filename stem selects one of the four approved station/year protocols.
+    The filename stem identifies the station, year and partition dates.
     Heights must be finite and <= 9000, with T=1 and a valid timestamp. Every
     member of a duplicate observed-T=1 timestamp group is rejected globally.
-    Invalid/intervening rows and any step other than exactly 900 seconds break
-    segments. No interpolation, sorting, clipping, or window-weighted fitting
-    is performed. Validation and test stride equals ``window``.
+    Invalid or intervening rows and steps other than 900 seconds end a segment.
+    Heights retain their recorded values and order. Each eligible training row
+    contributes once to normalization. Validation and test stride equals ``window``.
     """
     window = _positive_integer(window, "window")
     stride = _positive_integer(stride, "stride")
     path = Path(path)
     if path.stem not in DART_BOUNDARIES:
-        raise ValueError(f"No approved DART boundaries for {path.stem!r}")
+        raise ValueError(f"No DART partition dates for {path.stem!r}")
     boundary_strings = DART_BOUNDARIES[path.stem]
     b1, b2 = (pd.Timestamp(value).timestamp() for value in boundary_strings)
 
-    # Hash the exact bytes parsed, not a second read of a potentially changed file.
+    # Record the identity of the bytes used by the parser.
     source = path.read_bytes()
     frame = pd.read_csv(
         BytesIO(source), sep=r"\s+", header=None, skiprows=2,
@@ -98,8 +98,8 @@ def prepare_dart(path, window=192, stride=16):
                  (frame.iloc[:, i] for i in range(6)))),
         utc=True, errors="coerce",
     )
-    # Pandas may use datetime64[us], not [ns]. Explicit elapsed seconds work
-    # with either resolution and leave invalid timestamps ineligible.
+    # Elapsed seconds work with either Pandas datetime resolution, us or ns.
+    # Invalid timestamps remain ineligible.
     seconds = (dates - pd.Timestamp("1970-01-01T00:00:00Z")).dt.total_seconds().to_numpy()
     heights = frame.iloc[:, 7].to_numpy(dtype=np.float64)
     sample_types = frame.iloc[:, 6].to_numpy()
@@ -177,11 +177,11 @@ def prepare_dart(path, window=192, stride=16):
 
 
 def prepare_synthetic(window=192, sizes=(8192, 2048, 2048)):
-    """Generate fixed low-rank Gaussian realizations with a known covariance.
+    """Generate samples from a Gaussian factor model with a known covariance.
 
     Columns alternate cos(k), sin(k) for k=1,...,4 on t=0,...,window-1.
     Each split draws all latent coordinates before drawing observation noise.
-    The known zero mean is retained; there is no fitted standardization.
+    Samples retain the dimensionless simulator coordinates without standardization.
     """
     window = _positive_integer(window, "window")
     if window < 9:
@@ -242,7 +242,7 @@ def prepare_synthetic(window=192, sizes=(8192, 2048, 2048)):
 
 
 def prepare_dataset(name, datasets_dir):
-    """Dispatch ``gaussian`` or an approved DART filename stem."""
+    """Prepare ``gaussian`` or one of the four DART records."""
     if name == "gaussian":
         return prepare_synthetic()
     if name not in DART_BOUNDARIES:

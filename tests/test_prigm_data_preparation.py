@@ -1,4 +1,4 @@
-"""CPU tests for v2 synthetic families and DART qualification; no TensorFlow required."""
+"""CPU tests for Gaussian simulations and DART interval eligibility; no TensorFlow required."""
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -9,9 +9,9 @@ import pytest
 SRC = Path(__file__).resolve().parents[1] / "src"
 sys.path.insert(0, str(SRC))
 
-from prigm_v2_data import (GAUSSIAN_SEEDS, MIXTURE_SEEDS, MIXTURE_SIGN_SCALE,
+from prigm_data_preparation import (GAUSSIAN_SEEDS, MIXTURE_SEEDS, MIXTURE_SIGN_SCALE,
                            NOISE_STD, PHASES, prepare_dart_record, prepare_gaussian,
-                           prepare_mixture, qualify_candidate, same_phase_donors,
+                           prepare_mixture, qualify_candidate,
                            sinusoidal_basis)
 
 
@@ -133,69 +133,6 @@ def test_qualification_normalizes_exact_union_of_reversed_segments(tmp_path):
     assert q.scale == pytest.approx(covered.std(ddof=0))
 
 
-def test_same_phase_donors_have_disjoint_support_and_different_blocks():
-    starts = np.array([h * 3600 + day * 86400 for day in range(40) for h in PHASES],
-                      dtype=np.int64)
-    source = starts // 900
-    donors = same_phase_donors(starts, seed=66001, source_starts=source, block_origin=0)
-    hours = ((starts % 86400) // 3600).astype(np.int64)
-    blocks = starts // (14 * 86400)
-    assert np.all(donors != np.arange(len(starts)))
-    assert np.all(hours[donors] == hours)
-    assert np.all(blocks[donors] != blocks)
-    assert np.all(np.abs(source[donors] - source) >= 192)
-    assert np.all(np.abs(starts[donors] - starts) > 191 * 900)
-    again = same_phase_donors(starts, seed=66001, source_starts=source, block_origin=0)
-    np.testing.assert_array_equal(donors, again)
-
-
-def test_donors_use_declared_block_origin():
-    starts = np.array([13, 15], dtype=np.int64) * 86400
-    source = starts // 900
-    np.testing.assert_array_equal(same_phase_donors(starts, 0, source, 0), [1, 0])
-    assert same_phase_donors(starts, 0, source, 7 * 86400) is None
-
-
-def test_donors_reject_overlap_across_block_boundary():
-    starts = np.array([13, 14], dtype=np.int64) * 86400
-    assert same_phase_donors(starts, 0, starts // 900, 0) is None
-
-
-def test_donors_reject_overlapping_raw_support():
-    starts = np.array([0, 15], dtype=np.int64) * 86400
-    assert same_phase_donors(starts, 0, np.array([0, 32]), 0) is None
-
-
-@pytest.mark.parametrize("dtype", [np.int64, np.uint64])
-@pytest.mark.parametrize("days,source", [
-    ([0, 13, 14, 28], [0, 1248, 1344, 2688]),
-    ([0, 15, 30], [0, 32, 5000]),
-])
-def test_donors_exclude_earlier_overlapping_support_for_integer_dtypes(dtype, days, source):
-    starts = np.asarray(days, dtype=np.int64) * 86400
-    source = np.asarray(source, dtype=np.int64)
-    for seed in (0, 1):
-        donors = same_phase_donors(starts.astype(dtype), seed, source.astype(dtype), 0)
-        assert donors is not None
-        assert np.all(np.abs(starts[donors] - starts) > 191 * 900)
-        assert np.all(np.abs(source[donors] - source) >= 192)
-        expected = same_phase_donors(starts, seed, source, 0)
-        np.testing.assert_array_equal(donors, expected)
-
-
-def test_no_donor_disables_whole_diagnostic_without_dropping_targets():
-    starts = np.array([0, 15 * 86400, 30 * 86400 + 4 * 3600], dtype=np.int64)
-    assert same_phase_donors(starts, 0, starts // 900, 0) is None
-
-
-@pytest.mark.parametrize("source", [np.array([0.0, 192.5]), np.array([0, -1]),
-                                    np.array([0])])
-def test_donors_reject_invalid_source_indices(source):
-    starts = np.array([0, 15 * 86400], dtype=np.int64)
-    with pytest.raises(ValueError):
-        same_phase_donors(starts, 0, source, 0)
-
-
 def test_prepare_dart_record_rejects_ineligible(tmp_path):
     start = datetime(2018, 1, 1)
     rows = [
@@ -208,48 +145,79 @@ def test_prepare_dart_record_rejects_ineligible(tmp_path):
         prepare_dart_record(path, "2018-01-01", "2019-01-01")
 
 
-def test_prepare_dart_record_matches_archived_44402_2018_except_donors():
-    path = Path("datasets-v2-acquisition/raw/44402t2018.txt")
-    if not path.is_file():
-        pytest.skip("44402 2018 source not present")
+@pytest.fixture
+def complete_annual_record(tmp_path):
+    start = datetime(2018, 1, 1, tzinfo=timezone.utc)
+    heights = 4000 + np.arange(365 * 96, dtype=np.float64) / 10000
+    path = tmp_path / "44402t2018.txt"
+    with path.open("w") as stream:
+        stream.write("#YY MM DD hh mm ss T HEIGHT\n#yr mo dy hr mn s - m\n")
+        for i, height in enumerate(heights):
+            date = start + timedelta(minutes=15 * i)
+            stream.write(f"{date:%Y %m %d %H %M %S} 1 {float(height)!r}\n")
+    return path, heights, int(start.timestamp())
+
+
+def test_complete_annual_record_has_expected_windows_weights_and_normalization(complete_annual_record):
+    path, heights, origin = complete_annual_record
     prepared = prepare_dart_record(path, "2018-01-01", "2019-01-01")
-    archived = Path("runs-v2/dart_44402_2018.npz")
-    if not archived.is_file():
-        pytest.skip("archived 44402 2018 arrays not present")
-    with np.load(archived) as store:
-        for key in ("train", "validation", "test", "train_weights",
-                    "validation_weights", "eval_weights", "starts_train",
-                    "starts_validation", "starts_test"):
-            np.testing.assert_allclose(prepared[key], store[key], rtol=0, atol=0)
-        assert float(prepared["mean"]) == pytest.approx(float(store["mean"]))
-        assert float(prepared["scale"]) == pytest.approx(float(store["scale"]))
-        hours = ((prepared["starts_test"] % 86400) // 3600).astype(np.int64)
-        assert prepared["reassignment_available"]
-        donors = prepared["reassignment_donors"]
-        source = prepared["source_starts_test"]
-        blocks = ((prepared["starts_test"] - prepared["reassignment_block_origin"])
-                  // (14 * 86400))
-        assert np.all(donors != np.arange(len(donors)))
-        assert np.all(hours[donors] == hours)
-        assert np.all(blocks[donors] != blocks)
-        assert np.all(np.abs(source[donors] - source) >= 192)
+    assert set(prepared) == {
+        "train", "validation", "test", "train_weights", "validation_weights",
+        "eval_weights", "starts_train", "starts_validation", "starts_test",
+        "source_starts_train", "source_starts_validation", "source_starts_test",
+        "mean", "scale", "dataset_name",
+    }
+    # Splits exclude two days on either side of days 219 and 292. At 15 minute
+    # cadence, the three usable source-row intervals are [0,20832),
+    # [21216,27840), and [28224,35040).
+    expected_mean = heights[:20832].mean()
+    expected_scale = heights[:20832].std(ddof=0)
+    assert prepared["mean"] == expected_mean
+    assert prepared["scale"] == expected_scale
+    assert prepared["dataset_name"] == "dart_44402_2018"
+    for split, first, last, count, weight_key in (
+        ("train", 0, 20640, 1291, "train_weights"),
+        ("validation", 21216, 27648, 403, "validation_weights"),
+        ("test", 28224, 34848, 415, "eval_weights"),
+    ):
+        source_rows = np.arange(first, last + 1, 16, dtype=np.int64)
+        assert len(source_rows) == count
+        expected = (heights[source_rows[:, None] + np.arange(192)] - expected_mean) / expected_scale
+        np.testing.assert_array_equal(prepared[split], expected)
+        np.testing.assert_array_equal(prepared["source_starts_" + split], source_rows)
+        np.testing.assert_array_equal(prepared["starts_" + split], origin + 900 * source_rows)
+        hours = ((origin + 900 * source_rows) % 86400) // 3600
+        for hour in PHASES:
+            mask = hours == hour
+            np.testing.assert_array_equal(prepared[weight_key][mask],
+                                          np.full(mask.sum(), 1 / (6 * mask.sum())))
+            assert prepared[weight_key][mask].sum() == pytest.approx(1 / 6)
+
+
+def test_complete_annual_record_meets_stated_eligibility(complete_annual_record):
+    path, _, _ = complete_annual_record
+    result = qualify_candidate(path, "2018-01-01", "2019-01-01")
+    assert result.eligible
+    assert result.coverage == 1
+    assert result.packs == {"train": 108, "validation": 34, "test": 35}
+    assert result.windows == {"train": 1291, "validation": 403, "test": 415}
+    assert all(count > 0 for counts in result.phases.values() for count in counts.values())
+
+
+def test_annual_record_below_coverage_requirement_is_rejected(complete_annual_record):
+    path, _, _ = complete_annual_record
+    lines = path.read_text().splitlines(keepends=True)
+    for i in range(2, len(lines), 4):
+        fields = lines[i].split()
+        fields[-1] = "9999"
+        lines[i] = " ".join(fields) + "\n"
+    path.write_text("".join(lines))
+    result = qualify_candidate(path, "2018-01-01", "2019-01-01")
+    assert not result.eligible
+    assert result.coverage == 0.75
+    assert any(reason.startswith("coverage ") for reason in result.reasons)
+
+
         # Archived donors were stored, not regenerated from this helper.
 
 
-def test_three_ledger_candidates_match_recorded_eligibility():
-    raw = Path("datasets-v2-acquisition/raw")
-    cases = [
-        ("44402t2017.txt", "2017-01-01", "2018-01-01", False, 0.9176940639269406, 108, 19, 35),
-        ("46407t2012.txt", "2012-01-01", "2012-10-05", False, 0.43098021582733814, 53, 0, 0),
-        ("44402t2018.txt", "2018-01-01", "2019-01-01", True, 0.990296803652968, 101, 33, 33),
-    ]
-    missing = [name for name, *_ in cases if not (raw / name).is_file()]
-    if missing:
-        pytest.skip("DART acquisition files absent: " + ", ".join(missing))
-    for name, start, end, eligible, coverage, train_packs, val_packs, test_packs in cases:
-        q = qualify_candidate(raw / name, start, end, station=name.split("t")[0])
-        assert q.eligible is eligible
-        assert q.coverage == pytest.approx(coverage)
-        assert q.packs.get("train", 0) == train_packs
-        assert q.packs.get("validation", 0) == val_packs
-        assert q.packs.get("test", 0) == test_packs
