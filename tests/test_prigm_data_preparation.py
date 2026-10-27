@@ -219,5 +219,3 @@ def test_annual_record_below_coverage_requirement_is_rejected(complete_annual_re
 
 
         # Archived donors were stored, not regenerated from this helper.
-
-
