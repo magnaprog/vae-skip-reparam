@@ -261,11 +261,14 @@ def diagnostics(directory, records, reduced):
                 if row == len(names)-1:
                     ax.set_xlabel(("Mean minus\ntraining mean (m)", "Standard deviation\nwithin a window (m)", "Time increment\nnorm (m)")[feature])
             axes[row, 0].set_ylabel("ECDF")
-            axes[row, 0].text(0, 1.055, f"{records[name]['station']} / {records[name]['year']}",
-                             transform=axes[row, 0].transAxes, ha="left", va="bottom", fontsize=9)
         diagnostic_legend(fig)
-        fig.subplots_adjust(left=.115, right=.985, bottom=.105 if fresh else .08,
+        fig.subplots_adjust(left=.155, right=.985, bottom=.105 if fresh else .08,
                             top=.8 if fresh else .837, hspace=.60, wspace=.24)
+        for row, name in enumerate(names):
+            box = axes[row, 0].get_position()
+            fig.text(.022, (box.y0 + box.y1) / 2,
+                     f"{records[name]['station']} / {records[name]['year']}",
+                     rotation=90, ha="center", va="center", fontsize=8.5)
         for col, label in enumerate(("Window mean", "Standard deviation", "Time increment norm")):
             box = axes[0, col].get_position()
             fig.text((box.x0 + box.x1) / 2, .855 if fresh else .88,
@@ -301,11 +304,14 @@ def diagnostics(directory, records, reduced):
             for ax in axes[row]:
                 ax.set_ylim(limits)
             axes[row, 0].set_ylabel("Bin power (m$^2$)")
-            axes[row, 0].text(0, 1.055, f"{records[name]['station']} / {records[name]['year']}",
-                             transform=axes[row, 0].transAxes, ha="left", va="bottom", fontsize=9)
         diagnostic_legend(fig, spectra=True)
-        fig.subplots_adjust(left=.14, right=.985, bottom=.09 if fresh else .07,
+        fig.subplots_adjust(left=.19, right=.985, bottom=.09 if fresh else .07,
                             top=.74 if fresh else .767, hspace=.32, wspace=.34)
+        for row, name in enumerate(names):
+            box = axes[row, 0].get_position()
+            fig.text(.022, (box.y0 + box.y1) / 2,
+                     f"{records[name]['station']} / {records[name]['year']}",
+                     rotation=90, ha="center", va="center", fontsize=8.5)
         for col, label in enumerate(("Neural observation variance\n" + r"Base ($\sigma_0^2$)",
                                      "Neural observation variance\n" + r"High ($25\sigma_0^2$)")):
             box = axes[0, col].get_position()
@@ -393,9 +399,10 @@ def intervals(directory, records):
                          ("additional", plot_values.RECORDS[4:])):
         original = group == "original"
         fig = plt.figure(figsize=(5.5, 7.15 if original else 6.25))
-        grid = fig.add_gridspec(len(names), 2, left=.18, right=.985,
-                               bottom=.095 if original else .12,
-                               top=.86 if original else .83, hspace=.65, wspace=.12)
+        grid = fig.add_gridspec(len(names), 2, left=.23, right=.985,
+                               bottom=.05 if original else .065,
+                               top=.88 if original else .85,
+                               hspace=.17 if original else .36, wspace=.14)
         for row, name in enumerate(names):
             record = records[name]
             points = {days: plot_values.interval_points(record, days) for days in (14, 28)}
@@ -408,9 +415,13 @@ def intervals(directory, records):
             dates = mdates.date2num(all_starts.astype("datetime64[s]"))
             padding = max(3., (dates.max() - dates.min()) * .085)
             bounds = dates.min() - padding, dates.max() + padding
+            row_box = grid[row, 0].get_position(fig)
+            fig.text(.069, (row_box.y0 + row_box.y1) / 2,
+                     f"{record['station']} / {record['year']}",
+                     rotation=90, ha="center", va="center", fontsize=8.5)
             first_axis = None
             for col, days in enumerate((14, 28)):
-                cell = grid[row, col].subgridspec(2, 1, height_ratios=(3.1, 1), hspace=.05)
+                cell = grid[row, col].subgridspec(2, 1, height_ratios=(.92, 1), hspace=0)
                 ax = fig.add_subplot(cell[0], sharey=first_axis)
                 if first_axis is None:
                     first_axis = ax
@@ -440,29 +451,31 @@ def intervals(directory, records):
                 # Bind both columns to the complete untransformed values, including zero.
                 ax.set_ylim(score_bounds)
                 ax.locator_params(axis="y", nbins=3)
-                ax.tick_params(axis="x", bottom=False, labelbottom=False)
+                # Dates sit next to the plot; the coverage panel reserves two
+                # further, aligned rows below them, without its own tick marks.
+                ax.tick_params(axis="x", bottom=True, labelbottom=False, length=2)
                 ax.set_xlim(bounds)
-                if col == 0:
-                    ax.set_title(f"{record['station']} / {record['year']}", loc="left", pad=7, fontsize=8.5)
                 if row == 0:
                     box = ax.get_position()
-                    fig.text((box.x0 + box.x1) / 2, .915 if original else .90,
+                    fig.text((box.x0 + box.x1) / 2, .906 if original else .89,
                              f"Intervals of {days} days", ha="center", fontsize=9)
                 coverage.set_ylim(0, 1)
                 coverage.set_yticks([])
                 coverage.set_xticks(starts)
-                coverage.xaxis.set_major_formatter(mdates.DateFormatter("%b\n%d", tz=timezone.utc))
-                coverage.tick_params(axis="x", labelsize=8.5, length=2, pad=2)
+                coverage.tick_params(axis="x", bottom=False, labelbottom=False)
+                coverage.patch.set_visible(False)
                 for spine in coverage.spines.values():
                     spine.set_visible(False)
                 for x, count, mass in zip(starts, values["windows"], values["mass"], strict=True):
-                    coverage.text(x, .75, str(int(count)), ha="center", va="center", fontsize=8.5,
+                    coverage.text(x, .70, mdates.num2date(x, tz=timezone.utc).strftime("%b\n%d"),
+                                  ha="center", va="center", fontsize=8.5)
+                    coverage.text(x, .32, str(int(count)), ha="center", va="center", fontsize=8.5,
                                   fontweight="bold" if count == 1 else "normal")
                     weight = f"{float(f'{100 * mass:.3g}'):.2f}".rstrip("0").rstrip(".")
-                    coverage.text(x, .15, weight, ha="center", va="center", fontsize=8.5)
+                    coverage.text(x, .06, weight, ha="center", va="center", fontsize=8.5)
                 if col == 0:
-                    for y, label in ((.75, "Windows"), (.15, "Weight (%)")):
-                        coverage.text(-.03, y, label, transform=coverage.transAxes,
+                    for y, label in ((.70, "Start (UTC)"), (.32, "Windows"), (.06, "Weight (%)")):
+                        coverage.text(-.04, y, label, transform=coverage.transAxes,
                                       ha="right", va="center", fontsize=8.5)
         handles = [Line2D([], [], color=color, marker="o", linestyle="none", markersize=3.5,
                           markerfacecolor=color if variance == "base" else "white",
@@ -472,8 +485,7 @@ def intervals(directory, records):
         fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(.5, .995), ncol=5,
                    title="Observation variance / training seed", frameon=False,
                    columnspacing=1.0, handletextpad=.45)
-        fig.text(.58, .025, "Interval start (UTC)", ha="center", fontsize=9)
-        fig.text(.022, .48, "Energy score difference: skip minus no skip", rotation=90,
+        fig.text(.018, .48, "Energy score difference: skip minus no skip", rotation=90,
                  ha="center", va="center", fontsize=9)
         save(fig, directory, "dart_intervals_" + group, EVIDENCE_SHA)
 
