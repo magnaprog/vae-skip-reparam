@@ -42,6 +42,52 @@ def test_condition_legends_fit_without_codes(height, spectra, dpi):
             plt.close(fig)
 
 
+@pytest.mark.parametrize("dpi", [100, 144])
+def test_diagnostic_station_labels_are_separate_from_axis_labels(monkeypatch, tmp_path, dpi):
+    summary, reduced = renderer.load_inputs(FIGURES)
+    captured = []
+    monkeypatch.setattr(renderer, "save", lambda fig, directory, name, digest: captured.append((name, fig)))
+    with plt.rc_context(renderer.STYLE):
+        renderer.diagnostics(tmp_path, summary["records"], reduced)
+        try:
+            for name, fig in captured:
+                fig.set_dpi(dpi)
+                fig.canvas.draw()
+                draw = fig.canvas.get_renderer()
+                spectra = "spectra" in name
+                columns = 2 if spectra else 3
+                names = [n for n in renderer.plot_values.RECORDS
+                         if (summary["records"][n]["target"] == "six_UTC_bins_equal") == ("fresh" in name)]
+                assert fig.get_figwidth() == 5.5
+                labels = list(fig.texts)
+                for row, record_name in enumerate(names):
+                    ax = fig.axes[row * columns]
+                    record = summary["records"][record_name]
+                    station, = [t for t in fig.texts if t.get_text() == f"{record['station']} / {record['year']}"]
+                    assert station.get_rotation() == 90 and station.get_fontsize() == 8.5
+                    box = station.get_window_extent(draw)
+                    assert (box.y0 + box.y1) / 2 == pytest.approx((ax.bbox.y0 + ax.bbox.y1) / 2)
+                    assert box.x1 < ax.yaxis.label.get_window_extent(draw).x0
+                    assert ax.get_ylabel() == ("Bin power (m$^2$)" if spectra else "ECDF")
+                    assert ax.yaxis.label.get_fontsize() == 9
+                for ax in fig.axes:
+                    if ax.get_ylabel():
+                        labels.append(ax.yaxis.label)
+                    ticks = [t.label1 for t in ax.yaxis._update_ticks() if t.label1.get_visible()]
+                    assert all(t.get_fontsize() == 8.5 for t in ticks)
+                    labels.extend(ticks)
+                assert all(t.get_fontfamily() == ["DejaVu Serif"] for t in labels)
+                boxes = [t.get_window_extent(draw) for t in labels]
+                # Unframed legend padding is blank; compare the visible labels.
+                boxes.extend(t.get_window_extent(draw) for legend in fig.legends for t in legend.get_texts())
+                for box in boxes:
+                    assert fig.bbox.contains(box.x0, box.y0) and fig.bbox.contains(box.x1, box.y1)
+                assert_separate(boxes)
+        finally:
+            for _, fig in captured:
+                plt.close(fig)
+
+
 @pytest.mark.parametrize("name", ["comparison", "variance"])
 def test_comparison_and_refit_draw_descriptive_labels(monkeypatch, tmp_path, name):
     records = json.loads((FIGURES / "plot_summary.json").read_text())["records"]

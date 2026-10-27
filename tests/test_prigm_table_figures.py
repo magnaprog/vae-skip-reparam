@@ -4,6 +4,7 @@ import csv
 from datetime import datetime, timezone
 from hashlib import sha256
 import importlib.util
+import itertools
 import json
 from pathlib import Path
 
@@ -209,6 +210,15 @@ def check_interval_artists(fig, names, records):
     assert len(fig.axes) == 4 * len(names) and fig.get_figwidth() == 5.5
     total = bins = 0
     for row, name in enumerate(names):
+        all_intervals = [item for days in ("14", "28") for item in records[name]["intervals"][days]]
+        scores = [0.] + [score for item in all_intervals for variance in ("base", "high")
+                         for score in item[variance]]
+        padding = (max(scores) - min(scores)) * .18 or .1
+        expected_ylim = (min(scores) - padding, max(scores) + padding)
+        dates = [mdates.date2num(datetime.fromtimestamp(item["start_unix"], timezone.utc))
+                 for item in all_intervals]
+        padding = max(3., (max(dates) - min(dates)) * .085)
+        expected_xlim = (min(dates) - padding, max(dates) + padding)
         for col, days in enumerate(("14", "28")):
             ax, coverage = fig.axes[row * 4 + col * 2:row * 4 + col * 2 + 2]
             source = records[name]["intervals"][days]
@@ -233,21 +243,81 @@ def check_interval_artists(fig, names, records):
                     assert line.get_markerfacecolor() == ("#CC3311" if variance == "base" else "white")
                     total += len(expected_x)
             assert any(list(line.get_ydata()) == [0, 0] for line in ax.lines)
+            assert ax.get_xlim() == expected_xlim and ax.get_ylim() == expected_ylim
             np.testing.assert_array_equal(coverage.get_xticks(), expected_x)
             text = [t for t in coverage.texts if t.get_transform() is coverage.transData]
-            assert len(text) == 2 * len(source)
+            assert len(text) == 3 * len(source)
             for index, item in enumerate(source):
-                n, mass = text[2 * index:2 * index + 2]
+                start, n, mass = text[3 * index:3 * index + 3]
+                assert start.get_text() == datetime.fromtimestamp(item["start_unix"], timezone.utc).strftime("%b\n%d")
                 assert n.get_text() == str(item["windows"])
                 rounded = float(f"{100 * item['mass']:.3g}")
                 assert mass.get_text() == f"{rounded:.2f}".rstrip("0").rstrip(".")
-                assert n.get_position() == (expected_x[index], .75)
-                assert mass.get_position() == (expected_x[index], .15)
+                assert start.get_position() == (expected_x[index], .70)
+                assert n.get_position() == (expected_x[index], .32)
+                assert mass.get_position() == (expected_x[index], .06)
+                assert all(t.get_visible() and t.get_rotation() == 0 for t in (start, n, mass))
             bins += len(source)
         left, right = fig.axes[row * 4], fig.axes[row * 4 + 2]
         assert left.get_ylim() == right.get_ylim() and left.get_xlim() == right.get_xlim()
         assert left.get_yscale() == right.get_yscale() == "linear"
     return total, bins
+
+
+def check_interval_layout(fig, names, records):
+    fig.canvas.draw()
+    draw = fig.canvas.get_renderer()
+    labels = list(fig.texts)
+    plots = fig.axes[::2]
+    for ax, coverage in zip(plots, fig.axes[1::2], strict=True):
+        labels.extend(coverage.texts)
+        labels.extend(t.label1 for t in ax.yaxis._update_ticks() if t.label1.get_visible())
+        for text in coverage.texts:
+            assert text.get_visible()
+            box = text.get_window_extent(draw)
+            assert box.y1 < ax.bbox.y0
+            # All three metadata rows retain the physical start-date position.
+            if text.get_transform() is coverage.transData:
+                x = ax.transData.transform((text.get_position()[0], 0))[0]
+                assert (box.x0 + box.x1) / 2 == pytest.approx(x)
+            for tick in ax.xaxis.get_major_ticks():
+                if tick.tick1line.get_visible():
+                    assert not box.overlaps(tick.tick1line.get_window_extent(draw))
+        assert not any(t.tick1line.get_visible() or t.label1.get_visible()
+                       for t in coverage.xaxis.get_major_ticks())
+    for row, name in enumerate(names):
+        label, = [t for t in fig.texts if t.get_text() ==
+                  f"{records[name]['station']} / {records[name]['year']}"]
+        assert label.get_rotation() == 90 and label.get_fontsize() == 8.5
+        # The station identifies the whole row, including its coverage panel.
+        top = fig.axes[row * 4].bbox.y1
+        bottom = fig.axes[row * 4 + 1].bbox.y0
+        box = label.get_window_extent(draw)
+        assert (box.y0 + box.y1) / 2 == pytest.approx((top + bottom) / 2)
+    boxes = [text.get_window_extent(draw) for text in labels]
+    boxes += [legend.get_window_extent(draw) for legend in fig.legends]
+    for box in boxes:
+        assert fig.bbox.contains(box.x0, box.y0) and fig.bbox.contains(box.x1, box.y1)
+        assert all(not box.overlaps(ax.bbox) for ax in plots)
+    # Includes adjacent dates, metadata rows, station names and the global ylabel.
+    for first, second in itertools.combinations(boxes, 2):
+        assert not first.overlaps(second)
+
+
+@pytest.mark.parametrize("dpi", [100, 144])
+def test_temporal_dates_counts_and_weights_are_separate_at_print_width(data, evidence, monkeypatch, tmp_path, dpi):
+    captured = []
+    monkeypatch.setattr(renderer, "save", lambda fig, *args: captured.append(fig))
+    with plt.rc_context(renderer.STYLE):
+        renderer.intervals(tmp_path, data["records"])
+    try:
+        for fig, names in zip(captured, (values.RECORDS[:4], values.RECORDS[4:]), strict=True):
+            fig.set_dpi(dpi)
+            check_interval_artists(fig, names, evidence)
+            check_interval_layout(fig, names, evidence)
+    finally:
+        for fig in captured:
+            plt.close(fig)
 
 
 def test_temporal_artists_keep_seed_values_dates_and_coverage(data, evidence, monkeypatch, tmp_path):
