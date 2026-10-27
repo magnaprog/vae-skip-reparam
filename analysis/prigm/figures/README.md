@@ -1,6 +1,6 @@
 # Figure inputs
 
-The renderer draws ten figures from the supplied arrays, score summaries and four annual DART records. Run it from the repository root:
+Reproduce all ten figures from the repository root:
 
 ```bash
 python analysis/prigm/figures/render_figures.py --output-dir runs/figures
@@ -20,7 +20,7 @@ Conditions appear in this order: no skip at base variance, skip at base variance
 | `table_figure_data.json` | Comparisons with PPCA, absolute scores and scores within time intervals |
 | `datasets/*.txt` | NOAA annual observations for the context figure |
 
-The feature arrays contain three quantities in meters: window mean minus training mean, standard deviation within a window, and the norm of time increments. The increment feature is the Euclidean norm of differences at lags 1, 4, 16, 48 and 96 observations, with each lag's differences divided by $\sqrt{192-\ell}$ for lag $\ell$. Spectral arrays contain 96 bin powers in square meters at positive frequencies from 0.5 to 48 cycles per day. These arrays are already in physical units. Energy scores use dimensionless coordinates, as described in the [results guide](../README.md).
+The feature arrays contain three quantities in meters: window mean minus training mean, standard deviation within a window, and the norm of time increments. The increment feature is the Euclidean norm of differences at lags 1, 4, 16, 48 and 96 observations, with each lag's differences divided by $\sqrt{192-\ell}$ for lag $\ell$. Spectral arrays contain 96 bin powers in square meters at positive frequencies from 0.5 to 48 cycles per day. Energy scores use dimensionless coordinates, as described in the [results guide](../README.md).
 
 The four records supplied under `datasets/` use equal window weights. The three 2018 records give equal total weight to each of six Coordinated Universal Time (UTC) start hours. Training and test weights are computed separately. Generated windows have equal weights within each sample set.
 
@@ -32,4 +32,4 @@ The PPCA comparison shows all three neural fits at each skip and variance settin
 
 The interval figures show full-window energy score differences for each training seed, together with window counts and total test weight. Intervals of 14 and 28 days begin at the start of the first eligible training window. Their endpoints are stored as Unix seconds. Each window belongs to the interval containing its start. Multiplying each interval difference by its weight and summing recovers the difference over the full test partition. Windows can overlap, and the two interval lengths reuse the same observations.
 
-The supplied inputs reproduce the figures. They contain feature and score reductions; repeating model evaluation also requires complete generated windows and network weights.
+Repeating model evaluation requires complete generated windows and network weights, which are outside this release.
