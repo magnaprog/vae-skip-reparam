@@ -1,4 +1,4 @@
-"""CPU acceptance tests for the frozen experiment and importance evaluator."""
+"""Check experiment execution, saved files and the importance evaluator."""
 import json
 import os
 from pathlib import Path
@@ -14,6 +14,58 @@ from scipy.stats import norm
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 import prigm_experiment as experiment
+
+
+@pytest.fixture
+def prepared_run(tmp_path, monkeypatch):
+    implementation = tmp_path / "implementation"
+    run = tmp_path / "run"
+    for name in experiment.CODE_FILES:
+        for directory in (implementation, run / "source"):
+            path = directory / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(f"# {name}\n")
+    (run / "prepared").mkdir()
+    for name in ["metadata.json", *(f"{dataset}.npz" for dataset in experiment.DATASETS)]:
+        (run / "prepared" / name).write_bytes(b"input identity fixture")
+    manifest = {
+        "schema_version": 1,
+        "purpose": "smoke",
+        "datasets": list(experiment.DATASETS),
+        "specification": experiment.specification("smoke"),
+        "code_sha256": {name: experiment.sha256(implementation / name)
+                        for name in experiment.CODE_FILES},
+        "prepared_sha256": {path.name: experiment.sha256(path)
+                            for path in (run / "prepared").iterdir()},
+    }
+    experiment.atomic_json(run / "run_manifest.json", manifest)
+    monkeypatch.setattr(experiment, "ROOT", implementation)
+    return run, implementation, manifest
+
+
+def test_verify_run_accepts_consistent_source_and_inputs(prepared_run):
+    run, _, manifest = prepared_run
+    assert experiment.verify_run(run) == manifest
+
+
+@pytest.mark.parametrize("changed", ["implementation", "saved_source", "input", "settings"])
+def test_verify_run_rejects_changed_source_inputs_or_settings(prepared_run, changed):
+    run, implementation, manifest = prepared_run
+    if changed == "implementation":
+        (implementation / experiment.CODE_FILES[0]).write_text("changed source")
+        error = "Experiment source changed"
+    elif changed == "saved_source":
+        (run / "source" / experiment.CODE_FILES[0]).write_text("changed source")
+        error = "Saved experiment source changed"
+    elif changed == "input":
+        (run / "prepared" / "gaussian.npz").write_bytes(b"changed input")
+        error = "Prepared dataset changed"
+    else:
+        manifest["specification"]["max_steps"] += 1
+        experiment.atomic_json(run / "run_manifest.json", manifest)
+        error = "Manifest differs"
+    with pytest.raises(ValueError, match=error):
+        experiment.verify_run(run)
 
 
 class IndependentGaussian:
@@ -42,7 +94,7 @@ def test_importance_evaluation_does_not_depend_on_chunk_for_constant_weights():
     np.testing.assert_allclose(first["log_score"], second["log_score"])
 
 
-def test_frozen_smoke_and_core_are_separate():
+def test_smoke_and_core_have_separate_settings():
     core = experiment.specification("core")
     smoke = experiment.specification("smoke")
     assert core["max_steps"] == 10000

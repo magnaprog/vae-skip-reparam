@@ -9,12 +9,70 @@ SRC = Path(__file__).resolve().parents[1] / "src"
 sys.path.insert(0, str(SRC))
 
 from prigm_metrics import energy_score, gaussian_log_prob, importance_statistics
-from prigm_v2_metrics import (INCREMENT_LAGS, NOISE_GRID, centered_energy_score,
-                              fixed_noise_ppca, increment_energy_score, increment_features,
+from prigm_generative_evaluation import (INCREMENT_LAGS, NOISE_GRID, centered_energy_score,
+                              exact_validation_score, fixed_noise_ppca, increment_energy_score, increment_features,
                               linear_model_iw_control, noise_matched_diagonal,
                               posterior_score_components, refit_observation_variance,
                               select_noise_variance, unconditional_score_streams,
                               weighted_moments, window_spectrum_statistics)
+
+
+@pytest.mark.parametrize("variance", [np.nan, np.inf, -np.inf, 0.0, -1.0,
+                                      True, [1.0], "1.0", 1 + 2j])
+@pytest.mark.parametrize("baseline", ["ppca", "diagonal"])
+def test_gaussian_baselines_reject_invalid_noise_variance(variance, baseline):
+    with pytest.raises(ValueError, match="finite positive scalar"):
+        if baseline == "ppca":
+            fixed_noise_ppca(np.zeros(2), np.eye(2), variance)
+        else:
+            noise_matched_diagonal(np.ones((2, 2)), [1, 1], variance)
+
+
+@pytest.mark.parametrize("weights", [[1, np.nan], [1, np.inf], [-1, 2],
+                                     [0, 0], [1e308, 1e308], [], [1], [[1, 1]]])
+@pytest.mark.parametrize("operation", ["moments", "validation"])
+def test_weighted_gaussian_operations_reject_invalid_weights(weights, operation):
+    with np.errstate(over="ignore"), pytest.raises(ValueError, match="weights"):
+        if operation == "moments":
+            weighted_moments(np.zeros((2, 2)), weights)
+        else:
+            exact_validation_score(np.zeros((2, 2)), weights, np.zeros(2), np.eye(2))
+
+
+@pytest.mark.parametrize("rows", [np.zeros((0, 2)), np.zeros((2, 0)),
+                                  np.full((2, 2), np.nan), np.full((2, 2), np.inf)])
+def test_weighted_moments_reject_empty_or_nonfinite_rows(rows):
+    with pytest.raises(ValueError, match="x must"):
+        weighted_moments(rows, np.ones(len(rows)))
+
+
+def test_weighted_gaussian_operations_preserve_unequal_weights_and_zero_weight_rows():
+    rows = np.array([[1.0, 2.0], [3.0, 8.0], [100.0, -100.0]])
+    weights = np.array([1.0, 3.0, 0.0])
+    mean, covariance = weighted_moments(rows, weights)
+    np.testing.assert_array_equal(mean, [2.5, 6.5])
+    np.testing.assert_array_equal(covariance, [[0.75, 2.25], [2.25, 6.75]])
+    expected_density = gaussian_log_prob(rows, np.zeros(2), np.eye(2))
+    assert exact_validation_score(rows, weights, np.zeros(2), np.eye(2)) == (
+        expected_density[0] + 3 * expected_density[1]) / 4
+    reweighted = weighted_moments(rows, 8 * weights)
+    np.testing.assert_array_equal(reweighted[0], mean)
+    np.testing.assert_array_equal(reweighted[1], covariance)
+
+
+@pytest.mark.parametrize("lags", [(-1,), (0,), (True,), (np.bool_(True),),
+                                  (1.5,), (np.nan,), (np.inf,), (4,), (), None, ("1",)])
+def test_increment_features_reject_invalid_lags(lags):
+    with pytest.raises(ValueError, match="lags"):
+        increment_features(np.arange(8).reshape(2, 4), lags=lags)
+
+
+def test_increment_features_preserve_integer_lag_order_and_scaling():
+    rows = np.array([[0.0, 1.0, 4.0, 9.0], [2.0, 5.0, 10.0, 17.0]])
+    result = increment_features(rows, lags=np.array([2, 1], dtype=np.int64))
+    expected = np.concatenate(((rows[:, 2:] - rows[:, :-2]) / np.sqrt(2),
+                               np.diff(rows, axis=1) / np.sqrt(3)), axis=1)
+    np.testing.assert_array_equal(result, expected)
 
 
 @pytest.fixture(scope="module")
@@ -225,7 +283,7 @@ def test_component_draws_do_not_depend_on_chunking():
         np.testing.assert_array_equal(first[key], second[key])
 
 
-def test_residual_components_match_frozen_likelihood_arithmetic():
+def test_residual_components_include_gaussian_normalizer_and_jacobian():
     class ResidualDecoder(QuadraticDecoder):
         b = 0.2
         observation_variance = 0.25
@@ -355,7 +413,7 @@ def test_centered_energy_rejects_invalid_rows(bad, which):
         centered_energy_score(**args)
 
 
-def test_centered_energy_preserves_frozen_width_and_sample_count_rules():
+def test_centered_energy_requires_matching_width_and_multiple_samples():
     with pytest.raises(ValueError):
         centered_energy_score(np.ones((2, 3)), np.ones((2, 4)))
     with pytest.raises(ValueError):

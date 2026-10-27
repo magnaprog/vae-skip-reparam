@@ -46,7 +46,7 @@ def test_condition_legends_fit_without_codes(height, spectra, dpi):
 def test_diagnostic_station_labels_are_separate_from_axis_labels(monkeypatch, tmp_path, dpi):
     summary, reduced = renderer.load_inputs(FIGURES)
     captured = []
-    monkeypatch.setattr(renderer, "save", lambda fig, directory, name, digest: captured.append((name, fig)))
+    monkeypatch.setattr(renderer, "save", lambda fig, directory, name: captured.append((name, fig)))
     with plt.rc_context(renderer.STYLE):
         renderer.diagnostics(tmp_path, summary["records"], reduced)
         try:
@@ -57,7 +57,7 @@ def test_diagnostic_station_labels_are_separate_from_axis_labels(monkeypatch, tm
                 spectra = "spectra" in name
                 columns = 2 if spectra else 3
                 names = [n for n in renderer.plot_values.RECORDS
-                         if (summary["records"][n]["target"] == "six_UTC_bins_equal") == ("fresh" in name)]
+                         if (summary["records"][n]["target"] == "six_UTC_bins_equal") == name.endswith("_2018")]
                 assert fig.get_figwidth() == 5.5
                 labels = list(fig.texts)
                 for row, record_name in enumerate(names):

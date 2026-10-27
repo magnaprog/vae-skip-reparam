@@ -1,4 +1,4 @@
-"""v2 Gaussian VAE with explicit output-head storage contract 3.
+"""Gaussian VAE with observation or residual output coordinates.
 
 Base, canonical and base_fast store the observation head w. Raw, raw_half
 and head_rate store r = b*w, where b = 1 - alpha. All likelihoods use the
@@ -7,8 +7,8 @@ observation variance. Base and canonical use identical forward arithmetic.
 
 The equivalent residual variance is b**2 * observation_variance. Residual
 means b*g(z) and self-reconstructions alpha*x + b*g(z) are diagnostics only.
-Historical weights must be replayed with their original model source, not
-loaded into this storage contract.
+Weight files declare their output coordinates, scale and observation variance.
+Loading requires these attributes to match the model.
 """
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ def condition_settings(condition, observation_variance):
     elif condition == BASE_FAST:
         alpha, mode = 0.0, "head_rate"
     else:
-        raise ValueError(f"unknown v2 condition {condition!r}")
+        raise ValueError(f"unknown condition {condition!r}")
     try:
         observation_variance = float(observation_variance)
     except (TypeError, ValueError) as exc:
@@ -60,12 +60,12 @@ def condition_settings(condition, observation_variance):
 
 
 class BypassVAE(tf.keras.Model):
-    """Dense diagonal-Gaussian posterior, linear output-head decoder.
+    """Gaussian encoder and nonlinear decoder with an affine output layer.
 
-    Same architecture contract as the frozen v1 GaussianVAE: encoder 128/64
-    ReLU, decoder 64/128 ReLU, diagonal posterior with log-variance bounded to
-    [-12, 12], linear heads, explicit external noise. Initialization scales
-    the output head once by head_scale, only when that scale is not one.
+    The encoder has ReLU hidden layers of widths 128 and 64; the decoder
+    has ReLU hidden layers of widths 64 and 128. The diagonal posterior has
+    log variances limited to [-12, 12]. Sampling noise is supplied by the caller.
+    Initialization multiplies the output kernel and bias by head_scale once.
     """
 
     storage_contract = STORAGE_CONTRACT
@@ -148,7 +148,7 @@ class BypassVAE(tf.keras.Model):
             for key, expected in self._weight_contract().items():
                 if key not in checkpoint.attrs or checkpoint.attrs[key] != expected:
                     raise ValueError(f"incompatible weight storage contract: {key}; "
-                                     "historical weights require their original source")
+                                     "weights must declare matching output coordinates and observation variance")
         return super().load_weights(filepath)
 
     # ---- forward pieces -------------------------------------------------

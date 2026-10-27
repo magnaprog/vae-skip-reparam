@@ -1,12 +1,15 @@
-"""DART record eligibility, window preparation and synthetic data generation.
+"""DART window preparation and Gaussian simulation.
 
-Eligibility uses only data criteria, never model scores. The coverage
-denominator is every expected quarter-hour UTC slot in the complete
-candidate interval. Calendar splits at floor(0.6*N) and floor(0.8*N) days
-from D0, with two-day embargo on each side of each boundary. Nonoverlapping
-support packs counted by earliest-finish greedy selection from eligible
-four-hour-grid windows. Six UTC start phases (00/04/08/12/16/20) must be
-nonempty in each partition. Window weights w(s,i) = 1/[6*n(s, h(i))].
+DART eligibility depends on the duration and coverage of the observations.
+Coverage counts usable observations against every expected UTC slot at
+15 minute spacing in the full interval. For an interval of N whole days,
+the calendar splits fall floor(0.6*N) and floor(0.8*N) days after its start.
+Two days on either side of each split are excluded.
+
+Eligible windows start every four hours. Within each partition, a greedy
+selection by earliest finish counts windows that share no source observations.
+All six UTC start hours (00, 04, 08, 12, 16, 20) must be present. Each group
+receives one sixth of the total window weight: w(s,i) = 1/[6*n(s, h(i))].
 """
 from __future__ import annotations
 
@@ -71,7 +74,7 @@ def _parse_annual(path):
 
 def qualify_candidate(path, interval_start, interval_end, station=None,
                       window_length=WINDOW_LENGTH):
-    """Evaluate one fixed candidate interval; returns a Qualification."""
+    """Check an interval's coverage, window counts and UTC start-hour groups."""
     interval_start = pd.to_datetime(interval_start, utc=True).to_pydatetime()
     interval_end = pd.to_datetime(interval_end, utc=True).to_pydatetime()
     if interval_end <= interval_start:
@@ -92,7 +95,6 @@ def qualify_candidate(path, interval_start, interval_end, station=None,
 
     inside = retained & (seconds >= start_ts) & (seconds < end_ts)
     in_seconds = seconds[inside]
-    in_heights = heights[inside]
 
     # Coverage: retained unambiguous T1 rows on expected quarter-hour UTC slots
     # / all expected slots in the complete interval.
@@ -128,7 +130,6 @@ def qualify_candidate(path, interval_start, interval_end, station=None,
             q.reasons.append(f"{split}: no observations")
             continue
         sec = seconds[idx]
-        hgt = heights[idx]
         # segment by cadence breaks
         breaks = np.flatnonzero((np.diff(idx) != 1) | (np.diff(sec) != 900)) + 1
         segments = np.split(np.arange(len(idx)), breaks) if len(idx) else []
@@ -197,43 +198,6 @@ def qualify_candidate(path, interval_start, interval_end, station=None,
     return q
 
 
-def same_phase_donors(starts, seed, source_starts, block_origin,
-                      window_length=WINDOW_LENGTH):
-    """Uniform same-phase donors from disjoint support and another 14-day block.
-
-    Blocks are anchored at the declared cohort start in UTC seconds. If any
-    target has no admissible donor, the entire diagnostic is unavailable.
-    """
-    starts = np.asarray(starts)
-    source_starts = np.asarray(source_starts)
-    if (starts.ndim != 1 or len(starts) == 0 or source_starts.shape != starts.shape
-            or not np.issubdtype(starts.dtype, np.integer)
-            or not np.issubdtype(source_starts.dtype, np.integer)
-            or np.any(source_starts < 0)):
-        raise ValueError("starts and source_starts must be matching nonempty integer vectors")
-    if (isinstance(block_origin, bool) or not isinstance(block_origin, (int, np.integer))
-            or isinstance(window_length, bool)
-            or not isinstance(window_length, (int, np.integer)) or window_length < 1):
-        raise ValueError("block origin and positive window length must be integers")
-    hours = ((starts % 86400) // 3600).astype(np.int64)
-    blocks = (starts - block_origin) // (14 * 86400)
-    rng = np.random.default_rng(seed)
-    donors = np.empty(len(starts), dtype=np.int64)
-    index = np.arange(len(starts))
-    for i in range(len(starts)):
-        # Subtract smaller from larger so unsigned inputs cannot wrap at earlier starts.
-        source_distance = (np.maximum(source_starts, source_starts[i])
-                           - np.minimum(source_starts, source_starts[i]))
-        time_distance = np.maximum(starts, starts[i]) - np.minimum(starts, starts[i])
-        candidates = index[(hours == hours[i]) & (blocks != blocks[i])
-                           & (source_distance >= window_length)
-                           & (time_distance > (window_length - 1) * 900)]
-        if len(candidates) == 0:
-            return None
-        donors[i] = candidates[rng.integers(0, len(candidates))]
-    return donors
-
-
 def _windows_from_grid(heights, grid, mean, scale, window_length=WINDOW_LENGTH):
     arrays = np.empty((len(grid), window_length), dtype=np.float64)
     starts = np.empty(len(grid), dtype=np.int64)
@@ -247,13 +211,8 @@ def _windows_from_grid(heights, grid, mean, scale, window_length=WINDOW_LENGTH):
 
 
 def prepare_dart_record(path, interval_start, interval_end, station=None,
-                        reassignment_seed=66001, window_length=WINDOW_LENGTH):
-    """Serialize one eligible DART candidate to the prepared-array contract.
-
-    Window weights follow w = 1/(6 n_phase). Donors must have disjoint source
-    support and belong to another cohort-anchored 14-day block at the same UTC
-    phase. Unavailable reassignment leaves the evaluation population intact.
-    """
+                        window_length=WINDOW_LENGTH):
+    """Prepare eligible DART windows with equal total weight per UTC start hour."""
     q = qualify_candidate(path, interval_start, interval_end, station=station,
                           window_length=window_length)
     if not q.eligible:
@@ -271,9 +230,6 @@ def prepare_dart_record(path, interval_start, interval_end, station=None,
             [q.weights[split][i] for i in range(len(grid))], dtype=np.float64)
         if not np.isfinite(weights[split]).all() or weights[split].sum() <= 0:
             raise ValueError(f"{split} weights are empty or nonfinite")
-    block_origin = int(q.interval_start.timestamp())
-    donors = same_phase_donors(starts["test"], reassignment_seed, source_starts["test"],
-                              block_origin, window_length)
     year = q.interval_start.year
     return {
         "train": arrays["train"],
@@ -288,16 +244,13 @@ def prepare_dart_record(path, interval_start, interval_end, station=None,
         "source_starts_train": source_starts["train"],
         "source_starts_validation": source_starts["validation"],
         "source_starts_test": source_starts["test"],
-        "reassignment_block_origin": np.int64(block_origin),
-        "reassignment_available": np.bool_(donors is not None),
-        "reassignment_donors": donors if donors is not None else np.empty(0, dtype=np.int64),
         "mean": np.float64(q.mean),
         "scale": np.float64(q.scale),
         "dataset_name": np.array(f"dart_{q.station}_{year}"),
     }
 
 
-# ---- synthetic families (recovered; frozen contracts) ----
+# Gaussian and mixture simulations
 
 
 SYNTHETIC_SIZES = (8192, 2048, 2048)
@@ -344,7 +297,7 @@ def prepare_gaussian(window: int = 192, sizes=SYNTHETIC_SIZES, seeds=GAUSSIAN_SE
         arrays[split] = latent @ loading.T + noise
         starts[split] = np.arange(size, dtype=np.int64)
     metadata = {
-        "dataset": "gaussian_v2", "window": window, "sizes": list(sizes),
+        "dataset": "gaussian", "window": window, "sizes": list(sizes),
         "family": "linear-Gaussian", "seeds": dict(seeds),
         "singular_values": singular_values.tolist(), "noise_std": NOISE_STD,
         "normalization": "declared zero mean, unit scale",
@@ -376,7 +329,7 @@ def prepare_mixture(window: int = 192, sizes=SYNTHETIC_SIZES, seeds=MIXTURE_SEED
             + latent @ loading.T + noise
         starts[split] = np.arange(size, dtype=np.int64)
     metadata = {
-        "dataset": "mixture_v2", "window": window, "sizes": list(sizes),
+        "dataset": "gaussian_mixture", "window": window, "sizes": list(sizes),
         "family": "two-Gaussian mixture, covariance-matched", "seeds": dict(seeds),
         "singular_values": singular_values.tolist(),
         "sign_scale": float(MIXTURE_SIGN_SCALE), "noise_std": NOISE_STD,

@@ -46,10 +46,7 @@ def expected_ppca(source, arm):
 
 def test_per_fit_values_agree_with_independent_released_reductions(data):
     directory = ROOT / "analysis/prigm/reductions"
-    references_files = [directory / name for name in ("PPCA_reference_means.csv", "ppca_means.csv")
-                        if (directory / name).is_file()]
-    assert len(references_files) == 1, "Expected exactly one development/public PPCA means file"
-    with references_files[0].open() as stream:
+    with (directory / "ppca_means.csv").open() as stream:
         references = {(r["record"], r["variance_group"], r["geometry"]): float(r["ES"])
                       for r in csv.DictReader(stream)}
     with (directory / "energy_terms_fits.csv").open() as stream:
@@ -60,9 +57,8 @@ def test_per_fit_values_agree_with_independent_released_reductions(data):
         expected = float(fit["ES"]) - reference
         actual = values.ppca_comparison_points(data["records"][fit["record"]], fit["arm"])[
             SEEDS.index(int(fit["seed"])), SCORES.index(fit["geometry"])]
-        # This historical reduction recomputed energy terms; it differs from the
-        # manifest's stored means by at most 1.21e-13. Exact current-source checks
-        # live in the private extraction test; plotted JSON bytes are checked below.
+        # The CSV recomputes energy terms. Its scores differ from the plotting
+        # inputs by at most 1.21e-13 through floating-point rounding.
         assert abs(actual - expected) <= 1.3e-13
 
 

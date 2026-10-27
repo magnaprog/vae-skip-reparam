@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "Please cite the paper when using this code or its results."
+type: software
+title: "VAE skip reparameterization"
+authors:
+  - family-names: Lee
+    given-names: Kevin
+repository-code: "https://github.com/magnaprog/vae-skip-reparam"
+license: MIT
+preferred-citation:
+  type: conference-paper
+  authors:
+    - family-names: Lee
+      given-names: Kevin
+  title: "An Input Skip Can Reparameterize a VAE Without Improving the Generator"
+  collection-title: "2nd Workshop on Principles of Generative Modeling at NeurIPS 2026"
+  year: 2026

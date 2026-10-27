@@ -17,15 +17,15 @@ Prepare a short run on CPU, then train one Gaussian model on an available GPU:
 
 ```bash
 python src/prigm_experiment.py prepare --run-root runs/smoke --purpose smoke
-python src/prigm_experiment.py train --run-root runs/smoke \
+CUDA_VISIBLE_DEVICES='GPU-REPLACE-ME' python src/prigm_experiment.py train --run-root runs/smoke \
   --dataset gaussian --arm A --seed 42 --gpu-uuid 'GPU-REPLACE-ME'
 ```
 
-Replace the UUID with that of a GPU assigned to this run. The short run checks execution with fewer training steps and samples than the experiments in the paper.
+Replace both UUID placeholders with the same GPU assigned to this run. The short run checks execution with fewer training steps and samples than the experiments in the paper.
 
-## Run the original experiment
+## Run the study setup
 
-The original experiment uses the Gaussian dataset and four annual DART records, each with four conditions and three training seeds. Prepare a new directory, then supply the UUIDs of four available GPUs:
+The launcher runs 60 fits: one Gaussian dataset and four annual DART records, with four conditions and three training seeds per dataset. The DART records are listed in [Data sources](datasets/README.md). Prepare a new directory, then supply the UUIDs of four available GPUs:
 
 ```bash
 python src/prigm_experiment.py prepare --run-root runs/core
@@ -40,13 +40,13 @@ python src/prigm_experiment.py campaign --run-root runs/core \
 | D | None | 25 times base |
 | B | 0.8 | 25 times base |
 
-The CLI option `--arm` selects a condition. Its spelling and the result keys remain consistent with the saved experiments.
+The `--arm` option selects a condition using the codes above. Base observation variance comes from probabilistic principal component analysis (PPCA) of the training data.
 
-The run directory contains the preparation settings, source identities, training histories, network weights and evaluations. Interrupted fits start a new attempt; they do not resume the optimizer and random-number state exactly. Keep each completed run directory for subsequent analysis.
+The run directory saves the preparation settings, copies of the training code, training histories, network weights and evaluations. An interrupted fit restarts in a new attempt directory, without resuming the optimizer and random number state. Keep the completed run directory to analyze its results.
 
-The `prigm_v2_data`, `prigm_v2_model` and `prigm_v2_metrics` modules contain the additional data, model and scoring routines. The 36 fits for the 2018 DART records require their separate preparation inputs and launchers. The supplied annual records support the original 60-fit experiment.
+The paper also evaluates 36 fits on three DART records from 2018. Their scores and figure inputs are included, but their preparation inputs and training launchers are not part of this release.
 
-The numerical helpers expect finite arrays, nonnegative weights with positive total mass, and finite positive observation variances. Check these conditions when calling the helpers directly with new data.
+When calling the numerical helpers with new data, use finite arrays, nonnegative weights with positive total mass, and finite positive observation variances.
 
 ## Test the models
 
@@ -55,7 +55,7 @@ In the training environment, install pytest and run the two model test modules:
 ```bash
 python -m pip install pytest==9.0.3
 PYTHONDONTWRITEBYTECODE=1 CUDA_VISIBLE_DEVICES=-1 python -m pytest \
-  -q -rs -p no:cacheprovider tests/test_prigm_model.py tests/test_prigm_v2_model.py
+  -q -rs -p no:cacheprovider tests/test_prigm_model.py tests/test_prigm_decoder_coordinates.py
 ```
 
 This command runs model checks on CPU. The figure and numerical tests use the separate environment described in the README.

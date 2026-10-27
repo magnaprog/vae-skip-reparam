@@ -1,15 +1,7 @@
-"""v2 metrics: fixed-noise PPCA, increment energy, posterior-code reassignment.
-
-Established scores (energy_score, gaussian_log_prob, importance_statistics)
-delegate to the frozen v1 metrics module. New here: fixed-noise PPCA with an
-exact validation score for grid selection, increment-feature energy, the
-whole-vector posterior-code reassignment diagnostic, and exact linear-model
-marginal/posterior controls used to calibrate IW scoring.
-"""
+"""Gaussian baselines, importance sampling, energy scores and window spectra."""
 from __future__ import annotations
 
 import numpy as np
-from scipy.linalg import cholesky, solve_triangular
 
 from prigm_metrics import energy_score, gaussian_log_prob, importance_statistics
 
@@ -22,9 +14,7 @@ def fixed_noise_ppca(mean, covariance, variance, rank=16):
     """PPCA loadings at a fixed noise variance v: W = V sqrt(max(lam - v, 0))."""
     mean = np.asarray(mean, dtype=np.float64)
     covariance = np.asarray(covariance, dtype=np.float64)
-    variance = float(variance)
-    if variance <= 0:
-        raise ValueError("variance must be positive")
+    variance = _positive_variance(variance)
     evals, evecs = np.linalg.eigh(covariance)
     order = np.argsort(evals)[::-1]
     evals = evals[order]
@@ -41,11 +31,14 @@ def weighted_moments(x, weights):
     """Weighted mean and population covariance; weights need not sum to one."""
     x = np.asarray(x, dtype=np.float64)
     weights = np.asarray(weights, dtype=np.float64)
-    if x.ndim != 2 or weights.ndim != 1 or len(weights) != x.shape[0] or weights.min() < 0:
-        raise ValueError("x must be 2D with matching nonnegative weights")
+    if x.ndim != 2 or min(x.shape) == 0 or not np.isfinite(x).all():
+        raise ValueError("x must be a nonempty finite 2D array")
+    if (weights.shape != (len(x),) or not np.isfinite(weights).all()
+            or np.any(weights < 0)):
+        raise ValueError("weights must be finite nonnegative values matching the row count")
     total = weights.sum()
-    if total <= 0:
-        raise ValueError("weights must have positive mass")
+    if not np.isfinite(total) or total <= 0:
+        raise ValueError("weights must have finite positive mass")
     mean = weights @ x / total
     centered = x - mean
     covariance = (centered * weights[:, None]).T @ centered / total
@@ -91,7 +84,13 @@ def exact_validation_score(x, weights, mean, covariance):
     """Weighted exact Gaussian log density, averaged over evaluation rows."""
     weights = np.asarray(weights, dtype=np.float64)
     log_prob = gaussian_log_prob(x, mean, covariance)
-    return float(weights @ log_prob / weights.sum())
+    if (weights.shape != log_prob.shape or not np.isfinite(weights).all()
+            or np.any(weights < 0)):
+        raise ValueError("weights must be finite nonnegative values matching the row count")
+    total = weights.sum()
+    if not np.isfinite(total) or total <= 0:
+        raise ValueError("weights must have finite positive mass")
+    return float(weights @ log_prob / total)
 
 
 def select_noise_variance(train_x, train_w, validation_x, validation_w,
@@ -116,10 +115,17 @@ def increment_features(x, lags=INCREMENT_LAGS):
     """Concatenated lag differences, each block divided by sqrt(d - lag)."""
     x = np.asarray(x, dtype=np.float64)
     d = x.shape[1]
+    try:
+        lags = tuple(lags)
+    except TypeError as error:
+        raise ValueError("lags must be positive integers below the window length") from error
+    if not lags or any(
+        isinstance(lag, (bool, np.bool_)) or not isinstance(lag, (int, np.integer))
+        or lag <= 0 or lag >= d for lag in lags
+    ):
+        raise ValueError("lags must be positive integers below the window length")
     blocks = []
     for lag in lags:
-        if lag >= d:
-            raise ValueError("lag must be smaller than the window length")
         blocks.append(np.diff(x, axis=1, n=1) if lag == 1 else x[:, lag:] - x[:, :-lag])
         blocks[-1] = blocks[-1] / np.sqrt(d - lag)
     return np.concatenate(blocks, axis=1)
@@ -143,45 +149,10 @@ def increment_energy_score(draws, observations):
 
 def noise_matched_diagonal(train_x, train_w, variance):
     """Diagonal baseline with total variance max(weighted_var_j, v)."""
+    variance = _positive_variance(variance)
     mean, covariance = weighted_moments(train_x, train_w)
     total = np.maximum(np.diag(covariance), variance)
     return {"mean": mean, "covariance": np.diag(total)}
-
-
-def posterior_code_reassignment(model, windows, donor_indices, latent_draws_per_window=16,
-                                seed=0, decode_chunk=4096):
-    """Reassigned-minus-own decoder-mean MSE per coordinate.
-
-    Each window's posterior uses (draws, latent) standard-normal noise from
-    the seeded stream. Own MSE uses the target's posterior codes; reassigned
-    MSE uses its donor's posterior codes. Both compare decoder means to the
-    target window, without adding observation noise.
-    """
-    windows = np.asarray(windows, dtype=np.float32)
-    n = len(windows)
-    rng = np.random.default_rng(seed)
-    mean, log_variance = model.encode(windows)
-    mean = np.asarray(mean, dtype=np.float64)
-    log_variance = np.asarray(log_variance, dtype=np.float64)
-    epsilon = rng.standard_normal((n, latent_draws_per_window, model.latent_dim))
-    z = mean[:, None, :] + np.exp(0.5 * log_variance[:, None, :]) * epsilon
-    flat = z.reshape(-1, model.latent_dim).astype(np.float32)
-    decoded = []
-    for start in range(0, len(flat), decode_chunk):
-        decoded.append(np.asarray(model.decode_mean(flat[start:start + decode_chunk]),
-                                  dtype=np.float64))
-    decoded = np.concatenate(decoded).reshape(n, latent_draws_per_window, -1)
-    donor_z = z[donor_indices]
-    donor_flat = donor_z.reshape(-1, model.latent_dim).astype(np.float32)
-    donor_decoded = []
-    for start in range(0, len(donor_flat), decode_chunk):
-        donor_decoded.append(np.asarray(model.decode_mean(donor_flat[start:start + decode_chunk]),
-                                        dtype=np.float64))
-    donor_decoded = np.concatenate(donor_decoded).reshape(n, latent_draws_per_window, -1)
-    own_mse = ((decoded - windows[:, None, :].astype(np.float64)) ** 2).mean(axis=(1, 2))
-    donor_mse = ((donor_decoded - windows[:, None, :].astype(np.float64)) ** 2).mean(axis=(1, 2))
-    return {"own_mse": own_mse, "donor_mse": donor_mse,
-            "reassignment_gain": donor_mse - own_mse}
 
 
 def posterior_score_components(model, observations, samples, seed, chunk=32,
@@ -189,7 +160,7 @@ def posterior_score_components(model, observations, samples, seed, chunk=32,
     """Per-window probability components, sharing the same posterior draws.
 
     Probability arithmetic is float64; neural inputs and latent codes are
-    float32. The residual path reproduces the frozen v1 likelihood arithmetic.
+    float32. The residual likelihood includes the change-of-variables Jacobian.
     Expected NLL/MSE are Monte Carlo estimates; KL is analytic. The Jensen
     gap compares log-mean weights with mean log weights, not with true log p(x).
     An explicit observation variance changes only the likelihood, deriving the
@@ -406,7 +377,8 @@ def linear_model_iw_control(covariance, noise_variance, x, prior_samples,
     marginal_covariance = loadings @ loadings.T + noise_variance * np.eye(d)
     exact_log_marginal = gaussian_log_prob(x, np.zeros(d), marginal_covariance)
     rng = np.random.default_rng(seed)
-    prior_z = rng.standard_normal((prior_samples, loadings.shape[1]))
+    # Preserve the initial draws so later importance samples retain their stream.
+    rng.standard_normal((prior_samples, loadings.shape[1]))
     log_weights = []
     for xi in x:
         precision = loadings.T @ loadings / noise_variance + np.eye(loadings.shape[1])

@@ -25,7 +25,7 @@ import plot_values
 
 EVIDENCE_SHA = "a73117bf43a049628455b72e27d55634c6e97d38d51a238fe679d55a0b4d0b6f"
 SUMMARY_SHA = "91c0bf8adbca844f53aaf85e18db4cb36834e69c2d3e3676b5069fe3cf0c8696"
-PLOT_MANIFEST_SHA = "5fbeaef79372cd88b870d19a613f38248ac5464362951df62d4daba1eb30a112"
+PLOT_MANIFEST_SHA = "53a12054dca1c73316a57c311e88a8858f98d9c5465cfb647bb8cdb7c0a1847e"
 TABLE_FIGURE_SHA = "e0d5c53b085630303435824a57217e896a97dbac53fd7ce1b1ee3903a1614d86"
 FONT = "DejaVu Serif"
 FONT_SHA = "107244956e9962b9e96faccdc551825e0ae0898ae13737133e1b921a2fd35ffa"
@@ -178,11 +178,11 @@ def diagnostic_legend(fig, spectra=False):
                    loc="upper center", bbox_to_anchor=(.5, 1 - .70 / height), ncol=2,
                    frameon=False, columnspacing=1.1, handlelength=2.7, borderaxespad=0)
 
-def save(fig, directory, name, digest):
+def save(fig, directory, name):
     # Do not tight-crop: every output is 396 PDF points wide, matching the paper.
     fig.savefig(directory / (name + ".pdf"), dpi=250, metadata={
-        "Title": name, "Author": "", "Creator": "DART retained-data figure renderer",
-        "Subject": "Scientific evidence SHA256 " + digest, "CreationDate": None, "ModDate": None})
+        "Title": name, "Author": "", "Creator": "VAE skip reparameterization",
+        "CreationDate": None, "ModDate": None})
     plt.close(fig)
 
 
@@ -211,7 +211,7 @@ def comparison(directory, records):
     fig.text(.57, .02, "Energy score difference: skip minus no skip\n(dimensionless coordinates)",
              fontsize=9, ha="center")
     fig.tight_layout(rect=(0, .12, 1, .85), pad=.5, w_pad=.8)
-    save(fig, directory, "reconstruction_generation", EVIDENCE_SHA)
+    save(fig, directory, "dart_energy_score_differences")
 
 
 def context(directory, summary):
@@ -231,12 +231,12 @@ def context(directory, summary):
         ax.set_ylabel("HEIGHT (m)")
         ax.ticklabel_format(axis="y", style="plain", useOffset=False)
     fig.tight_layout(pad=.7, h_pad=1.2, w_pad=.8)
-    save(fig, directory, "full_record_context", EVIDENCE_SHA)
+    save(fig, directory, "dart_original_height_records")
 
 
 def diagnostics(directory, records, reduced):
-    for group, fresh in (("historical", False), ("fresh", True)):
-        names = [n for n in plot_values.record_order(records) if (records[n]["target"] == "six_UTC_bins_equal") == fresh]
+    for group, is_2018 in (("original", False), ("2018", True)):
+        names = [n for n in plot_values.record_order(records) if (records[n]["target"] == "six_UTC_bins_equal") == is_2018]
         fig, axes = plt.subplots(len(names), 3, figsize=(5.5, 1.52 * len(names) + .95), squeeze=False)
         for row, name in enumerate(names):
             for feature, ax in enumerate(axes[row]):
@@ -262,8 +262,8 @@ def diagnostics(directory, records, reduced):
                     ax.set_xlabel(("Mean minus\ntraining mean (m)", "Standard deviation\nwithin a window (m)", "Time increment\nnorm (m)")[feature])
             axes[row, 0].set_ylabel("ECDF")
         diagnostic_legend(fig)
-        fig.subplots_adjust(left=.155, right=.985, bottom=.105 if fresh else .08,
-                            top=.8 if fresh else .837, hspace=.60, wspace=.24)
+        fig.subplots_adjust(left=.155, right=.985, bottom=.105 if is_2018 else .08,
+                            top=.8 if is_2018 else .837, hspace=.60, wspace=.24)
         for row, name in enumerate(names):
             box = axes[row, 0].get_position()
             fig.text(.022, (box.y0 + box.y1) / 2,
@@ -271,9 +271,9 @@ def diagnostics(directory, records, reduced):
                      rotation=90, ha="center", va="center", fontsize=8.5)
         for col, label in enumerate(("Window mean", "Standard deviation", "Time increment norm")):
             box = axes[0, col].get_position()
-            fig.text((box.x0 + box.x1) / 2, .855 if fresh else .88,
+            fig.text((box.x0 + box.x1) / 2, .855 if is_2018 else .88,
                      label, ha="center", fontsize=9)
-        save(fig, directory, "dart_ecdf_" + group, EVIDENCE_SHA)
+        save(fig, directory, "dart_feature_distributions_" + group)
 
         fig, axes = plt.subplots(len(names), 2, figsize=(5.5, 1.48 * len(names) + 1.15), squeeze=False)
         frequency = np.arange(1, 97) / 2
@@ -305,8 +305,8 @@ def diagnostics(directory, records, reduced):
                 ax.set_ylim(limits)
             axes[row, 0].set_ylabel("Bin power (m$^2$)")
         diagnostic_legend(fig, spectra=True)
-        fig.subplots_adjust(left=.19, right=.985, bottom=.09 if fresh else .07,
-                            top=.74 if fresh else .767, hspace=.32, wspace=.34)
+        fig.subplots_adjust(left=.19, right=.985, bottom=.09 if is_2018 else .07,
+                            top=.74 if is_2018 else .767, hspace=.32, wspace=.34)
         for row, name in enumerate(names):
             box = axes[row, 0].get_position()
             fig.text(.022, (box.y0 + box.y1) / 2,
@@ -316,7 +316,7 @@ def diagnostics(directory, records, reduced):
                                      "Neural observation variance\n" + r"High ($25\sigma_0^2$)")):
             box = axes[0, col].get_position()
             fig.text((box.x0 + box.x1) / 2, box.y1 + .046, label, ha="center", fontsize=9)
-        save(fig, directory, "dart_spectra_" + group, EVIDENCE_SHA)
+        save(fig, directory, "dart_spectra_" + group)
 
 
 def variance(directory, records):
@@ -357,7 +357,7 @@ def variance(directory, records):
              ha="center", fontsize=8.5)
     fig.text(.74, .012, "Energy score change ($10^{-3}$)\n(replacement minus original)",
              ha="center", fontsize=9)
-    save(fig, directory, "dart_variance_refit", EVIDENCE_SHA)
+    save(fig, directory, "dart_observation_variance")
 
 
 def ppca_comparison(directory, records):
@@ -388,7 +388,7 @@ def ppca_comparison(directory, records):
     fig.subplots_adjust(left=.42, right=.985, bottom=.095, top=.94, wspace=.3)
     fig.text(.71, .018, "Energy score difference: neural minus PPCA\n(dimensionless coordinates)",
              ha="center", fontsize=9)
-    save(fig, directory, "dart_ppca_comparison", EVIDENCE_SHA)
+    save(fig, directory, "dart_ppca_comparison")
 
 
 def intervals(directory, records):
@@ -486,7 +486,7 @@ def intervals(directory, records):
                    columnspacing=1.0, handletextpad=.45)
         fig.text(.018, .48, "Energy score difference: skip minus no skip", rotation=90,
                  ha="center", va="center", fontsize=9)
-        save(fig, directory, "dart_intervals_" + group, EVIDENCE_SHA)
+        save(fig, directory, "dart_intervals_" + group)
 
 
 def main():

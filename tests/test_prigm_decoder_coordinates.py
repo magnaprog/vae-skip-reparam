@@ -14,7 +14,7 @@ import h5py
 SRC = Path(__file__).resolve().parents[1] / "src"
 sys.path.insert(0, str(SRC))
 
-from prigm_v2_model import (BASE_FAST, HEAD_RATE, CONDITIONS, STORAGE_CONTRACT,
+from prigm_decoder_coordinates import (BASE_FAST, HEAD_RATE, CONDITIONS, STORAGE_CONTRACT,
                             BypassVAE, CanonicalBypassOptimizer,
                             condition_settings, map_bypass)
 
@@ -311,7 +311,7 @@ def test_weight_contract_roundtrip(tmp_path, condition, suffix, common_draws):
 
 @pytest.mark.parametrize("attribute,value", [
     ("storage_contract", None), ("storage_contract", 2),
-    ("head_coordinates", "legacy_residual"), ("head_scale", 0.25),
+    ("head_coordinates", "unknown_coordinates"), ("head_scale", 0.25),
     ("observation_variance", 2 * OBS),
 ])
 def test_wrong_contract_rejected_before_any_assignment(tmp_path, attribute, value):
@@ -340,10 +340,10 @@ def test_other_head_storage_requires_explicit_mapping(tmp_path, target_condition
     _assert_exact_tensors(target.weights, before)
 
 
-def test_untagged_same_shape_historical_weights_rejected(tmp_path):
+def test_untagged_same_shape_weights_rejected(tmp_path):
     source, target = _model("raw", seed=99), _model("canonical", seed=1)
-    path = tmp_path / "historical.h5"
-    # Deliberately use Keras directly to produce the old, untagged storage format.
+    path = tmp_path / "untagged.h5"
+    # Deliberately use Keras directly to produce an untagged weight file.
     tf.keras.Model.save_weights(source, str(path))
     with h5py.File(path, "r") as checkpoint:
         assert "storage_contract" not in checkpoint.attrs
@@ -355,7 +355,7 @@ def test_untagged_same_shape_historical_weights_rejected(tmp_path):
     with pytest.raises(ValueError, match="storage_contract"):
         target.load_weights(path)
     _assert_exact_tensors(target.weights, before)
-    # An overwrite refusal must not relabel an old file as contract 3.
+    # An overwrite refusal must not add coordinate attributes to an existing untagged file.
     with pytest.raises(FileExistsError):
         target.save_weights(path, overwrite=False)
     with h5py.File(path, "r") as checkpoint:
