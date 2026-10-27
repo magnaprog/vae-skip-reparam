@@ -1,4 +1,4 @@
-# Train a model
+# Model training
 
 Run commands from the repository root. Training uses a separate environment from figure rendering. The experiments used Python 3.11.8 with these direct dependencies:
 
@@ -9,9 +9,9 @@ python -m pip install tensorflow==2.15.0 numpy==1.26.4 scipy==1.14.1 \
   pandas==2.2.3 h5py==3.12.1
 ```
 
-Use a compatible NVIDIA driver and CUDA environment for TensorFlow 2.15. The package list records the experiment's Python dependencies; driver installation depends on the host.
+Use a compatible NVIDIA driver and CUDA environment for TensorFlow 2.15.
 
-## Check execution
+## Short training run
 
 Prepare a short run on CPU, then train one Gaussian model on an available GPU:
 
@@ -23,7 +23,7 @@ CUDA_VISIBLE_DEVICES='GPU-REPLACE-ME' python src/prigm_experiment.py train --run
 
 Replace both UUID placeholders with the same GPU assigned to this run. The short run checks execution with fewer training steps and samples than the experiments in the paper.
 
-## Run the study setup
+## Gaussian and DART experiments
 
 The launcher runs 60 fits: one Gaussian dataset and four annual DART records, with four conditions and three training seeds per dataset. The DART records are listed in [Data sources](datasets/README.md). Prepare a new directory, then supply the UUIDs of four available GPUs:
 
@@ -42,13 +42,13 @@ python src/prigm_experiment.py campaign --run-root runs/core \
 
 The `--arm` option selects a condition using the codes above. Base observation variance comes from probabilistic principal component analysis (PPCA) of the training data.
 
-The run directory saves the preparation settings, copies of the training code, training histories, network weights and evaluations. An interrupted fit restarts in a new attempt directory, without resuming the optimizer and random number state. Keep the completed run directory to analyze its results.
+The run directory saves the preparation settings, copies of the training code, training histories, network weights and evaluations. An interrupted fit restarts in a new attempt directory, without resuming the optimizer and random number state.
 
 The paper also evaluates 36 fits on three DART records from 2018. Their scores and figure inputs are included, but their preparation inputs and training launchers are not part of this release.
 
 When calling the numerical helpers with new data, use finite arrays, nonnegative weights with positive total mass, and finite positive observation variances.
 
-## Test the models
+## Model tests
 
 In the training environment, install pytest and run the two model test modules:
 
