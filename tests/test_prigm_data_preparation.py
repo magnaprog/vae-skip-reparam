@@ -216,6 +216,3 @@ def test_annual_record_below_coverage_requirement_is_rejected(complete_annual_re
     assert not result.eligible
     assert result.coverage == 0.75
     assert any(reason.startswith("coverage ") for reason in result.reasons)
-
-
-        # Archived donors were stored, not regenerated from this helper.
