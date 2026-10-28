@@ -39,16 +39,16 @@ Run the data, metric and plotting tests in the CPU environment. For model tests,
 ## Citation
 
 ```bibtex
-@misc{lee2026inputskip,
+@inproceedings{lee2026inputskip,
   author        = {Lee, Kevin},
   title         = {An Input Skip Can Reparameterize a {VAE} Without Improving the Generator},
+  booktitle     = {Conference on Neural Information Processing Systems ({NeurIPS})
+                   Workshop: Principles of Generative Modeling ({PriGM})},
   year          = {2026},
   eprint        = {2610.37456},
   archivePrefix = {arXiv},
   primaryClass  = {cs.LG},
-  url           = {https://arxiv.org/abs/2610.37456},
-  note          = {Accepted at the Conference on Neural Information Processing Systems
-                   ({NeurIPS}) Workshop: Principles of Generative Modeling ({PriGM})}
+  url           = {https://arxiv.org/abs/2610.37456}
 }
 ```
 
