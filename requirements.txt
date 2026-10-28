@@ -1,0 +1,8 @@
+# Direct dependencies for CPU figure rendering and numerical tests, Python 3.12.
+# TensorFlow training uses the separate environment in TRAINING.md.
+numpy==2.4.4
+scipy==1.17.1
+pandas==3.0.2
+matplotlib==3.10.9
+Pillow==10.2.0
+pytest==9.0.3

@@ -1,0 +1,550 @@
+{
+  "covariance_structure": [
+    {
+      "fitted_PPCA_variance": 0.0001,
+      "leading16_covariance_fraction": {
+        "without_window_mean": 0.9999652775792243,
+        "time_differences": 0.9999109530207483,
+        "full_window": 0.9999957861049107
+      },
+      "record": "23461t2022"
+    },
+    {
+      "fitted_PPCA_variance": 0.0001,
+      "leading16_covariance_fraction": {
+        "without_window_mean": 0.9998884181958471,
+        "time_differences": 0.9997290245681572,
+        "full_window": 0.999994647160398
+      },
+      "record": "44402t2016"
+    },
+    {
+      "fitted_PPCA_variance": 0.0001,
+      "leading16_covariance_fraction": {
+        "without_window_mean": 0.9999659969306841,
+        "time_differences": 0.9999251757574386,
+        "full_window": 0.9999943264837147
+      },
+      "record": "46407t2011"
+    },
+    {
+      "fitted_PPCA_variance": 0.0001,
+      "leading16_covariance_fraction": {
+        "without_window_mean": 0.9998867595291095,
+        "time_differences": 0.9997873426493314,
+        "full_window": 0.9999916239923407
+      },
+      "record": "52403t2020"
+    },
+    {
+      "fitted_PPCA_variance": 0.00012047717091476568,
+      "leading16_covariance_fraction": {
+        "without_window_mean": 0.9998888522824356,
+        "time_differences": 0.999712898512988,
+        "full_window": 0.9998899692038125
+      },
+      "record": "dart_44402_2018"
+    },
+    {
+      "fitted_PPCA_variance": 0.0001,
+      "leading16_covariance_fraction": {
+        "without_window_mean": 0.9999574384166491,
+        "time_differences": 0.9999210038531682,
+        "full_window": 0.9999577267928168
+      },
+      "record": "dart_21415_2018"
+    },
+    {
+      "fitted_PPCA_variance": 0.0001103383339039894,
+      "leading16_covariance_fraction": {
+        "without_window_mean": 0.9998971231493778,
+        "time_differences": 0.9998081757987662,
+        "full_window": 0.9999012519638875
+      },
+      "record": "dart_21418_2018"
+    }
+  ],
+  "coverage": {
+    "matched_PPCA_fit_geometry_comparisons": 252,
+    "original_and_variance_refit_stream_geometry_rows": 1512,
+    "prior_streams": [
+      71001,
+      71002,
+      71003
+    ],
+    "records": [
+      "23461t2022",
+      "44402t2016",
+      "46407t2011",
+      "52403t2020",
+      "dart_44402_2018",
+      "dart_21415_2018",
+      "dart_21418_2018"
+    ],
+    "variance_refit_fit_geometry_contrasts": 252,
+    "samples_per_stream": 1024,
+    "skip_fit_geometry_contrasts": 126,
+    "training_seeds": [
+      42,
+      1729,
+      31415
+    ],
+    "unique_fits": 84,
+    "conditions": [
+      "no_skip_base",
+      "skip_base",
+      "no_skip_high",
+      "skip_high"
+    ]
+  },
+  "definitions": {
+    "observation_distance": "Weighted mean distance from observations to generated samples",
+    "half_sample_distance": "Half the mean distance between distinct pairs of generated samples",
+    "energy_score": "observation_distance minus half_sample_distance; lower is better",
+    "PPCA": "Each neural fit's mean score across streams minus the PPCA mean at the same observation variance; the models use separate sampling streams",
+    "covariance": "Fraction of transformed covariance trace contributed by the first sixteen eigenvectors of the original weighted training covariance, using the same eigenvectors for each transformation",
+    "reduction": "Average the three sampling streams within each fit before computing counts and ranges across fits",
+    "variance_refit": "Score after replacing observation variance minus the original score, using the same network weights and sampling stream",
+    "scope": "Scores use normalized coordinates and finite generated samples; comparisons describe the available fits",
+    "skip": "skip_base minus no_skip_base, or skip_high minus no_skip_high, at the same observation variance and training and sampling seeds"
+  },
+  "limits": [
+    "Assess distributional agreement with the combined energy score.",
+    "For medians across fits, compute the energy score for each fit first.",
+    "Covariance fractions describe training variation. Gaussianity and causes of score differences need separate evidence."
+  ],
+  "matched_PPCA_comparison": [
+    {
+      "geometry": "full_window",
+      "minimum_at": {
+        "record": "46407t2011",
+        "seed": "31415",
+        "variance_group": "high",
+        "condition": "no_skip_high"
+      },
+      "neural_minus_PPCA": {
+        "count": 84,
+        "max": 8.913640510708255,
+        "median": 2.158486484809009,
+        "min": 0.767160144304512,
+        "negative": 0,
+        "positive": 84,
+        "zero": 0
+      }
+    },
+    {
+      "geometry": "without_window_mean",
+      "minimum_at": {
+        "record": "44402t2016",
+        "seed": "31415",
+        "variance_group": "high",
+        "condition": "no_skip_high"
+      },
+      "neural_minus_PPCA": {
+        "count": 84,
+        "max": 2.5862007606642887,
+        "median": 0.5546256905307816,
+        "min": 0.06865011106379204,
+        "negative": 0,
+        "positive": 84,
+        "zero": 0
+      }
+    },
+    {
+      "geometry": "time_differences",
+      "minimum_at": {
+        "record": "44402t2016",
+        "seed": "42",
+        "variance_group": "high",
+        "condition": "no_skip_high"
+      },
+      "neural_minus_PPCA": {
+        "count": 84,
+        "max": 0.3363450299227557,
+        "median": 0.06236482942319527,
+        "min": 0.006487313288583263,
+        "negative": 0,
+        "positive": 84,
+        "zero": 0
+      }
+    }
+  ],
+  "purpose": "DART energy scores and covariance comparisons",
+  "variance_refit_term_summaries": [
+    {
+      "delta_observation_distance": {
+        "count": 42,
+        "max": 0.005890421800926878,
+        "median": 0.002516425445233672,
+        "min": 0.00020732151285685063,
+        "negative": 0,
+        "positive": 42,
+        "zero": 0
+      },
+      "delta_half_sample_distance": {
+        "count": 42,
+        "max": 0.023172478540969415,
+        "median": 0.007794687088897042,
+        "min": 0.0006400178854300739,
+        "negative": 0,
+        "positive": 42,
+        "zero": 0
+      },
+      "delta_energy_score": {
+        "count": 42,
+        "max": -0.0004326963725738153,
+        "median": -0.005263170321516538,
+        "min": -0.018311499389010777,
+        "negative": 42,
+        "positive": 0,
+        "zero": 0
+      },
+      "geometry": "full_window",
+      "variance_group": "base"
+    },
+    {
+      "delta_observation_distance": {
+        "count": 42,
+        "max": 0.015564180356548718,
+        "median": 0.0045696542351400336,
+        "min": 0.0005625171166775781,
+        "negative": 0,
+        "positive": 42,
+        "zero": 0
+      },
+      "delta_half_sample_distance": {
+        "count": 42,
+        "max": 0.028142053687961077,
+        "median": 0.008458679093990082,
+        "min": 0.0009807006996324457,
+        "negative": 0,
+        "positive": 42,
+        "zero": 0
+      },
+      "delta_energy_score": {
+        "count": 42,
+        "max": -0.0004181835829554596,
+        "median": -0.004414715932062663,
+        "min": -0.012577873331411915,
+        "negative": 42,
+        "positive": 0,
+        "zero": 0
+      },
+      "geometry": "without_window_mean",
+      "variance_group": "base"
+    },
+    {
+      "delta_observation_distance": {
+        "count": 42,
+        "max": 0.005403278290304736,
+        "median": 0.0015743379277886236,
+        "min": 0.00019775068869587464,
+        "negative": 0,
+        "positive": 42,
+        "zero": 0
+      },
+      "delta_half_sample_distance": {
+        "count": 42,
+        "max": 0.008485590279042795,
+        "median": 0.0026589487287981737,
+        "min": 0.00031722694029575244,
+        "negative": 0,
+        "positive": 42,
+        "zero": 0
+      },
+      "delta_energy_score": {
+        "count": 42,
+        "max": -8.064118984529856e-05,
+        "median": -0.001230134645539153,
+        "min": -0.0030823119887381325,
+        "negative": 42,
+        "positive": 0,
+        "zero": 0
+      },
+      "geometry": "time_differences",
+      "variance_group": "base"
+    },
+    {
+      "delta_observation_distance": {
+        "count": 42,
+        "max": -0.00316098262954038,
+        "median": -0.011614063447109284,
+        "min": -0.015817650843533926,
+        "negative": 42,
+        "positive": 0,
+        "zero": 0
+      },
+      "delta_half_sample_distance": {
+        "count": 42,
+        "max": -0.01455992695030576,
+        "median": -0.02699314295153673,
+        "min": -0.0395265827212589,
+        "negative": 42,
+        "positive": 0,
+        "zero": 0
+      },
+      "delta_energy_score": {
+        "count": 42,
+        "max": 0.03572550419464685,
+        "median": 0.014938667023641845,
+        "min": 0.00515542144063789,
+        "negative": 0,
+        "positive": 42,
+        "zero": 0
+      },
+      "geometry": "full_window",
+      "variance_group": "high"
+    },
+    {
+      "delta_observation_distance": {
+        "count": 42,
+        "max": -0.009512488731337143,
+        "median": -0.03121023759038888,
+        "min": -0.06739850861914103,
+        "negative": 42,
+        "positive": 0,
+        "zero": 0
+      },
+      "delta_half_sample_distance": {
+        "count": 42,
+        "max": -0.015577391601143612,
+        "median": -0.046955816322943586,
+        "min": -0.08658321250720828,
+        "negative": 42,
+        "positive": 0,
+        "zero": 0
+      },
+      "delta_energy_score": {
+        "count": 42,
+        "max": 0.01985709154815396,
+        "median": 0.013673824001235884,
+        "min": 0.005799664238805846,
+        "negative": 0,
+        "positive": 42,
+        "zero": 0
+      },
+      "geometry": "without_window_mean",
+      "variance_group": "high"
+    },
+    {
+      "delta_observation_distance": {
+        "count": 42,
+        "max": -0.003339559745417109,
+        "median": -0.011095009687281202,
+        "min": -0.024393467524734796,
+        "negative": 42,
+        "positive": 0,
+        "zero": 0
+      },
+      "delta_half_sample_distance": {
+        "count": 42,
+        "max": -0.005272253293657103,
+        "median": -0.01577486333259622,
+        "min": -0.028996751918714942,
+        "negative": 42,
+        "positive": 0,
+        "zero": 0
+      },
+      "delta_energy_score": {
+        "count": 42,
+        "max": 0.005827424673727137,
+        "median": 0.003731455805214233,
+        "min": 0.0018353378549012718,
+        "negative": 0,
+        "positive": 42,
+        "zero": 0
+      },
+      "geometry": "time_differences",
+      "variance_group": "high"
+    }
+  ],
+  "schema_version": 3,
+  "skip_term_summaries": [
+    {
+      "delta_observation_distance": {
+        "count": 21,
+        "max": 1.4779749106468014,
+        "median": 0.21569283291897298,
+        "min": -0.9481020291129335,
+        "negative": 7,
+        "positive": 14,
+        "zero": 0
+      },
+      "delta_half_sample_distance": {
+        "count": 21,
+        "max": 1.0617116610528434,
+        "median": 0.5154697136216049,
+        "min": -0.27474700958503484,
+        "negative": 2,
+        "positive": 19,
+        "zero": 0
+      },
+      "delta_energy_score": {
+        "count": 21,
+        "max": 1.5022947521449435,
+        "median": -0.299978211761605,
+        "min": -1.2678114991892635,
+        "negative": 15,
+        "positive": 6,
+        "zero": 0
+      },
+      "geometry": "full_window",
+      "pair": "skip_base-no_skip_base"
+    },
+    {
+      "delta_observation_distance": {
+        "count": 21,
+        "max": 0.4270750482504706,
+        "median": 0.16562602862898146,
+        "min": -0.1359421075637496,
+        "negative": 5,
+        "positive": 16,
+        "zero": 0
+      },
+      "delta_half_sample_distance": {
+        "count": 21,
+        "max": 0.9875404091884737,
+        "median": 0.26493541805103676,
+        "min": -0.10624199958834613,
+        "negative": 3,
+        "positive": 18,
+        "zero": 0
+      },
+      "delta_energy_score": {
+        "count": 21,
+        "max": 0.29720133239038926,
+        "median": -0.08918357829618895,
+        "min": -0.6263251775293526,
+        "negative": 17,
+        "positive": 4,
+        "zero": 0
+      },
+      "geometry": "without_window_mean",
+      "pair": "skip_base-no_skip_base"
+    },
+    {
+      "delta_observation_distance": {
+        "count": 21,
+        "max": 0.062179472046857,
+        "median": 0.005715114908376877,
+        "min": -0.07527457518048493,
+        "negative": 10,
+        "positive": 11,
+        "zero": 0
+      },
+      "delta_half_sample_distance": {
+        "count": 21,
+        "max": 0.15227539169902557,
+        "median": -0.0037368108401210076,
+        "min": -0.04414020647310527,
+        "negative": 11,
+        "positive": 10,
+        "zero": 0
+      },
+      "delta_energy_score": {
+        "count": 21,
+        "max": 0.026157362238061144,
+        "median": -0.008569203665951227,
+        "min": -0.09009591965216808,
+        "negative": 17,
+        "positive": 4,
+        "zero": 0
+      },
+      "geometry": "time_differences",
+      "pair": "skip_base-no_skip_base"
+    },
+    {
+      "delta_observation_distance": {
+        "count": 21,
+        "max": 2.6237562128508025,
+        "median": 0.4054985979527406,
+        "min": -0.12620347948987623,
+        "negative": 1,
+        "positive": 20,
+        "zero": 0
+      },
+      "delta_half_sample_distance": {
+        "count": 21,
+        "max": 1.1602217343383472,
+        "median": 0.3780665385360133,
+        "min": -1.1676779201330016,
+        "negative": 4,
+        "positive": 17,
+        "zero": 0
+      },
+      "delta_energy_score": {
+        "count": 21,
+        "max": 3.3954403362305308,
+        "median": -0.21859979954788736,
+        "min": -0.603938935505079,
+        "negative": 11,
+        "positive": 10,
+        "zero": 0
+      },
+      "geometry": "full_window",
+      "pair": "skip_high-no_skip_high"
+    },
+    {
+      "delta_observation_distance": {
+        "count": 21,
+        "max": 0.5596385829846771,
+        "median": 0.0678174677630216,
+        "min": -0.16458199919594593,
+        "negative": 8,
+        "positive": 13,
+        "zero": 0
+      },
+      "delta_half_sample_distance": {
+        "count": 21,
+        "max": 1.104089114430414,
+        "median": 0.12124230344685882,
+        "min": -0.14899194973518712,
+        "negative": 8,
+        "positive": 13,
+        "zero": 0
+      },
+      "delta_energy_score": {
+        "count": 21,
+        "max": 0.08683096715625194,
+        "median": -0.027498025386270147,
+        "min": -0.5444505314457396,
+        "negative": 15,
+        "positive": 6,
+        "zero": 0
+      },
+      "geometry": "without_window_mean",
+      "pair": "skip_high-no_skip_high"
+    },
+    {
+      "delta_observation_distance": {
+        "count": 21,
+        "max": 0.08468182828479047,
+        "median": 0.00560714011898759,
+        "min": -0.028116425013275086,
+        "negative": 10,
+        "positive": 11,
+        "zero": 0
+      },
+      "delta_half_sample_distance": {
+        "count": 21,
+        "max": 0.15865704573693085,
+        "median": -0.0019620358519772583,
+        "min": -0.043512303800635865,
+        "negative": 12,
+        "positive": 9,
+        "zero": 0
+      },
+      "delta_energy_score": {
+        "count": 21,
+        "max": 0.015395878787360762,
+        "median": -0.0041850174295985365,
+        "min": -0.0739752174521402,
+        "negative": 14,
+        "positive": 7,
+        "zero": 0
+      },
+      "geometry": "time_differences",
+      "pair": "skip_high-no_skip_high"
+    }
+  ]
+}

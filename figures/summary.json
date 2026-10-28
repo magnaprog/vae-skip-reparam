@@ -1,0 +1,5968 @@
+{
+  "annual_sources": {
+    "data/23461t2022.txt": "f403f2e2d3345b0ddad24d37fb8b53a3c117e4b5e41835ac0550608cf4aed93b",
+    "data/44402t2016.txt": "b49d26914994f40ffe95d520c8ba8d2297ea4447e2d9c1df60c359399c4b550e",
+    "data/46407t2011.txt": "05ab41fce8ced3dea4db725c741f42dc6dd091b7d4d3291affc554a1334579b8",
+    "data/52403t2020.txt": "dc3a9ccf1612cd7c64b58f0288a9712701505b8eb08c1f9a94f78705deaa47d5"
+  },
+  "records": {
+    "23461t2022": {
+      "contrasts": {
+        "skip_base-no_skip_base/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": 0.29720133239038926,
+                "median": 0.025479275464954654,
+                "min": -0.055273832720852845
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": 0.026157362238061088,
+                "median": 0.003029154518434163,
+                "min": -0.0028915918255043396
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": 1.5022947521449435,
+                "median": 0.36914810248208596,
+                "min": -1.208231478413649
+              }
+            }
+          }
+        },
+        "skip_high-no_skip_high/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": 0.08683096715625134,
+                "median": 0.08223630218862017,
+                "min": -0.027498025386270292
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": 0.015395878787360817,
+                "median": 0.011131558695363308,
+                "min": 0.0007831675241507704
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": 3.3954403362305308,
+                "median": 0.8304144840101486,
+                "min": 0.7726544772926331
+              }
+            }
+          }
+        }
+      },
+      "models": {
+        "no_skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.2628601912189965,
+                  3.2761421381111524,
+                  3.2792893235911316
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.4322197664281685,
+                  0.43388912636916854,
+                  0.43505631980787257
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  45.578605697425694,
+                  45.52258110192008,
+                  45.538770215710926
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.2598636709398403,
+                  3.272934542609141,
+                  3.27619322572394
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.43167882631645943,
+                  0.4333107759122141,
+                  0.43449958253930887
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  45.57170616447639,
+                  45.51546124329366,
+                  45.532050457137494
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004090783094598061
+          }
+        },
+        "no_skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.178234213122832,
+                  3.181482592694285,
+                  3.1922811084854725
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.4356787453662928,
+                  0.43666856100091683,
+                  0.43776152262384643
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  44.067338778548766,
+                  44.18460581122192,
+                  44.15507882383535
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.1774944321446155,
+                  3.1806635032388866,
+                  3.191429553227674
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.43555057232812255,
+                  0.4365241946212369,
+                  0.4376116524015313
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  44.065153109800015,
+                  44.182194216802664,
+                  44.1528546005472
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.00021426595634502885
+          }
+        },
+        "no_skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.339291579137707,
+                  3.3554949897149986,
+                  3.3642086586257673
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.45513368731497417,
+                  0.4577844886296221,
+                  0.45715673058973205
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  45.29184845927582,
+                  45.274467981931465,
+                  45.25692128479289
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.3373500275400336,
+                  3.353325189430826,
+                  3.3620041113264163
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.45475971924095343,
+                  0.4573863352711653,
+                  0.45674496472486725
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  45.286981525689654,
+                  45.26891623134129,
+                  45.25195939339034
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.00033177271189180146
+          }
+        },
+        "skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.214910125277298,
+                  3.204938571010516,
+                  3.232621458470908
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.437190821529879,
+                  0.4348424879786685,
+                  0.43821936665196465
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  44.349876767188356,
+                  44.245335046747016,
+                  44.42005076588038
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.212758421566762,
+                  3.2026422489335427,
+                  3.2303216491144138
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.4366396401706657,
+                  0.43427419418237106,
+                  0.4376395022059379
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  44.34476942494126,
+                  44.23997970165549,
+                  44.41505199658804
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0003527045815069657
+          }
+        },
+        "skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.21235781471462,
+                  3.1860608000903667,
+                  3.230017125892467
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.43421381556567473,
+                  0.4306541706711965,
+                  0.43656606727767183
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  44.41108982293679,
+                  44.52985381568407,
+                  44.57352408243144
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.2111345746135282,
+                  3.184781402299462,
+                  3.228618941187812
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.4338995428846951,
+                  0.4303392661383673,
+                  0.4362365756431515
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  44.40793773546551,
+                  44.526395666650046,
+                  44.57027814017274
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.00026293312264475885
+          }
+        },
+        "skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.6275188542411447,
+                  3.6621658281918172,
+                  3.6609145422166787
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.4796948801662101,
+                  0.4843460659836222,
+                  0.48450604709867934
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  46.82017881943054,
+                  46.76705070104428,
+                  46.74289246196018
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.6232663366893414,
+                  3.657254282239823,
+                  3.656335152511746
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.4786322748952276,
+                  0.48319144340277775,
+                  0.48338038458473004
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  46.80938861243306,
+                  46.75529981057622,
+                  46.732379361534804
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0005266915124296315
+          }
+        },
+        "no_skip_high/1729/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.1117473372413764,
+                  3.121321555917045,
+                  3.124302432968841
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.40997750618091855,
+                  0.41072297677973907,
+                  0.4116380667687625
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  45.24001261756081,
+                  45.23084991458314,
+                  45.21548924775782
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.125080374851972,
+                  3.1354318136427284,
+                  3.1386109967349984
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.4120654188502263,
+                  0.412996113430407,
+                  0.4139516093718526
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  45.275336146374485,
+                  45.26611977152093,
+                  45.25055477013551
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.000518444651767341
+          }
+        },
+        "no_skip_high/31415/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.1619052759102027,
+                  3.1724423868877207,
+                  3.163139987390164
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.4200048175092869,
+                  0.4214839934603232,
+                  0.4203425232111757
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  43.898743567593975,
+                  44.16949223053715,
+                  43.99115106873093
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.175804249314565,
+                  3.1872427421135208,
+                  3.177655094258032
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.4223561933789436,
+                  0.4240645930428036,
+                  0.422839594914742
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  43.93088417204049,
+                  44.20372807520646,
+                  44.02342971375637
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0006082691301960028
+          }
+        },
+        "no_skip_high/42/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.2032153253880686,
+                  3.227660217683301,
+                  3.1956480348614034
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.42692930657313427,
+                  0.4307537484888146,
+                  0.4262368351271592
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  43.78169862930834,
+                  43.82583679513536,
+                  43.636821165643575
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.2163394790574604,
+                  3.241832669783405,
+                  3.209416383382887
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.4297373830509079,
+                  0.43373281403866937,
+                  0.42908406635122465
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  43.81188016110697,
+                  43.85887239295943,
+                  43.66663886265772
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0003938542183243104
+          }
+        },
+        "skip_high/1729/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.1966973923851083,
+                  3.2002524390745055,
+                  3.2209143961364024
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.42501693753865555,
+                  0.4254734843597529,
+                  0.42803576419309414
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  46.06551103235985,
+                  45.83234196649558,
+                  46.27974223307679
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.2149582457704966,
+                  3.218991092645084,
+                  3.240169269343412
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.4296143288608845,
+                  0.430177472831827,
+                  0.4329069687553028
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  46.101299644970865,
+                  45.86758259045416,
+                  46.31588950909116
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0005740863100936188
+          }
+        },
+        "skip_high/31415/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.1485817640025804,
+                  3.1211659579312445,
+                  3.1452458520954516
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.42285194551267824,
+                  0.41930950928710176,
+                  0.4220193819534582
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  44.65945870537077,
+                  44.78299260645703,
+                  44.93489898691216
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.1615877802409846,
+                  3.1348300793133803,
+                  3.1598155527997696
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.4264244641519742,
+                  0.4229888161368678,
+                  0.4258697537681691
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  44.68864643003122,
+                  44.81441084838511,
+                  44.965479009998504
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004843397643287434
+          }
+        },
+        "skip_high/42/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.2920281302875525,
+                  3.295810261821162,
+                  3.285394092389919
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.43925898475038766,
+                  0.4394519826919559,
+                  0.43860359883285444
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  47.220879483528556,
+                  47.21183232481786,
+                  46.997965790432445
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.3036474547083365,
+                  3.3085641503287357,
+                  3.2972054902670456
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.44216701165890004,
+                  0.44253409275123945,
+                  0.4415191593962831
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  47.25060871964138,
+                  47.24383348637363,
+                  47.02694351078047
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0008833098136385468
+          }
+        }
+      },
+      "station": "23461",
+      "target": "original_uniform_windows",
+      "year": 2022
+    },
+    "44402t2016": {
+      "contrasts": {
+        "skip_base-no_skip_base/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": 0.0320437395940479,
+                "median": -0.0813966210514554,
+                "min": -0.14386134955068167
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": 0.014074664094207304,
+                "median": -0.00856920366595119,
+                "min": -0.031134368707379734
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": 0.8491187904961267,
+                "median": -0.15262633273381118,
+                "min": -1.2678114991892648
+              }
+            }
+          }
+        },
+        "skip_high-no_skip_high/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": 0.03710659581528164,
+                "median": 0.03133079969896283,
+                "min": 0.025635894555639638
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": 0.007569175970964866,
+                "median": 0.003186249258351407,
+                "min": 0.000626687849773766
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": 0.17241609329920315,
+                "median": 0.11519714577470097,
+                "min": 0.11052184277929378
+              }
+            }
+          }
+        }
+      },
+      "models": {
+        "no_skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.2444464559209756,
+                  2.2541554825715315,
+                  2.2368766175445405
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.3094634020807207,
+                  0.309720523222667,
+                  0.3066149077395645
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.501184308791498,
+                  12.645168966012019,
+                  12.625446134099418
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.2421642169086704,
+                  2.2519664018350656,
+                  2.2346912729005215
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.3093196580964699,
+                  0.30962382353816403,
+                  0.3065401236057119
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.495834323518249,
+                  12.63999938372831,
+                  12.620071233478825
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.00034489184394599913
+          }
+        },
+        "no_skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.2164414316152556,
+                  2.2159364851985326,
+                  2.221852176863525
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.3075867601376874,
+                  0.30804441972305385,
+                  0.30836637208678874
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.615876784817816,
+                  13.537326358823943,
+                  13.60127701556279
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.2147256054164526,
+                  2.214209381395352,
+                  2.220284368121707
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.3075030388389438,
+                  0.30792264510125467,
+                  0.3083299444377958
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.611374998990486,
+                  13.533008608242682,
+                  13.59672144314423
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.00030999116967002984
+          }
+        },
+        "no_skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.3269544467215506,
+                  2.327874817641243,
+                  2.314585404577381
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.3271801324981812,
+                  0.32726692098187976,
+                  0.3247816405733486
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.173678878451243,
+                  12.18006250452287,
+                  12.145704541267976
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.323194166709053,
+                  2.3243629727716506,
+                  2.310952692621829
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.32691532355718983,
+                  0.32705768229855076,
+                  0.3245174735995359
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.164585565369883,
+                  12.17084313484634,
+                  12.136439588772177
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0005243876060249582
+          }
+        },
+        "skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.1718644616444616,
+                  2.1549938083990945,
+                  2.1644304228391253
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.3010743306703228,
+                  0.29859740399709234,
+                  0.30041948737768354
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.307733373941504,
+                  13.620227543910401,
+                  13.39119486253941
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.1693698273511997,
+                  2.1527629074364545,
+                  2.1619981481837867
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.30074671536713316,
+                  0.29834876635907326,
+                  0.30015248002520933
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.302579718496473,
+                  13.615136476111005,
+                  13.385755032032298
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004096845021501879
+          }
+        },
+        "skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.255356447066685,
+                  2.2499311833245423,
+                  2.2450736820682295
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.3222022722101766,
+                  0.3226070845049262,
+                  0.3214121875150491
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.464508301611291,
+                  13.399263467143134,
+                  13.43282939224869
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.2516067895848946,
+                  2.2462902976007326,
+                  2.241751160802049
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.32179440553263816,
+                  0.32214803396076386,
+                  0.3210948992164961
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.453431288431588,
+                  13.388934333871331,
+                  13.422013665880199
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0006448156058321019
+          }
+        },
+        "skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.1913742642092324,
+                  2.178708447701764,
+                  2.1677479083771334
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.29645913869776697,
+                  0.2952136162483665,
+                  0.29415283298513684
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.94406763648862,
+                  10.917392417669857,
+                  10.834551372515817
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.1899795522599814,
+                  2.17743423639572,
+                  2.166523360606091
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.2962770350098422,
+                  0.2950472238470483,
+                  0.29398410253477286
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.941359672268092,
+                  10.914756241397207,
+                  10.831858245069682
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0002658069364268795
+          }
+        },
+        "no_skip_high/1729/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.0459750990483254,
+                  2.0726698950370452,
+                  2.0422459356667524
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.2747704138175318,
+                  0.27798252892847275,
+                  0.2742111466366908
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.124820053593218,
+                  12.126855478271091,
+                  11.896809748091236
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.059791959410088,
+                  2.087019300111067,
+                  2.055868358560952
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.2771005724601937,
+                  0.28051792878838533,
+                  0.27653973384417546
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.145216626723375,
+                  12.14651510062358,
+                  11.916416518235339
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004925324886259436
+          }
+        },
+        "no_skip_high/31415/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.0336710969226655,
+                  2.0380037076720443,
+                  2.0365755214696106
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.27595615238254856,
+                  0.27583506056581597,
+                  0.2764828955741739
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.240184338738185,
+                  11.03251660830384,
+                  11.250264277807466
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.044227520116844,
+                  2.0497544515880426,
+                  2.0468394642882197
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.27781101274340764,
+                  0.27798842922884204,
+                  0.27830769375737296
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.258280846149091,
+                  11.050662179298712,
+                  11.269105748863183
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004552157251373705
+          }
+        },
+        "no_skip_high/42/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.0379014002534666,
+                  2.0407034446698518,
+                  2.0343205224056757
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.2750431477433191,
+                  0.2756649271415162,
+                  0.2745258725493749
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.527142489130561,
+                  11.557076014463929,
+                  11.350934765117007
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.0502916923531846,
+                  2.0531227511398584,
+                  2.0466432107680617
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.2772814344895214,
+                  0.2778744702710454,
+                  0.2767659103167493
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.544247006133578,
+                  11.574822892138165,
+                  11.368441405619196
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.000640548424390673
+          }
+        },
+        "skip_high/1729/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.1095617103579603,
+                  2.082336851035391,
+                  2.080312155804617
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.28542443202748063,
+                  0.28238007893021905,
+                  0.28186710633789025
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.042872294588939,
+                  12.510497595121102,
+                  12.112363670143115
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.1255611830903316,
+                  2.0955636064964405,
+                  2.0935160638410313
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.2889305741272089,
+                  0.28522613064920643,
+                  0.28464580228892805
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.0626232236146,
+                  12.530102141960532,
+                  12.132460421881792
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.000568039322065775
+          }
+        },
+        "skip_high/31415/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.0668740244106716,
+                  2.0483325964444203,
+                  2.0699513888761474
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.2772645806305086,
+                  0.27514373308701323,
+                  0.2777458583543379
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.384880168296839,
+                  11.12458131578028,
+                  11.345069269110255
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.0828788668501645,
+                  2.0625219789266853,
+                  2.0864090723688973
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.2806250081206884,
+                  0.27811226176684156,
+                  0.2812421843606866
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.404547809651689,
+                  11.143642848483804,
+                  11.365364908729996
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004137222300594414
+          }
+        },
+        "skip_high/42/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.0715427034612017,
+                  2.063810506350627,
+                  2.071564556614054
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.27877415948839546,
+                  0.27769522621187914,
+                  0.2783233095089898
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.600599349066782,
+                  11.681540310797493,
+                  11.498605046171326
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  2.0909191949294006,
+                  2.0829022940466317,
+                  2.091513946920356
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.2833123887680341,
+                  0.2821928097326227,
+                  0.2830973498905483
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.619247867463976,
+                  11.70082058787537,
+                  11.51798787973742
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.00042725789844460566
+          }
+        }
+      },
+      "station": "44402",
+      "target": "original_uniform_windows",
+      "year": 2016
+    },
+    "46407t2011": {
+      "contrasts": {
+        "skip_base-no_skip_base/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": -0.07968027161850848,
+                "median": -0.08507194090029913,
+                "min": -0.08918357829618954
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": -0.0007332141914650666,
+                "median": -0.0019875380158099385,
+                "min": -0.0054783484751204465
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": 0.935786944495506,
+                "median": 0.9031369351862276,
+                "min": -0.8866900445817135
+              }
+            }
+          }
+        },
+        "skip_high-no_skip_high/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": 0.07356207116772051,
+                "median": -0.01476983581034208,
+                "min": -0.06683537517363251
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": 0.014676806603486026,
+                "median": -0.00034791597084112463,
+                "min": -0.0027528958469552243
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": 0.11057566867266704,
+                "median": 0.10266138743958979,
+                "min": -0.3273041173828985
+              }
+            }
+          }
+        }
+      },
+      "models": {
+        "no_skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.792553095942669,
+                  4.810207409273853,
+                  4.798500553550554
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6757150523141997,
+                  0.6788809819728332,
+                  0.6770951213182579
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  15.42884265016938,
+                  15.606293374110647,
+                  15.515722399187105
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.789307423472202,
+                  4.806976396195969,
+                  4.7950684347040955
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6749777921071078,
+                  0.6781147507607945,
+                  0.6763187423012383
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  15.425344580721418,
+                  15.60287027213622,
+                  15.512036509968214
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0003115634538661809
+          }
+        },
+        "no_skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.7399148967623095,
+                  4.733258447173443,
+                  4.7549150660816935
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.663795590861367,
+                  0.6632357622519237,
+                  0.6658127868410062
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  16.102555746398647,
+                  16.0386537905211,
+                  16.079275375473294
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.735907836145643,
+                  4.72925396537918,
+                  4.750787177616658
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6629852449320945,
+                  0.6624068850697203,
+                  0.6649685497332332
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  16.09690976051781,
+                  16.03322952822102,
+                  16.07364273936506
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.00038276131874189927
+          }
+        },
+        "no_skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.803743671296556,
+                  4.7850021983780575,
+                  4.7884269014912
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6770198908632145,
+                  0.6749370537029147,
+                  0.6749840974445273
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  14.856725734445162,
+                  14.891858736596301,
+                  14.82323260804118
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.801482193847553,
+                  4.782698577116101,
+                  4.786138913741385
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6765431966446479,
+                  0.6744523383494246,
+                  0.6744883421029126
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  14.8539214211265,
+                  14.889058293613322,
+                  14.82028832657451
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0002699477257314548
+          }
+        },
+        "skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.724160879806799,
+                  4.695079311857407,
+                  4.7144701322143
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6733163069548141,
+                  0.6699985035997184,
+                  0.671941299625397
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  16.368154489616785,
+                  16.551278175068216,
+                  16.43878659226865
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.717624281170493,
+                  4.688600336587744,
+                  4.707443446741193
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6716665981315043,
+                  0.6683451995953062,
+                  0.6702014171127957
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  16.358741455231886,
+                  16.54198867662987,
+                  16.428922127443453
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0006912026326255531
+          }
+        },
+        "skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.661867943807125,
+                  4.6523871583304715,
+                  4.6747924930243245
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6618154059640629,
+                  0.6612565786190981,
+                  0.6638095413237061
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  16.984275375466627,
+                  16.97872491334345,
+                  16.966895429141648
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.6493244114263454,
+                  4.639845097597617,
+                  4.662144466143725
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6587410560625258,
+                  0.6581589043790181,
+                  0.6607346294991087
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  16.96539959183067,
+                  16.96096476441411,
+                  16.948596863539912
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0010765648600016447
+          }
+        },
+        "skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.708478326100472,
+                  4.721796818006613,
+                  4.691681804357831
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.674806938614863,
+                  0.6774201051838474,
+                  0.6725143556375508
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.980603691801168,
+                  14.069839877511635,
+                  13.861303376024699
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.708081763226488,
+                  4.721342503300948,
+                  4.6912781311886125
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6746939868434987,
+                  0.6772933084569916,
+                  0.6723956753809709
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.98017760817143,
+                  14.06941077479974,
+                  13.86086047324861
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.00013631683849281437
+          }
+        },
+        "no_skip_high/1729/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.471774844369289,
+                  4.461263819480451,
+                  4.446596616965811
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6368707637846299,
+                  0.6361940063205017,
+                  0.6333913244506965
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.767968110236541,
+                  13.875112958054354,
+                  13.624346927685933
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.488933057632047,
+                  4.478195507577715,
+                  4.463947997949064
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6414291139613442,
+                  0.640815078808801,
+                  0.6379771724647431
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.784191402575125,
+                  13.890653417450357,
+                  13.640039291559695
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004385605943259879
+          }
+        },
+        "no_skip_high/31415/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.394955303690184,
+                  4.3921435404626985,
+                  4.392526124440893
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6291468265922789,
+                  0.627878507379864,
+                  0.6288368821212791
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.367274910064678,
+                  13.18230916918444,
+                  13.367608323127937
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.411849523961842,
+                  4.409647338662288,
+                  4.409379911322095
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6338450569781384,
+                  0.6326907647559586,
+                  0.6335197413307214
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.383603622739097,
+                  13.198723379718809,
+                  13.384283945993397
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.00038398011543757955
+          }
+        },
+        "no_skip_high/42/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.499629726894616,
+                  4.5063735612041,
+                  4.499678094859727
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6457894411021361,
+                  0.6475078275019465,
+                  0.6456674850868627
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.832346254966113,
+                  13.939941245337662,
+                  13.54511447027382
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.515857870891549,
+                  4.522569075034122,
+                  4.516072350945644
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6501579049632298,
+                  0.6518643201212253,
+                  0.6501226715974402
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.848360798685174,
+                  13.955559717371498,
+                  13.56128458568975
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0005294326219692289
+          }
+        },
+        "skip_high/1729/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.408387920130088,
+                  4.386472141449959,
+                  4.384269093714607
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6351571872425593,
+                  0.6318568009162784,
+                  0.6311834188561247
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.745254162242443,
+                  14.151236565979813,
+                  13.702664273772573
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.423502400936192,
+                  4.401408446939324,
+                  4.399713191052596
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6398634419611985,
+                  0.6365490608098643,
+                  0.6359436162313842
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.757992989215623,
+                  14.164248246898737,
+                  13.715757612983554
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0005065138837540636
+          }
+        },
+        "skip_high/31415/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.463150527799334,
+                  4.460343940567855,
+                  4.4768167137297485
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6426040764796365,
+                  0.6422467057062264,
+                  0.6450418537180171
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.438559626557698,
+                  13.435137567137076,
+                  13.351479371001052
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.479923123870788,
+                  4.477172723656191,
+                  4.493994940836886
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6476885854487192,
+                  0.647355725996593,
+                  0.6502335678138532
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.45332266642064,
+                  13.449227403215412,
+                  13.366005671523716
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004715221502126561
+          }
+        },
+        "skip_high/42/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.4796466227210505,
+                  4.5021588585314,
+                  4.479566394274966
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6450620881233781,
+                  0.6482687790921425,
+                  0.6445901385629013
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.541497307691928,
+                  13.670263729804542,
+                  13.123728580932429
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  4.49643837404453,
+                  4.5194686534614235,
+                  4.496847076003725
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.6501634331084469,
+                  0.6535819548392345,
+                  0.6499099184909877
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  13.555765428826843,
+                  13.684153026998596,
+                  13.137546688215078
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0005645886113605289
+          }
+        }
+      },
+      "station": "46407",
+      "target": "original_uniform_windows",
+      "year": 2011
+    },
+    "52403t2020": {
+      "contrasts": {
+        "skip_base-no_skip_base/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": 0.04035687167931057,
+                "median": -0.029700107975403494,
+                "min": -0.06007426789584717
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": 0.0070964078297930016,
+                "median": -0.003672997032305614,
+                "min": -0.004593606691259707
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": 0.75319115784988,
+                "median": -0.4065934955539537,
+                "min": -0.8356732493984703
+              }
+            }
+          }
+        },
+        "skip_high-no_skip_high/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": -0.0121938057890875,
+                "median": -0.01559004946075889,
+                "min": -0.021416010090611486
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": -0.0019613727992407273,
+                "median": -0.004185017429598499,
+                "min": -0.004247091539690273
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": 3.1783924336300977,
+                "median": 1.1843618413987784,
+                "min": -0.6039389355050814
+              }
+            }
+          }
+        }
+      },
+      "models": {
+        "no_skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.536644518141763,
+                  3.540090510746321,
+                  3.5612475131346146
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5366051229833594,
+                  0.5373256867739892,
+                  0.5410904516375435
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  18.573100156476066,
+                  18.561187095163852,
+                  18.436342832802325
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.5346580766391313,
+                  3.538120086245905,
+                  3.5593856107431074
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5362095978956344,
+                  0.5369254393821659,
+                  0.5407227156493226
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  18.57000839197145,
+                  18.557921424068166,
+                  18.43348362333032
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0002555690073258949
+          }
+        },
+        "no_skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.49533817499686,
+                  3.5024685343696493,
+                  3.515265705770981
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.532694978894886,
+                  0.5342935267886699,
+                  0.5358280256724021
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  18.25727396406183,
+                  18.375310359079663,
+                  18.3193627621012
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.4933414465240475,
+                  3.500452653311026,
+                  3.513249755311561
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.532309147705462,
+                  0.5339019534548239,
+                  0.5354489152400094
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  18.254047057667368,
+                  18.371729415832647,
+                  18.316094952668628
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.00026965872003177177
+          }
+        },
+        "no_skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.547924771844869,
+                  3.5470472778231583,
+                  3.5524869039677993
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5432235230746657,
+                  0.5431591048525464,
+                  0.5432350405729328
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  19.22415081924962,
+                  19.189089930413303,
+                  19.180774591923353
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.5457335730920487,
+                  3.5449622417219686,
+                  3.550516592831552
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5427954521902454,
+                  0.5427605366050557,
+                  0.5428382760392967
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  19.220720157673313,
+                  19.1854357939528,
+                  19.177579968254697
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0002653534560814401
+          }
+        },
+        "skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.4826513983875547,
+                  3.4757921010895827,
+                  3.49931623885802
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5332661551702873,
+                  0.5321679516994782,
+                  0.5358063344513475
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  18.192346317373904,
+                  18.103566929347203,
+                  18.054936351059276
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.4762588732803903,
+                  3.4700562132672976,
+                  3.493136017246135
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.531829662736634,
+                  0.5308682492010991,
+                  0.5344441724763842
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  18.18238913221662,
+                  18.093869185897432,
+                  18.045240067904658
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0006073231074464509
+          }
+        },
+        "skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.548703510872909,
+                  3.5484330946754445,
+                  3.5370064246270685
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5422065878553437,
+                  0.5414626835417105,
+                  0.5404364834482829
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  17.406072078594,
+                  17.515553915114182,
+                  17.5233013433391
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.5455672373052947,
+                  3.545393207308344,
+                  3.5340470430046382
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5413794323193021,
+                  0.5406797841092831,
+                  0.5396901537258314
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  17.401992628430868,
+                  17.51108050250935,
+                  17.51929611107459
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0003542567104142045
+          }
+        },
+        "skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.517063706413382,
+                  3.5213511242053346,
+                  3.5199437990908997
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5391260661423669,
+                  0.5402651640050197,
+                  0.5392074472558415
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  20.02183795647096,
+                  19.98665111969953,
+                  19.845099738965423
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.5110754101155024,
+                  3.5152245226973564,
+                  3.51379541640606
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5376584004157396,
+                  0.5387749315943318,
+                  0.5376993294401252
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  20.01370991377121,
+                  19.977510925997834,
+                  19.8369306581042
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004994720537944694
+          }
+        },
+        "no_skip_high/1729/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.3711319265225637,
+                  3.413828109260957,
+                  3.4098784361525363
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5209931191027883,
+                  0.5278247502258633,
+                  0.5271297082575609
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  14.776931489095617,
+                  14.782070419743473,
+                  14.50058643525355
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.389141155999807,
+                  3.4319204040904254,
+                  3.428013696724757
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5260214865603021,
+                  0.5328967075158235,
+                  0.5321646340096055
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  14.794895975649858,
+                  14.801139308020085,
+                  14.517654328069643
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.00045539337336706785
+          }
+        },
+        "no_skip_high/31415/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.3747529581974494,
+                  3.393187990692073,
+                  3.3884852141498074
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5203885991000485,
+                  0.5239652526551528,
+                  0.5228454279038914
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  14.733739082566013,
+                  15.162518000428376,
+                  14.93086757654088
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.392543555640102,
+                  3.4108792624803863,
+                  3.4064382164451614
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5251703046978581,
+                  0.528778609159174,
+                  0.5276848011382622
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  14.750797638448313,
+                  15.181871136072354,
+                  14.94807586433988
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.000491741599773396
+          }
+        },
+        "no_skip_high/42/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.3808536051171867,
+                  3.378911726738454,
+                  3.3893007882532595
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5202562621207643,
+                  0.5199199423654685,
+                  0.5211082175649031
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  15.000633030208999,
+                  14.998999731129661,
+                  14.946709774351874
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.3994404540715415,
+                  3.398450793702704,
+                  3.408155821925407
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5251504752487326,
+                  0.5250540030797566,
+                  0.5261640965032091
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  15.018679593437247,
+                  15.018999751469535,
+                  14.964265779834967
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004523108509351911
+          }
+        },
+        "skip_high/1729/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.3817636259787553,
+                  3.385364017368788,
+                  3.391129411221251
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.522953365973602,
+                  0.523148681703255,
+                  0.5239614115116333
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  16.006639685999,
+                  15.8872814042453,
+                  15.718752778044674
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.4009572937926933,
+                  3.4042220443273257,
+                  3.410257376237654
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.528238524226069,
+                  0.528319670793227,
+                  0.5291842202657471
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  16.02735624821816,
+                  15.908692494490165,
+                  15.739027298278508
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0006087743407557456
+          }
+        },
+        "skip_high/31415/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.3788882092690145,
+                  3.3740066468821546,
+                  3.3392832766163263
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5203603377373478,
+                  0.5199493141245823,
+                  0.5143345755083671
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  14.203574176370322,
+                  14.501429729402151,
+                  14.31030394724755
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.399634844225195,
+                  3.3937315387472116,
+                  3.3583830244395503
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5264703867902327,
+                  0.5257694056941622,
+                  0.519886708907084
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  14.21794582199383,
+                  14.518404172107331,
+                  14.325210684596783
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004622148717698952
+          }
+        },
+        "skip_high/42/original": {
+          "observation_variance": 0.0025000000000000014,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.369554479701314,
+                  3.369517067448766,
+                  3.3632244245765435
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5164294908295299,
+                  0.5167621252897454,
+                  0.5153515313127897
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  18.294961168662518,
+                  18.251264732444607,
+                  17.9352939354737
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  3.3886084508483885,
+                  3.3887727480608216,
+                  3.382005356324853
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  0.5212826663513982,
+                  0.5216441811141319,
+                  0.5201233379170143
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  18.318321615064306,
+                  18.276205659891325,
+                  17.957876110905797
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0007939933933393263
+          }
+        }
+      },
+      "station": "52403",
+      "target": "original_uniform_windows",
+      "year": 2020
+    },
+    "dart_21415_2018": {
+      "contrasts": {
+        "skip_base-no_skip_base/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": -0.32747361802789915,
+                "median": -0.37217811413850654,
+                "min": -0.392924036989078
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": -0.04672095183042894,
+                "median": -0.056418874131391496,
+                "min": -0.05802690821184305
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": -0.22677344974721217,
+                "median": -0.2999782117616032,
+                "min": -0.3462492852092171
+              }
+            }
+          }
+        },
+        "skip_high-no_skip_high/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": -0.22293739396959467,
+                "median": -0.25233922706168005,
+                "min": -0.31977842583167987
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": -0.03494073668031442,
+                "median": -0.03750496724141946,
+                "min": -0.05100966492398736
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": -0.23577783259624674,
+                "median": -0.2532510178032356,
+                "min": -0.3407634045429617
+              }
+            }
+          }
+        }
+      },
+      "models": {
+        "no_skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.36719158726901,
+                  11.401612571679898,
+                  11.379861343816914
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.784521628506873,
+                  1.7897848089046628,
+                  1.7857133600095672
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.58283656496633,
+                  11.61983911932039,
+                  11.596271625103151
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.362994653998669,
+                  11.3972262960628,
+                  11.375651877682552
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.7833004652982267,
+                  1.7885023114850895,
+                  1.7844713391552285
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.57882937607301,
+                  11.61562853238118,
+                  11.592310747967861
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004096408199485036
+          }
+        },
+        "no_skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.525347803971426,
+                  11.539034412438026,
+                  11.5463673378601
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.8066278388600336,
+                  1.8082063302348776,
+                  1.8097838788360587
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.71062528203886,
+                  11.721100404391823,
+                  11.727052917651033
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.519833248686377,
+                  11.533598682643925,
+                  11.54089958915463
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.8050054353448453,
+                  1.8065900803959634,
+                  1.8081841497012094
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.705379710279026,
+                  11.715893034704866,
+                  11.72183774626558
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004517818351103154
+          }
+        },
+        "no_skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.51403007653336,
+                  11.499093564554451,
+                  11.497991019381642
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.8051008410132292,
+                  1.8037478224843009,
+                  1.8038903918549765
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.713095861097026,
+                  11.699422103410202,
+                  11.705200494211459
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.508700791088348,
+                  11.493590144279803,
+                  11.492798300164791
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.8035466060281609,
+                  1.8021441370279703,
+                  1.8023235007940543
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.707988620068068,
+                  11.69406060755736,
+                  11.700214092271267
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.00046616222319302336
+          }
+        },
+        "skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.022763483122917,
+                  11.086338358734082,
+                  11.057142806825127
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.7360215486252717,
+                  1.744949663631577,
+                  1.7388857296729674
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.231127098612312,
+                  11.266336795505534,
+                  11.262735559644375
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.01667698248153,
+                  11.080245606140176,
+                  11.051274663695427
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.7341705004342414,
+                  1.7430268746277624,
+                  1.7370568511134643
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.225388879212227,
+                  11.260594871382025,
+                  11.25719745295658
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0007061075515285826
+          }
+        },
+        "skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.168859253806755,
+                  11.152909698648823,
+                  11.172446259398455
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.7523105802771777,
+                  1.7502349365341359,
+                  1.752815908725482
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.417997819063133,
+                  11.414347772292388,
+                  11.426498377441385
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.162738046973956,
+                  11.147611591594146,
+                  11.167001658208296
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.750467698080564,
+                  1.7485141187094475,
+                  1.751087191962741
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.412228041885946,
+                  11.409124031281296,
+                  11.421332747277736
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0006809609145083552
+          }
+        },
+        "skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.135447793340814,
+                  11.105500769505836,
+                  11.091393986655568
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.749475919067049,
+                  1.7456138943044461,
+                  1.7435685173454822
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.496561798359973,
+                  11.475385634822196,
+                  11.46545067629488
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.130492084663587,
+                  11.10062353364741,
+                  11.086921793058563
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.7479184094545008,
+                  1.7440988344308532,
+                  1.7420990064462323
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.491812538418621,
+                  11.470578287464742,
+                  11.461157931333203
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0005844897417809417
+          }
+        },
+        "no_skip_high/1729/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.59938806345257,
+                  10.647305289137984,
+                  10.585696665160414
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6685451838482446,
+                  1.67444438083307,
+                  1.6647118871039435
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.822868197644091,
+                  10.867217537086267,
+                  10.805607196884901
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.611274733621546,
+                  10.659819051960937,
+                  10.597350555853046
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6722765499344885,
+                  1.6783514086560052,
+                  1.668360030722276
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.83461077303801,
+                  10.879625640364395,
+                  10.81709651902453
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0008357109583653199
+          }
+        },
+        "no_skip_high/31415/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.676552650488716,
+                  10.693177949700667,
+                  10.720001305817785
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6793440795115846,
+                  1.6826697072834118,
+                  1.686878487661882
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.944940196407847,
+                  10.960267945268217,
+                  10.993027643559014
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.689803668563906,
+                  10.706029817413732,
+                  10.733001957000791
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6834388088649996,
+                  1.6866858006875471,
+                  1.6909269738258386
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.957991848831679,
+                  10.973131158912372,
+                  11.005893681889967
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0008296307822405327
+          }
+        },
+        "no_skip_high/42/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.701998094197837,
+                  10.688349493092234,
+                  10.675582495801166
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.682176930774443,
+                  1.6808205339677844,
+                  1.6797853898650854
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.929975162983995,
+                  10.914501898774388,
+                  10.908637588544918
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.714631789770376,
+                  10.700982008627921,
+                  10.687276288761785
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6860738000497624,
+                  1.6847078051697602,
+                  1.6835423779285819
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.942380338779861,
+                  10.92706421003275,
+                  10.920190192468882
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.000767556529895928
+          }
+        },
+        "skip_high/1729/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.324339582436677,
+                  10.394805905454911,
+                  10.356226848674341
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.627016293294168,
+                  1.6371927540129254,
+                  1.6309775027539062
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.550870016117875,
+                  10.609099696963918,
+                  10.57597016512376
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.332508651828917,
+                  10.403268154703213,
+                  10.364475945011074
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6295838386775034,
+                  1.6399222948301655,
+                  1.633592309932003
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.55893447570587,
+                  10.617489347191945,
+                  10.58404082106288
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0008760011862585223
+          }
+        },
+        "skip_high/31415/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.379599211822214,
+                  10.384152768631303,
+                  10.366644648058612
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6315744899839901,
+                  1.6335048119996989,
+                  1.6307839777012274
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.623783641559696,
+                  10.640394259379121,
+                  10.611767670667376
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.388310084769488,
+                  10.392088381450902,
+                  10.374446264986394
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6342770020362858,
+                  1.636078862574491,
+                  1.6333004584295394
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.632224390728135,
+                  10.648387449658543,
+                  10.619326141996007
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0008730798648694596
+          }
+        },
+        "skip_high/42/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.508231424376776,
+                  10.45842296986731,
+                  10.430463506938366
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6523574082391213,
+                  1.6450710953716061,
+                  1.6405321409556421
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.714782442240633,
+                  10.683118285169561,
+                  10.647880425104367
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.517615865640616,
+                  10.4674110785157,
+                  10.438607942340328
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6553216334788856,
+                  1.6478858800353458,
+                  1.6432010374071429
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.72388532304573,
+                  10.692022416260258,
+                  10.655835359710892
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0009402703436620233
+          }
+        }
+      },
+      "station": "21415",
+      "target": "six_UTC_bins_equal",
+      "year": 2018
+    },
+    "dart_21418_2018": {
+      "contrasts": {
+        "skip_base-no_skip_base/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": -0.41088073535158226,
+                "median": -0.4529976354806813,
+                "min": -0.6263251775293496
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": -0.05475086562625083,
+                "median": -0.05774725354096888,
+                "min": -0.09009591965216845
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": -0.2661298198477417,
+                "median": -0.6129761260231715,
+                "min": -0.8520057997812973
+              }
+            }
+          }
+        },
+        "skip_high-no_skip_high/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": -0.3573914554618902,
+                "median": -0.5010283982208777,
+                "min": -0.5444505314457379
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": -0.052375748273496926,
+                "median": -0.06854561283334171,
+                "min": -0.07397521745213997
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": -0.4330442360828055,
+                "median": -0.47565023390295263,
+                "min": -0.5586422401474387
+              }
+            }
+          }
+        }
+      },
+      "models": {
+        "no_skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.803228130556743,
+                  11.827590192899388,
+                  11.820657111268533
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.7350538085017753,
+                  1.738547665300368,
+                  1.7365622251900577
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.025074769562865,
+                  12.026165721311376,
+                  12.045567068048932
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.795581886441566,
+                  11.819987680242255,
+                  11.812714576461747
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.7329458882302478,
+                  1.7363672764562352,
+                  1.7343459964971373
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.017762552227746,
+                  12.01912941309941,
+                  12.038120867598284
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0006394361613558053
+          }
+        },
+        "no_skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.858177351615588,
+                  11.85098776443577,
+                  11.872870356481204
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.7423526657216644,
+                  1.7413944726980224,
+                  1.7444470107851424
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.042673564833175,
+                  12.026607481087165,
+                  12.04654359545478
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.848702830120324,
+                  11.84246544838291,
+                  11.863557680396944
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.7397205047123065,
+                  1.73891161130751,
+                  1.741824588686938
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.033704365147006,
+                  12.018581897372918,
+                  12.037705711846037
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0007387168197098003
+          }
+        },
+        "no_skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.814006405306491,
+                  11.800239111740495,
+                  11.783656289307773
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.7371880890736935,
+                  1.7362405854648564,
+                  1.734115051065457
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.163867625846162,
+                  12.153668618980557,
+                  12.125043091566878
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.805275692037357,
+                  11.791162884989486,
+                  11.775203094547075
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.7346730100072132,
+                  1.7336624067593718,
+                  1.7315951969867003
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.155469716281562,
+                  12.145211146513821,
+                  12.116930962064469
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0007641274657346846
+          }
+        },
+        "skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.340294866875961,
+                  11.368336819739255,
+                  11.383850841667403
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6762161435739529,
+                  1.6793845558975358,
+                  1.6813212388978056
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.381610587966433,
+                  11.441377507820675,
+                  11.43489108506655
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.333075309853047,
+                  11.361082208615686,
+                  11.376341924448003
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6740486277635578,
+                  1.6771329635601133,
+                  1.6790561586675297
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.375183195606455,
+                  11.435012622770197,
+                  11.428091467968326
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0008873157353415508
+          }
+        },
+        "skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.44370456965809,
+                  11.436027021563996,
+                  11.469661675255729
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6871976984746448,
+                  1.686352756057518,
+                  1.6903910977939138
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.769249524624597,
+                  11.760584394139684,
+                  11.787601263067614
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.436605361232788,
+                  11.429738882594085,
+                  11.462594487658155
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6850846705702516,
+                  1.6843366636805353,
+                  1.6882747366912483
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.762439797690556,
+                  11.754754101374086,
+                  11.780923534921946
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0008191079402363466
+          }
+        },
+        "skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.183526809092834,
+                  11.165542574440929,
+                  11.169856890232948
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6474332276639454,
+                  1.644183353248719,
+                  1.6456393857348373
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.310341293884752,
+                  11.285809499709982,
+                  11.290411143454971
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.179431853764427,
+                  11.161229079318774,
+                  11.165932458558242
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6462336972058031,
+                  1.6429444061510612,
+                  1.6444427368999592
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.306617605578538,
+                  11.28193896301711,
+                  11.286822176291048
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.000652294233719993
+          }
+        },
+        "no_skip_high/1729/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.076322647077808,
+                  11.13439789665502,
+                  11.109246300735533
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.640059925726644,
+                  1.6469509996225669,
+                  1.6431570195133327
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.289859277485267,
+                  11.31573756275085,
+                  11.316373612658571
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.089381346250184,
+                  11.147556990520226,
+                  11.12262676858902
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6440286378313707,
+                  1.6510243307206802,
+                  1.647221140343695
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.302267200221609,
+                  11.327857220447337,
+                  11.328892165480802
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0008675232741285575
+          }
+        },
+        "no_skip_high/31415/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.14612946505666,
+                  11.146880083255288,
+                  11.18785915561501
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6463387183594764,
+                  1.6466315276058998,
+                  1.6522916711526088
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.299557115765051,
+                  11.297137550553238,
+                  11.338907260217587
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.159725563085694,
+                  11.159964023508719,
+                  11.201834851100362
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6504486558401623,
+                  1.6506404153066612,
+                  1.656503009935434
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.312324962707782,
+                  11.309369734613396,
+                  11.352002708162305
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0008929558467181183
+          }
+        },
+        "no_skip_high/42/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.965733303650337,
+                  10.955700039176874,
+                  10.925200050573414
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6254295731376158,
+                  1.622955585443771,
+                  1.6189948407683152
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.24226663967019,
+                  11.228252662509199,
+                  11.188368997838818
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.97397223858005,
+                  10.963985837441573,
+                  10.93294424100761
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.6280067317852789,
+                  1.6255323255729037,
+                  1.6214743123498097
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.250182511198041,
+                  11.236042718501043,
+                  11.195781034822907
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0012043616140585127
+          }
+        },
+        "skip_high/1729/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.580331482811628,
+                  10.604586739847445,
+                  10.631963427146655
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.572243045253089,
+                  1.573983533636056,
+                  1.5783045274733734
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.70911193299738,
+                  10.7637748803908,
+                  10.773156919064192
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.586533415813836,
+                  10.610627754167158,
+                  10.638421501643498
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5742279584646799,
+                  1.5759809320965321,
+                  1.580369563333993
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.71471536959978,
+                  10.769171760561674,
+                  10.7790802832064
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.001111207042573263
+          }
+        },
+        "skip_high/31415/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.61040172560015,
+                  10.60419603308009,
+                  10.632919350909505
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.573924408471654,
+                  1.5731565684512632,
+                  1.576255287838648
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.874407148587693,
+                  10.87223311550517,
+                  10.889828954194597
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.616914134413488,
+                  10.610220714500887,
+                  10.639658720404363
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5759685759455175,
+                  1.5751255212049993,
+                  1.5783403536541545
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.880511180651744,
+                  10.877771196093699,
+                  10.896060201561886
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0010352237932309972
+          }
+        },
+        "skip_high/42/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.59104120670179,
+                  10.59914300339293,
+                  10.584274816920233
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5703283527235579,
+                  1.570134215216659,
+                  1.5697901865889943
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.749509089472795,
+                  10.753272774104175,
+                  10.729155734732378
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.596892208781792,
+                  10.605124672975462,
+                  10.589841137974137
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5721607319088267,
+                  1.5719985937537262,
+                  1.5715994424313626
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  10.754724348134086,
+                  10.758513725724185,
+                  10.734165788772978
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0011399200122860053
+          }
+        }
+      },
+      "station": "21418",
+      "target": "six_UTC_bins_equal",
+      "year": 2018
+    },
+    "dart_44402_2018": {
+      "contrasts": {
+        "skip_base-no_skip_base/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": -0.29609700225467783,
+                "median": -0.34545978990756393,
+                "min": -0.47919842621840836
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": -0.03335921926850882,
+                "median": -0.03495783884562065,
+                "min": -0.05226465408517411
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": -0.11920129585867596,
+                "median": -0.336667009089366,
+                "min": -0.7683951707845793
+              }
+            }
+          }
+        },
+        "skip_high-no_skip_high/original": {
+          "scores": {
+            "without_window_mean": {
+              "optimizer_seeds": {
+                "max": -0.1511983837677621,
+                "median": -0.22762028570287343,
+                "min": -0.36304844720868407
+              }
+            },
+            "time_differences": {
+              "optimizer_seeds": {
+                "max": -0.01563036335227926,
+                "median": -0.02677108075517139,
+                "min": -0.04195633767442438
+              }
+            },
+            "full_window": {
+              "optimizer_seeds": {
+                "max": -0.21859979954788797,
+                "median": -0.22193245869476583,
+                "min": -0.3222474038769582
+              }
+            }
+          }
+        }
+      },
+      "models": {
+        "no_skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.925778055586834,
+                  11.955834556418964,
+                  11.94609846951369
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5698889636036548,
+                  1.573953577777294,
+                  1.5718834500243672
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.259818483627647,
+                  12.304933220403706,
+                  12.311252333771563
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.920146295919002,
+                  11.950050810859185,
+                  11.940361754304512
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5683157458492565,
+                  1.5723045039802326,
+                  1.5702519397301522
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.254341123948995,
+                  12.29946396172822,
+                  12.305758532637197
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0005180250526448752
+          }
+        },
+        "no_skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.991892178815892,
+                  11.982480500895603,
+                  12.003269799813038
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5860853693096333,
+                  1.5845965772529558,
+                  1.5867639432185339
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.38200079091787,
+                  12.363720640064182,
+                  12.385560300112127
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.986004546075504,
+                  11.977271128306484,
+                  11.99744489477004
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5843852453733343,
+                  1.582977120920721,
+                  1.5850598065791381
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.376369078940478,
+                  12.358781569528661,
+                  12.38000293682755
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0005088983766735209
+          }
+        },
+        "no_skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  12.003832778177616,
+                  11.979589667480042,
+                  11.947758413433897
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5786843900028558,
+                  1.5763577752615792,
+                  1.5725050221323988
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.479338514302817,
+                  12.469302251228388,
+                  12.420178329584123
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.998105894504185,
+                  11.973972504856672,
+                  11.94238421254206
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.577101666463511,
+                  1.5747935321116067,
+                  1.5709909703988245
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.473877544777444,
+                  12.464021887591457,
+                  12.415022116397466
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0004887185469701773
+          }
+        },
+        "skip_base/1729/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.569366689774256,
+                  11.591715287786526,
+                  11.630249734236013
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5354115341146595,
+                  1.537203792705276,
+                  1.543033006779854
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.919313602552208,
+                  11.96097642155059,
+                  11.98571298643202
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.564706071000053,
+                  11.587262995031155,
+                  11.625667025194995
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5340347398884426,
+                  1.5358355905870196,
+                  1.5416505567909113
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.91485266365534,
+                  11.956762898121392,
+                  11.981304743823197
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0005248631688831875
+          }
+        },
+        "skip_base/31415/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.698722988543283,
+                  11.661682898178988,
+                  11.728945586038229
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5504672055773971,
+                  1.546916114459635,
+                  1.5551890532072288
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.261473208837995,
+                  12.230463389583367,
+                  12.28174124509679
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.690970707533387,
+                  11.655106653177146,
+                  11.72153285694264
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5481471026170495,
+                  1.5447721602712035,
+                  1.55290154759959
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  12.253915975586109,
+                  12.224237233054241,
+                  12.274642809912258
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0007793678500871785
+          }
+        },
+        "skip_base/42/original": {
+          "observation_variance": 0.0001,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.504650085465263,
+                  11.495650333991819,
+                  11.493285160979248
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5238727260331133,
+                  1.5233190029634074,
+                  1.5235614961447908
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.694625779216572,
+                  11.680962800273777,
+                  11.688045003271242
+                ]
+              }
+            }
+          }
+        },
+        "skip_base/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.499641320885273,
+                  11.4910139457576,
+                  11.488706347687907
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.5223872117617323,
+                  1.5219046967097103,
+                  1.5221325027112191
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.689916473867036,
+                  11.676714333708407,
+                  11.683735001186376
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.000554927540115525
+          }
+        },
+        "no_skip_high/1729/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.957810340119895,
+                  11.004103287273255,
+                  10.972952299480662
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.4603622916654369,
+                  1.466296111701246,
+                  1.4617856466029413
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.395932283648424,
+                  11.454508002036997,
+                  11.42835944609155
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.969372791471503,
+                  11.01530850748875,
+                  10.983805373405994
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.4639124109738242,
+                  1.469892872096677,
+                  1.4652646591173912
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.407234691917123,
+                  11.46530489412038,
+                  11.439030304858727
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0009577299527652241
+          }
+        },
+        "no_skip_high/31415/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.132663546790656,
+                  11.140486428334498,
+                  11.166530476185358
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.4807711322268216,
+                  1.4816153694584964,
+                  1.4848253026382419
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.503348629775354,
+                  11.497139291709198,
+                  11.53133063962097
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.146116317233385,
+                  11.153479847842917,
+                  11.180479154752312
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.4849753980425453,
+                  1.485755223730711,
+                  1.489140159635111
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.516574842007985,
+                  11.50970800441948,
+                  11.544912842140612
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0009213185017233099
+          }
+        },
+        "no_skip_high/42/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.076673866993463,
+                  11.07448593994737,
+                  11.029142137954512
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.4726650039918603,
+                  1.4722691373891383,
+                  1.467495827986849
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.511572860569549,
+                  11.52212751447522,
+                  11.46021338194894
+                ]
+              }
+            }
+          }
+        },
+        "no_skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  11.090613497154935,
+                  11.088064682977324,
+                  11.042601754479518
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.4769538902436665,
+                  1.4764797474244635,
+                  1.471665656365608
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.525100895820907,
+                  11.535173969876922,
+                  11.47331117778471
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0007829715423816557
+          }
+        },
+        "skip_high/1729/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.793651939800498,
+                  10.835249709856255,
+                  10.852369125913773
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.4430325237536408,
+                  1.4480637240587724,
+                  1.4504567121003733
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.1672069218493,
+                  11.221322943650836,
+                  11.234470467633171
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/1729/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.803359575925839,
+                  10.844973014403578,
+                  10.862176091064288
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.446118521591371,
+                  1.4512307559045148,
+                  1.4536470893009024
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.176656952379586,
+                  11.230602189646566,
+                  11.243943836860533
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0010488511405511286
+          }
+        },
+        "skip_high/31415/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.780423570755376,
+                  10.76541012729857,
+                  10.804701411630514
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.43997082871502,
+                  1.4378122945389045,
+                  1.4435596680463623
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.282736527014192,
+                  11.2809454690241,
+                  11.302339188982932
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/31415/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.790315925974062,
+                  10.774430003916608,
+                  10.814582649487663
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.443136142219093,
+                  1.440800911099595,
+                  1.4467607083387566
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.292339135901448,
+                  11.289625795867893,
+                  11.311868549600097
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0009714222817634472
+          }
+        },
+        "skip_high/42/original": {
+          "observation_variance": 0.0025,
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.830105398689346,
+                  10.841979419070233,
+                  10.825356270027147
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.4434942393449075,
+                  1.4449556152377394,
+                  1.4436668725196866
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.174388149895979,
+                  11.176702585811785,
+                  11.17608080965507
+                ]
+              }
+            }
+          }
+        },
+        "skip_high/42/variance_refit": {
+          "scores": {
+            "without_window_mean": {
+              "weighted": {
+                "values": [
+                  10.84018761479821,
+                  10.851969306760079,
+                  10.835011938882298
+                ]
+              }
+            },
+            "time_differences": {
+              "weighted": {
+                "values": [
+                  1.4466317151665296,
+                  1.4480558322175745,
+                  1.4467544156703742
+                ]
+              }
+            },
+            "full_window": {
+              "weighted": {
+                "values": [
+                  11.184257496814897,
+                  11.186232332706618,
+                  11.185528714988955
+                ]
+              }
+            }
+          },
+          "variance_fit": {
+            "pooled": 0.0009801444524701961
+          }
+        }
+      },
+      "station": "44402",
+      "target": "six_UTC_bins_equal",
+      "year": 2018
+    }
+  },
+  "schema_version": 3
+}
