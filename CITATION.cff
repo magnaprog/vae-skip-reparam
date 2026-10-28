@@ -8,10 +8,12 @@ authors:
 repository-code: "https://github.com/magnaprog/vae-skip-reparam"
 license: MIT
 preferred-citation:
-  type: conference-paper
+  type: generic
+  status: preprint
   authors:
     - family-names: Lee
       given-names: Kevin
   title: "An Input Skip Can Reparameterize a VAE Without Improving the Generator"
-  collection-title: "NeurIPS 2026 Workshop on Principles of Generative Modeling (PriGM)"
   year: 2026
+  url: "https://arxiv.org/abs/2610.37456"
+  notes: "Accepted at the Conference on Neural Information Processing Systems (NeurIPS) Workshop: Principles of Generative Modeling (PriGM)"

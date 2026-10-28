@@ -1,6 +1,6 @@
 # VAE skip reparameterization
 
-Code, data and numerical results for *An Input Skip Can Reparameterize a VAE Without Improving the Generator*, Kevin Lee, NeurIPS PriGM 2026.
+Code, data and numerical results for [*An Input Skip Can Reparameterize a VAE Without Improving the Generator*](https://arxiv.org/abs/2610.37456), Kevin Lee, NeurIPS PriGM 2026.
 
 A constant input skip can reduce reconstruction error without changing the distribution a Gaussian variational autoencoder generates. The experiments compare reconstruction and generation on synthetic Gaussian data and NOAA DART records, while varying the skip coefficient and observation variance separately.
 
@@ -39,11 +39,16 @@ Run the data, metric and plotting tests in the CPU environment. For model tests,
 ## Citation
 
 ```bibtex
-@inproceedings{lee2026inputskip,
-  author    = {Lee, Kevin},
-  title     = {An Input Skip Can Reparameterize a {VAE} Without Improving the Generator},
-  booktitle = {{NeurIPS} 2026 Workshop on Principles of Generative Modeling ({PriGM})},
-  year      = {2026}
+@misc{lee2026inputskip,
+  author        = {Lee, Kevin},
+  title         = {An Input Skip Can Reparameterize a {VAE} Without Improving the Generator},
+  year          = {2026},
+  eprint        = {2610.37456},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  url           = {https://arxiv.org/abs/2610.37456},
+  note          = {Accepted at the Conference on Neural Information Processing Systems
+                   ({NeurIPS}) Workshop: Principles of Generative Modeling ({PriGM})}
 }
 ```
 
