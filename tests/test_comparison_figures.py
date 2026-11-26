@@ -276,8 +276,8 @@ def check_interval_artists(fig, names, records):
                     np.testing.assert_array_equal(shift[:, 1], np.zeros(len(expected_x)))
                     assert line.get_linestyle() == "None"
                     assert line.get_marker() == marker and line.get_markersize() == 2.8
-                    assert line.get_color() == ("#CC3311" if variance == "base" else "#009988")
-                    assert line.get_markerfacecolor() == ("#CC3311" if variance == "base" else "white")
+                    assert line.get_color() == ("#EE3377" if variance == "base" else "#009988")
+                    assert line.get_markerfacecolor() == ("#EE3377" if variance == "base" else "white")
                     total += len(expected_x)
             assert any(list(line.get_ydata()) == [0, 0] for line in ax.lines)
             assert ax.get_xlim() == expected_xlim and ax.get_ylim() == expected_ylim

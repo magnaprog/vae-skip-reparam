@@ -23,7 +23,7 @@ spec.loader.exec_module(renderer)
 DIAGNOSTIC_ROLES = (
     ("Training data", "#888888", ":", None), ("Test data", "#111111", "-", None),
     ("PPCA", "#555555", "-.", None), ("No skip, base variance", "#0077BB", "-", "^"),
-    ("Skip, base variance", "#CC3311", "-", "s"), ("No skip, high variance", "#332288", "-", "v"),
+    ("Skip, base variance", "#EE3377", "-", "s"), ("No skip, high variance", "#EE7733", "-", "v"),
     ("Skip, high variance", "#009988", "-", "o"))
 
 
@@ -220,7 +220,7 @@ def test_context_gap_matches_complete_utc_dates_between_observations(monkeypatch
         for panel in fig.axes:
             observations, = panel.collections
             np.testing.assert_array_equal(observations.get_sizes(), [.65])
-            np.testing.assert_array_equal(observations.get_facecolors(), [renderer.matplotlib.colors.to_rgba("#0072B2")])
+            np.testing.assert_array_equal(observations.get_facecolors(), [renderer.matplotlib.colors.to_rgba("#0077BB")])
             assert observations.get_rasterized()
         ax = fig.axes[3]
         assert ax.get_title().replace(" ", "") == "52403/2020"
