@@ -90,3 +90,35 @@ def test_coordinate_updates_at_a_common_start():
     for w, native_var in zip(models["original_res"].weights, native.weights):
         equivalent = native_var.numpy() / (native.b if native_var.ref() in heads else 1.0)
         np.testing.assert_allclose(w.numpy(), equivalent, rtol=2e-5, atol=5e-6)
+
+
+def test_retrospective_intervals_from_window_differences(tmp_path):
+    from optimizer_comparisons import write_csv
+    from optimizer_intervals import INTERVALS, WINDOWS, interval_rows
+
+    windows = read_csv(RESULTS / WINDOWS)
+    assert len(windows) == 12 * 215
+    with np.load(PREPARED) as data:
+        intervals = interval_rows(reversed(windows), data)
+        with pytest.raises(ValueError, match="Missing test window"):
+            interval_rows(windows[1:], data)
+        with pytest.raises(ValueError, match="duplicate window"):
+            interval_rows(windows + windows[:1], data)
+    output = tmp_path / INTERVALS
+    write_csv(output, intervals)
+    assert output.read_bytes() == (RESULTS / INTERVALS).read_bytes()
+    assert len(intervals) == 60
+    full = {(r["variance_label"], int(r["seed"]), r["contrast"]): float(r["stream_mean"])
+            for r in read_csv(RESULTS / "comparisons.csv") if r["geometry"] == "joint"}
+    counts = [71, 60, 40, 43, 1]
+    negative = set()
+    for row in intervals:
+        variance, seed, norm = row["variance_label"], row["seed"], row["clipping_coordinates"]
+        expected = full[variance, seed, "head_matched_minus_original_at_" + norm]
+        assert row["full_test_difference"] == pytest.approx(expected, abs=1e-14, rel=0)
+        assert expected > 0 and row["excluding_interval_difference"] > 0
+        if row["interval_difference"] < 0:
+            negative.add((variance, seed, norm, row["interval_start_utc"]))
+    assert [r["window_count"] for r in intervals] == counts * 12
+    assert negative == {("base", 42, "obs", "2018-12-17"), ("base", 42, "res", "2018-12-17"),
+                        ("high", 42, "res", "2018-12-17")}

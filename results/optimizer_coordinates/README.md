@@ -30,7 +30,7 @@ mkdir -p runs/optimizer
 python src/optimizer_comparisons.py --output runs/optimizer/comparisons.csv
 ```
 
-To train, use the Python 3.11 environment in the [training guide](../../TRAINING.md). Run the example on a GPU reserved for your use, replacing the UUID with its actual value. Each fit needs a fresh output directory. Supply `--seed` to run twelve fits on one device, or omit it to run all 36 sequentially on that device. The summarizer verifies all fit identities, final weight digests, and common training streams before writing the two CSVs.
+To train, use the Python 3.11 environment in the [training guide](../../TRAINING.md). Run the example on a GPU reserved for your use, replacing the UUID with its actual value. Each fit needs a fresh output directory. Supply `--seed` to run twelve fits on one device, or omit it to run all 36 sequentially on that device. The summarizer verifies all fit identities, final weight digests, and common training streams before writing scores, comparisons, and the per-window output-update differences.
 
 ```sh
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=2
@@ -49,8 +49,22 @@ python src/optimizer_coordinates.py score --variance base --seed 42 --mode nativ
     --output runs/optimizer/smoke-scores.csv
 ```
 
+## Retrospective interval check
+
+For each of the 12 comparisons, [output_update_windows.csv](output_update_windows.csv) gives the difference in full-window energy score on each of 215 test windows. The sign is `matched` minus `original` at the same clipping norm, variance, and training seed. Each row averages the differences across prior streams 71001, 71002, and 71003. The UTC start time in Unix seconds identifies the window in the prepared archive.
+
+[output_update_intervals.csv](output_update_intervals.csv) groups windows by start time in the existing 14-day intervals measured from the archive’s `reassignment_block_origin`. Each row gives the test weight in that interval and the mean score difference within it, outside it, and across the full test set. Each mean renormalizes `eval_weights` over the windows it includes. Omitting any interval preserved all 12 positive full-test differences. Three differences reversed sign within the final interval, which contained one window. These overlapping summaries describe one station-year.
+
+Run the reducer from the repository root with Python and NumPy to reproduce all 60 rows.
+
+```sh
+python src/optimizer_intervals.py --output intervals.csv
+```
+
+To use scores from a new run, pass `--windows runs/optimizer/evaluation/output_update_windows.csv` after running `summarize` above. Both commands use the same prepared test windows and weights.
+
 ## Verification
 
 CPU evaluation of the 36 original final checkpoints with this implementation reproduced the three GPU stream scores for each fit and geometry to within 7 × 10⁻⁹ and the paired stream contrasts to within 1.4 × 10⁻⁸ in absolute value. Rebuilding comparisons directly from the supplied CSVs differed by at most 5.4 × 10⁻¹⁵. A separate CPU retraining of the base-variance native residual model at seed 42 reproduced both random streams through all 10,000 updates. Its mean full-window energy score was 11.47597, compared with 11.47913 for the GPU fit.
 
-Run `python -m pytest -q tests/test_optimizer_coordinates.py` in the training environment to check raw and prepared inputs, the first sampled batch, coordinate updates, and all released comparisons.
+Run `python -m pytest -q tests/test_optimizer_coordinates.py` in the training environment to check raw and prepared inputs, the first sampled batch, coordinate updates, and the released comparisons and intervals.

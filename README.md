@@ -8,7 +8,7 @@ A constant input skip can reduce reconstruction error while preserving the distr
 
 The [results guide](results/README.md) describes the numerical results for 84 DART fits across seven annual records: energy scores, comparisons with probabilistic principal component analysis (PPCA), and the effects of changing observation variance.
 
-The [training guide](TRAINING.md) describes how to train and evaluate models on one Gaussian dataset and four DART records. The launcher runs 60 training jobs, with four combinations of input skip and observation variance and three training seeds per condition for each dataset. The [optimizer follow-up](results/optimizer_coordinates/README.md) includes runnable training and scoring code, the exact input, and both result tables for 36 additional fits at station 21415 in 2018.
+The [training guide](TRAINING.md) describes how to train and evaluate models on one Gaussian dataset and four DART records. The launcher runs 60 training jobs, with four combinations of input skip and observation variance and three training seeds per condition for each dataset. The [optimizer follow-up](results/optimizer_coordinates/README.md) includes runnable training and scoring code, the exact input, and scores for 36 additional fits at station 21415 in 2018. The [retrospective interval check](results/optimizer_coordinates/README.md#retrospective-interval-check) reports how the output-update comparison varies across the test period.
 
 The [data guide](data/README.md) lists the NOAA records. HEIGHT is bottom pressure expressed as equivalent water column height in meters.
 
