@@ -312,6 +312,7 @@ def diagnostics(directory, records, reduced):
 
         fig, axes = plt.subplots(len(names), 2, figsize=(5.5, 1.48 * len(names) + 1.15), squeeze=False)
         frequency = np.arange(1, 97) / 2
+        x_padding = (frequency[-1] / frequency[0]) ** .02
         for row, name in enumerate(names):
             for col, ax in enumerate(axes[row]):
                 for role in ROLES:
@@ -332,7 +333,7 @@ def diagnostics(directory, records, reduced):
                             markeredgewidth=.65, markerfacecolor=handles[role].get_markerfacecolor())
                 ax.set_xscale("log")
                 ax.set_yscale("log", nonpositive="mask")
-                ax.set_xlim(.5, 48)
+                ax.set_xlim(frequency[0] / x_padding, frequency[-1] * x_padding)
                 ax.set_xticks([.5, 1, 2, 6, 12, 24, 48], ["0.5", "1", "2", "6", "12", "24", "48"])
                 ax.xaxis.set_minor_formatter(NullFormatter())
                 ax.yaxis.set_major_locator(LogLocator(numticks=4))

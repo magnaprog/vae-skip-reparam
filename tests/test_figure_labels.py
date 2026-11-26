@@ -8,6 +8,7 @@ import re
 
 from matplotlib.collections import LineCollection
 import matplotlib.pyplot as plt
+from matplotlib.markers import MarkerStyle
 import numpy as np
 import pytest
 
@@ -28,6 +29,33 @@ DIAGNOSTIC_ROLES = (
 def assert_separate(boxes):
     for first, second in itertools.combinations(boxes, 2):
         assert not first.overlaps(second)
+
+
+def check_spectral_markers_and_bins(ax):
+    frequency = np.arange(1, 97) / 2
+    ticks = [.5, 1, 2, 6, 12, 24, 48]
+    np.testing.assert_array_equal(ax.get_xticks(), ticks)
+    assert [ax.xaxis.get_major_formatter()(x, i) for i, x in enumerate(ticks)] == [
+        "0.5", "1", "2", "6", "12", "24", "48"]
+    assert ax.get_xscale() == ax.get_yscale() == "log"
+    points_to_pixels = ax.figure.dpi / 72
+    symbols = 0
+    for line in ax.lines:
+        np.testing.assert_array_equal(line.get_xdata(), frequency)
+        if line.get_marker() == "None":
+            continue
+        positions = line.get_transform().transform(line.get_xydata()[line.get_markevery()])
+        style = MarkerStyle(line.get_marker())
+        bounds = style.get_path().get_extents(style.get_transform())
+        size = line.get_markersize()
+        stroke = line.get_markeredgewidth() / 2
+        x, y = positions.T
+        assert np.all(x + (size * bounds.x0 - stroke) * points_to_pixels > ax.bbox.x0)
+        assert np.all(x + (size * bounds.x1 + stroke) * points_to_pixels < ax.bbox.x1)
+        assert np.all(y + (size * bounds.y0 - stroke) * points_to_pixels > ax.bbox.y0)
+        assert np.all(y + (size * bounds.y1 + stroke) * points_to_pixels < ax.bbox.y1)
+        symbols += len(positions)
+    assert symbols == 20
 
 
 def check_spectrum_pair(axes, case):
@@ -125,8 +153,7 @@ def test_diagnostic_station_labels_are_separate_from_axis_labels(monkeypatch, tm
                         if marker:
                             assert line.get_markerfacecolor() == (color if "base" in label else "white")
                     if spectra:
-                        assert ax.get_xscale() == ax.get_yscale() == "log"
-                        assert ax.get_xlim() == (.5, 48)
+                        check_spectral_markers_and_bins(ax)
                     if ax.get_ylabel():
                         labels.append(ax.yaxis.label)
                     ticks = [t.label1 for t in ax.yaxis._update_ticks() if t.label1.get_visible()]
