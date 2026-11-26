@@ -49,11 +49,20 @@ def check_spectral_markers_and_bins(ax):
         bounds = style.get_path().get_extents(style.get_transform())
         size = line.get_markersize()
         stroke = line.get_markeredgewidth() / 2
+        x_stroke = bottom_stroke = top_stroke = stroke
+        if line.get_marker() in ("^", "v"):
+            # The triangular marker has unit height and unit base. Its miter
+            # joins extend farther than a half-stroke at the tips and corners.
+            x_stroke = stroke * (1 + np.sqrt(5)) / 2
+            if line.get_marker() == "^":
+                top_stroke = stroke * np.sqrt(5)
+            else:
+                bottom_stroke = stroke * np.sqrt(5)
         x, y = positions.T
-        assert np.all(x + (size * bounds.x0 - stroke) * points_to_pixels > ax.bbox.x0)
-        assert np.all(x + (size * bounds.x1 + stroke) * points_to_pixels < ax.bbox.x1)
-        assert np.all(y + (size * bounds.y0 - stroke) * points_to_pixels > ax.bbox.y0)
-        assert np.all(y + (size * bounds.y1 + stroke) * points_to_pixels < ax.bbox.y1)
+        assert np.all(x + (size * bounds.x0 - x_stroke) * points_to_pixels > ax.bbox.x0)
+        assert np.all(x + (size * bounds.x1 + x_stroke) * points_to_pixels < ax.bbox.x1)
+        assert np.all(y + (size * bounds.y0 - bottom_stroke) * points_to_pixels > ax.bbox.y0)
+        assert np.all(y + (size * bounds.y1 + top_stroke) * points_to_pixels < ax.bbox.y1)
         symbols += len(positions)
     assert symbols == 20
 
