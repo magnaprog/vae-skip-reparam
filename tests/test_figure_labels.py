@@ -32,6 +32,32 @@ def assert_separate(boxes):
         assert not first.overlaps(second)
 
 
+def check_marker_clearance(ax, line, positions, min_horizontal_pt=0, min_vertical_pt=0):
+    """Measure the actual outline against all four axes edges in print points."""
+    px = ax.figure.dpi / 72
+    style = MarkerStyle(line.get_marker())
+    bounds = style.get_path().get_extents(style.get_transform())
+    size = line.get_markersize()
+    stroke = line.get_markeredgewidth() / 2
+    x_stroke = bottom_stroke = top_stroke = stroke
+    if line.get_marker() in ("^", "v"):
+        # The triangular marker has unit height and unit base. Its miter
+        # joins extend farther than a half-stroke at the tips and corners.
+        x_stroke = stroke * (1 + np.sqrt(5)) / 2
+        if line.get_marker() == "^":
+            top_stroke = stroke * np.sqrt(5)
+        else:
+            bottom_stroke = stroke * np.sqrt(5)
+    x, y = positions.T
+    assert np.min((x - ax.bbox.x0) / px + size * bounds.x0 - x_stroke) > min_horizontal_pt
+    assert np.min((ax.bbox.x1 - x) / px - size * bounds.x1 - x_stroke) > min_horizontal_pt
+    bottom = np.min(y / px + size * bounds.y0 - bottom_stroke)
+    top = np.max(y / px + size * bounds.y1 + top_stroke)
+    assert bottom - ax.bbox.y0 / px > min_vertical_pt
+    assert ax.bbox.y1 / px - top > min_vertical_pt
+    return bottom, top
+
+
 def check_spectral_markers_and_bins(ax):
     frequency = np.arange(1, 97) / 2
     ticks = [.5, 1, 2, 6, 12, 24, 48]
@@ -39,31 +65,13 @@ def check_spectral_markers_and_bins(ax):
     assert [ax.xaxis.get_major_formatter()(x, i) for i, x in enumerate(ticks)] == [
         "0.5", "1", "2", "6", "12", "24", "48"]
     assert ax.get_xscale() == ax.get_yscale() == "log"
-    points_to_pixels = ax.figure.dpi / 72
     symbols = 0
     for line in ax.lines:
         np.testing.assert_array_equal(line.get_xdata(), frequency)
         if line.get_marker() == "None":
             continue
         positions = line.get_transform().transform(line.get_xydata()[line.get_markevery()])
-        style = MarkerStyle(line.get_marker())
-        bounds = style.get_path().get_extents(style.get_transform())
-        size = line.get_markersize()
-        stroke = line.get_markeredgewidth() / 2
-        x_stroke = bottom_stroke = top_stroke = stroke
-        if line.get_marker() in ("^", "v"):
-            # The triangular marker has unit height and unit base. Its miter
-            # joins extend farther than a half-stroke at the tips and corners.
-            x_stroke = stroke * (1 + np.sqrt(5)) / 2
-            if line.get_marker() == "^":
-                top_stroke = stroke * np.sqrt(5)
-            else:
-                bottom_stroke = stroke * np.sqrt(5)
-        x, y = positions.T
-        assert np.all(x + (size * bounds.x0 - x_stroke) * points_to_pixels > ax.bbox.x0)
-        assert np.all(x + (size * bounds.x1 + x_stroke) * points_to_pixels < ax.bbox.x1)
-        assert np.all(y + (size * bounds.y0 - bottom_stroke) * points_to_pixels > ax.bbox.y0)
-        assert np.all(y + (size * bounds.y1 + top_stroke) * points_to_pixels < ax.bbox.y1)
+        check_marker_clearance(ax, line, positions)
         symbols += len(positions)
     assert symbols == 20
 
@@ -227,7 +235,7 @@ def test_context_gap_matches_complete_utc_dates_between_observations(monkeypatch
         for panel in fig.axes:
             observations, = panel.collections
             np.testing.assert_array_equal(observations.get_sizes(), [.65])
-            np.testing.assert_array_equal(observations.get_facecolors(), [renderer.matplotlib.colors.to_rgba("#008CFF")])
+            np.testing.assert_array_equal(observations.get_facecolors(), [renderer.matplotlib.colors.to_rgba("#0072B2")])
             assert observations.get_rasterized()
         ax = fig.axes[3]
         assert ax.get_title().replace(" ", "") == "52403/2020"
@@ -238,7 +246,7 @@ def test_context_gap_matches_complete_utc_dates_between_observations(monkeypatch
         end = (date(2020, 8, 13) - date(2020, 1, 1)).days + 1
         assert start - 1 in days and end + 1 in days and not np.any((start <= days) & (days <= end))
         text, = ax.texts
-        assert " ".join(text.get_text().split()) == "T=1 gap 28 Mar to 13 Aug"
+        assert text.get_text() == "T=1 gap\nMar 28 to\nAug 13"
         fig.canvas.draw()
         box = text.get_window_extent(fig.canvas.get_renderer()).transformed(ax.transData.inverted())
         assert start <= box.x0 < box.x1 <= end + 1
@@ -316,20 +324,33 @@ def test_comparison_and_refit_draw_descriptive_labels(monkeypatch, tmp_path, nam
                     assert change.get_position().x1 < width.get_position().x0
                     if col < 2:
                         assert width.get_position().x1 < changes[col+1].get_position().x0
-                    assert width.get_xlim() == ranges[0].get_xlim()
+                    assert width.get_xlim() == (4.5e-6, 6e-3)
+                    np.testing.assert_array_equal(width.get_xticks(), [1e-5, 1e-3])
                     for ax in (change, width):
                         ticks = [float(t.get_text().replace("−", "-")) for t in ax.get_xticklabels()]
                         np.testing.assert_allclose(ticks, ax.get_xticks() * 1000, rtol=0, atol=1e-12)
                         assert ax.get_ylim() == fig.axes[0].get_ylim()
                 points = [[line for line in ax.lines if line.get_marker() not in ("None", None)] for ax in fig.axes]
                 assert all(len(lines) == 84 for lines in points)
+                for panel, (ax, lines) in enumerate(zip(fig.axes, points, strict=True)):
+                    row_extents = []
+                    for line in lines:
+                        positions = line.get_transform().transform(line.get_xydata())
+                        extent = check_marker_clearance(ax, line, positions, .5 if panel == 0 or panel >= 4 else 0,
+                                                        .5 if panel >= 4 else 0)
+                        row_extents.append(extent)
+                    if panel >= 4:
+                        # Rows descend on the page. Even identical widths must leave visible space.
+                        assert all(upper[0] - lower[1] > .5 for upper, lower in itertools.pairwise(row_extents))
+                np.testing.assert_array_equal(fig.axes[0].get_xticks(), [.2, 1, 5])
                 for row, (record, condition) in enumerate(itertools.product(names, renderer.CONDITION_ORDER)):
                     ratios, deltas = renderer.figure_values.refit_points(records[record], condition)
                     for seed, offset in enumerate((-.29, 0, .29)):
                         index, y = row * 3 + seed, row + offset
                         fits = deltas[seed]
                         expected = [ratios[seed], *fits.mean(axis=1), *np.ptp(fits, axis=1)]
-                        symbols = [renderer.MARKERS[condition], "|", "|", "|", ".", ".", "."]
+                        symbol = {"no_skip_base": "^", "skip_base": "s", "no_skip_high": "v", "skip_high": "o"}[condition]
+                        symbols = [symbol, "|", "|", "|", symbol, symbol, symbol]
                         for lines, x, marker in zip(points, expected, symbols, strict=True):
                             point = lines[index]
                             np.testing.assert_array_equal(point.get_xydata(), [[x, y]])
@@ -339,6 +360,11 @@ def test_comparison_and_refit_draw_descriptive_labels(monkeypatch, tmp_path, nam
                             segment, = change.collections[index].get_segments()
                             np.testing.assert_array_equal(segment, [[low, y], [high, y]])
                             assert 0 < width.get_xlim()[0] < high - low < width.get_xlim()[1]
+                        for lines in points[4:]:
+                            point = lines[index]
+                            assert point.get_markersize() == {"^": 3.35, "s": 2.6, "v": 3.35, "o": 2.95}[symbol]
+                            assert point.get_markeredgewidth() == .15
+                            assert point.get_markerfacecolor() == point.get_markeredgecolor() == renderer.COLORS[condition]
                 assert_separate([text.get_window_extent(draw) for text in labels + fig.axes[0].texts])
                 footer = fig.texts[-1].get_window_extent(draw)
                 for ax in fig.axes[1:]:
