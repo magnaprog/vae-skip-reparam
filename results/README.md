@@ -29,3 +29,5 @@ Covariance fractions measure how much variance in each evaluation's coordinates 
 Columns ending in `stream_min` and `stream_max` span the three sampling streams within one fit. Columns ending in `seed_min` and `seed_max` span the three training fits after averaging their sampling streams. In `energy_scores.json`, each summary gives its number of fits in `count`; its range spans those fits. These ranges describe variation in the available calculations. Population confidence intervals require a separate uncertainty analysis.
 
 Repeating model evaluation requires prepared window arrays and generated samples that are outside this release.
+
+The [optimizer follow-up](optimizer_coordinates/README.md) reports 36 additional fits and their paired comparisons on the previously analyzed 21415/2018 record.

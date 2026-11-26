@@ -46,7 +46,7 @@ The names `base` and `high` refer to observation variance. For skip coefficient 
 
 The run directory contains preparation settings, copies of the training code, training histories, network weights and evaluations. Rerunning an interrupted fit creates a new attempt directory and starts training with reinitialized optimizer and random number state.
 
-The paper evaluates another 36 fits on three DART records from 2018, bringing the DART total to 84. This release includes their scores and figure inputs. Retraining these models requires preparation inputs and training launchers that are outside this release.
+The paper evaluates another 36 fits on three DART records from 2018, bringing the DART total to 84. This release includes their scores and figure inputs. The [optimizer follow-up](results/optimizer_coordinates/README.md) repeats the two native training procedures at 21415 and crosses the output-layer Adam settings with the clipping norm. Its launcher and inputs cover that station in 2018.
 
 Numerical helpers require finite arrays, nonnegative weights with positive total weight, and finite positive observation variances.
 

@@ -225,13 +225,14 @@ class CanonicalBypassOptimizer:
 
     Defaults: lr=1e-3, beta_1=.9, beta_2=.999, epsilon=1e-7, amsgrad=False,
     global norm cap=10. Head learning rate alone is multiplied by the model's
-    head_rate_multiplier. No shadow parameters or coordinate conversions are
+    head_rate_multiplier unless explicit head settings are supplied. No shadow parameters or coordinate conversions are
     used. Adam's epsilon is added to sqrt(v), before bias correction is folded
     into the learning rate (TensorFlow 2.15), not to sqrt(v_hat).
     """
 
     def __init__(self, model, learning_rate=1e-3, global_norm=10.0,
-                 beta_1=0.9, beta_2=0.999, epsilon=1e-7, clip=True):
+                 beta_1=0.9, beta_2=0.999, epsilon=1e-7, clip=True, *,
+                 head_learning_rate=None, head_epsilon=None):
         if not isinstance(model, BypassVAE):
             raise TypeError("CanonicalBypassOptimizer requires a BypassVAE")
         self.model = model
@@ -246,13 +247,17 @@ class CanonicalBypassOptimizer:
         self.clipping_active = tf.Variable(
             False, dtype=tf.bool, trainable=False, name="clipping_active")
         head_lr = self.learning_rate * model.head_rate_multiplier
+        if head_learning_rate is not None:
+            head_lr = head_learning_rate
+        if head_epsilon is None:
+            head_epsilon = epsilon
         self._optimizers = {
             "body": tf.keras.optimizers.Adam(
                 learning_rate=self.learning_rate, beta_1=beta_1, beta_2=beta_2,
                 epsilon=epsilon, amsgrad=False),
             "head": tf.keras.optimizers.Adam(
                 learning_rate=head_lr, beta_1=beta_1, beta_2=beta_2,
-                epsilon=epsilon, amsgrad=False),
+                epsilon=head_epsilon, amsgrad=False),
         }
         self._head_weights = list(model.output_head.trainable_variables)
         self._head_refs = {v.ref() for v in self._head_weights}
