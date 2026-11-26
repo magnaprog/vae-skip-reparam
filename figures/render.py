@@ -261,12 +261,6 @@ def context(directory, summary):
 
 def diagnostics(directory, records, reduced):
     handles = dict(zip(ROLES, legend_handles(), strict=True))
-    def range_marks(ax, x, low, high, role):
-        color = COLORS[role]
-        ax.vlines(x, low, high, color=color, linewidth=.80, zorder=1.85)
-        # The cap width is in print points. Each endpoint keeps its data coordinates.
-        ax.scatter(np.tile(x, 2), np.ma.concatenate((low, high)), marker="_", s=4.15**2,
-                   color=color, linewidths=.65, zorder=1.95, label="_seed_range_caps")
 
     # Sample different frequency bins for each symbol so nearby curves remain identifiable.
     spectral_marks = dict(zip(CONDITION_ORDER, ([0, 4, 13, 45, 88], [1, 6, 17, 52, 94],
@@ -291,8 +285,6 @@ def diagnostics(directory, records, reduced):
                         offset = .05 * CONDITION_ORDER.index(role)
                         marks = np.searchsorted(middle[line], np.array([.12, .36, .60, .84]) + offset)
                         marks = np.unique(np.minimum(marks, line.sum() - 1))
-                        x_indices = np.flatnonzero(line)[marks]
-                        range_marks(ax, grid[x_indices], low[x_indices], high[x_indices], role)
                     ax.step(grid[line], middle[line], where="post", color=COLORS[role],
                             linestyle=STYLES.get(role, "-"), linewidth=handles[role].get_linewidth(),
                             marker=MARKERS.get(role), markevery=marks, markersize=3.0,
@@ -333,8 +325,6 @@ def diagnostics(directory, records, reduced):
                     ax.fill_between(frequency, low, high,
                                     color=COLORS[role], alpha=.12, linewidth=0)
                     marks = spectral_marks.get(role)
-                    if marks is not None:
-                        range_marks(ax, frequency[marks], low[marks], high[marks], role)
                     ax.plot(frequency, middle, color=COLORS[role],
                             linestyle=STYLES.get(role, "-"), linewidth=handles[role].get_linewidth(),
                             marker=MARKERS.get(role), markevery=marks, markersize=3.0,
