@@ -157,9 +157,12 @@ def legend_handles(roles=ROLES, multiline=False):
     labels = {"train": "Training data", "test": "Test data", "PPCA": "PPCA", **CONDITION_LABELS}
     if multiline:
         labels.update({key: value.replace(", ", ",\n") for key, value in CONDITION_LABELS.items()})
+    widths = {"train": 1.20, "test": 1.08, "PPCA": .94}
     return [Line2D([], [], color=COLORS[k], linestyle=STYLES.get(k, "-"),
-                   marker=MARKERS.get(k), markersize=3, markerfacecolor="white",
-                   label=labels.get(k, k), linewidth=1) for k in roles]
+                   marker=MARKERS.get(k), markersize=3.8, markeredgewidth=.65,
+                   markerfacecolor=COLORS[k] if k in CONDITION_ORDER[:2] else "white",
+                   label=labels.get(k, k),
+                   linewidth=widths.get(k, .82)) for k in roles]
 
 
 
@@ -172,11 +175,6 @@ def diagnostic_legend(fig, spectra=False):
     fig.legend(handles=legend_handles(CONDITION_ORDER, multiline=True),
                loc="upper center", bbox_to_anchor=(.5, 1 - .29 / height), ncol=4,
                frameon=False, columnspacing=1.1, handlelength=2, borderaxespad=0)
-    if spectra:
-        fig.legend(handles=[Line2D([], [], color=".35", linestyle="-", label="Neural samples with noise"),
-                            Line2D([], [], color=".35", linestyle="--", label="Decoder means")],
-                   loc="upper center", bbox_to_anchor=(.5, 1 - .70 / height), ncol=2,
-                   frameon=False, columnspacing=1.1, handlelength=2.7, borderaxespad=0)
 
 def save(fig, directory, name):
     # Do not tight-crop: every output is 396 PDF points wide, matching the paper.
@@ -188,8 +186,11 @@ def save(fig, directory, name):
 
 def comparison(directory, records):
     names = figure_values.record_order(records)
-    fig, axes = plt.subplots(1, 3, figsize=(5.5, 2.75), sharey=True)
-    for ax, score, title in zip(axes, SCORES, ("Full windows", "After mean\nsubtraction", "Time increments")):
+    fig, axes = plt.subplots(1, 3, figsize=(5.5, 2.75), sharey=True,
+                             gridspec_kw={"width_ratios": (1, 1, 1.18)})
+    titles = ("Full windows", "After mean\nsubtraction", "Time increments")
+    ticks = ((-1, 0, 1, 2, 3), (-.6, -.3, 0, .3), (-.08, -.04, 0, .04))
+    for ax, score, title, tick_values in zip(axes, SCORES, titles, ticks):
         for pair, offset, color, marker, label in (
                 ("skip_base-no_skip_base", -.12, COLORS["skip_base"], "s", r"Base variance ($\sigma_0^2$)"),
                 ("skip_high-no_skip_high", .12, COLORS["skip_high"], "o", r"High variance ($25\sigma_0^2$)")):
@@ -197,20 +198,28 @@ def comparison(directory, records):
             middle = np.array([s["median"] for s in stats])
             error = np.array([[s["median"] - s["min"] for s in stats], [s["max"] - s["median"] for s in stats]])
             ax.errorbar(middle, np.arange(7) + offset, xerr=error, fmt=marker,
-                        color=color, markersize=3.8, linewidth=.9, capsize=2, label=label)
-        ax.axvline(0, color=".55", linewidth=.65)
+                        color=color, markersize=3.6, markeredgewidth=.75,
+                        markerfacecolor="white" if marker == "o" else color,
+                        linewidth=.85, capsize=1.8, label=label)
+        ax.set_xticks(tick_values)
+        xmin, xmax = ax.get_xlim()
+        padding = .035 * (xmax - xmin)
+        ax.set_xlim(xmin - padding, xmax + padding)
+        ax.xaxis.set_major_formatter(FuncFormatter(lambda value, _: f"{value:g}".replace("-", "−")))
+        ax.set_axisbelow(True)
+        ax.axvline(0, color=".35", linewidth=.85, zorder=1.8)
         ax.axhline(3.5, color=".7", linewidth=.6, linestyle=":")
         ax.grid(axis="x", color=".9", linewidth=.5)
-        ax.set_title(title)
+        ax.set_title(title, pad=3)
+        ax.tick_params(axis="y", length=0)
 
     axes[0].set_yticks(np.arange(7), [f"{records[n]['station']}/{records[n]['year']}" for n in names])
     axes[0].invert_yaxis()
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, title="Skip minus no skip", title_fontsize=9,
-               loc="upper center", bbox_to_anchor=(.58, 1.015), ncol=2, frameon=False)
-    fig.text(.57, .02, "Energy score difference: skip minus no skip\n(dimensionless coordinates)",
-             fontsize=9, ha="center")
-    fig.tight_layout(rect=(0, .12, 1, .85), pad=.5, w_pad=.8)
+    fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(.55, .995),
+               ncol=2, frameon=False, borderaxespad=0, handlelength=1.6, columnspacing=2)
+    fig.text(.56, .02, "Energy score difference (skip minus no skip)", ha="center", va="bottom")
+    fig.subplots_adjust(left=.155, right=.965, bottom=.20, top=.745, wspace=.16)
     save(fig, directory, "dart_energy_score_differences")
 
 
@@ -222,37 +231,63 @@ def context(directory, summary):
         relative = next(path for path in sources if Path(path).name == name + ".txt")
         c = figure_values.read_observed_context(ROOT / relative, sources[relative])
         ax.scatter(c["days"], c["heights"], s=.35, linewidths=0, color="#008CFF", rasterized=True)
-        ax.set_xlim(min(1, c["days"].min()), max(366 + calendar.isleap(c["year"]), c["days"].max()))
-        ax.set_title(f"{records[name]['station']}/{records[name]['year']}")
+        # Keep endpoint observations fully visible, including midnight on January 1.
+        ax.set_xlim(-1, 368 + calendar.isleap(c["year"]))
+        ax.set_title(f"{records[name]['station']} / {records[name]['year']}", pad=3)
         month_days = [(date(c["year"], m, 1) - date(c["year"], 1, 1)).days + 1
                       for m in (1, 4, 7, 10)]
         ax.set_xticks(month_days, ["Jan", "Apr", "Jul", "Oct"])
-        ax.set_xlabel("Date (UTC)")
-        ax.set_ylabel("HEIGHT (m)")
         ax.ticklabel_format(axis="y", style="plain", useOffset=False)
-    fig.tight_layout(pad=.7, h_pad=1.2, w_pad=.8)
+        if name == "52403t2020":
+            # Mark only complete UTC dates between the two bordering observations.
+            observed_days = np.unique(np.floor(c["days"]).astype(int))
+            gap = np.argmax(np.diff(observed_days))
+            last_observed, next_observed = observed_days[gap:gap + 2]
+            day_zero = date(c["year"], 1, 1).toordinal() - 1
+            first = date.fromordinal(day_zero + int(last_observed) + 1)
+            last = date.fromordinal(day_zero + int(next_observed) - 1)
+            midpoint = (last_observed + next_observed + 1) / 2
+            label = f"T=1 gap\n{first.day} {calendar.month_abbr[first.month]} to\n{last.day} {calendar.month_abbr[last.month]}"
+            ax.text(midpoint, .51, label,
+                    transform=ax.get_xaxis_transform(), ha="center", va="center", fontsize=8, color=".25")
+    fig.supylabel("Equivalent water column height (m)", x=.012, fontsize=9)
+    fig.supxlabel("Month (UTC)", y=.018, fontsize=9)
+    fig.subplots_adjust(left=.147, right=.985, bottom=.109, top=.953, hspace=.38, wspace=.43)
     save(fig, directory, "dart_original_height_records")
 
 
 def diagnostics(directory, records, reduced):
+    handles = dict(zip(ROLES, legend_handles(), strict=True))
+    # Sample different frequency bins for each symbol so nearby curves remain identifiable.
+    spectral_marks = dict(zip(CONDITION_ORDER, ([0, 4, 13, 45, 88], [1, 6, 17, 52, 94],
+                                                [2, 8, 21, 60, 82], [3, 10, 27, 68, 77]), strict=True))
     for group, is_2018 in (("original", False), ("2018", True)):
         names = [n for n in figure_values.record_order(records) if (records[n]["target"] == "six_UTC_bins_equal") == is_2018]
         fig, axes = plt.subplots(len(names), 3, figsize=(5.5, 1.52 * len(names) + .95), squeeze=False)
         for row, name in enumerate(names):
             for feature, ax in enumerate(axes[row]):
                 grid, curves = ecdf_arrays(reduced[name], feature)
+                if feature == 1:
+                    ax.axhline(.5, color=".83", linewidth=.55, zorder=0)
                 for role in ROLES:
                     values = curves[role]
                     low, high, middle = values.min(0), values.max(0), np.median(values, axis=0)
                     envelope = step_support(grid, low, high)
                     line = step_support(grid, middle)
                     ax.fill_between(grid[envelope], low[envelope], high[envelope], step="post", color=COLORS[role], alpha=.13, linewidth=0)
-                    # Marks identify curves without changing their exact step support.
-                    fraction = {"no_skip_base": .10, "skip_base": .16, "no_skip_high": .22, "skip_high": .28}.get(role, .1)
-                    marks = np.unique(((fraction + np.arange(4) * .2) * (int(line.sum()) - 1)).astype(int))
+                    # Place the four condition symbols at different cumulative probabilities.
+                    marks = None
+                    if role in CONDITION_ORDER:
+                        offset = .05 * CONDITION_ORDER.index(role)
+                        marks = np.searchsorted(middle[line], np.array([.12, .36, .60, .84]) + offset)
+                        marks = np.unique(np.minimum(marks, line.sum() - 1))
+                        x_indices = np.flatnonzero(line)[marks]
+                        ax.vlines(grid[x_indices], low[x_indices], high[x_indices],
+                                  color=COLORS[role], linewidth=.65, zorder=1.8)
                     ax.step(grid[line], middle[line], where="post", color=COLORS[role],
-                            linestyle=STYLES.get(role, "-"), linewidth=.85, marker=MARKERS.get(role),
-                            markevery=marks, markersize=2.3, markeredgewidth=.5, markerfacecolor="white")
+                            linestyle=STYLES.get(role, "-"), linewidth=handles[role].get_linewidth(),
+                            marker=MARKERS.get(role), markevery=marks, markersize=3.2,
+                            markeredgewidth=.65, markerfacecolor=handles[role].get_markerfacecolor())
                 ax.set_ylim(-.025, 1.025)
                 ax.set_yticks([0, .5, 1])
                 if feature:
@@ -262,7 +297,7 @@ def diagnostics(directory, records, reduced):
                     ax.set_xlabel(("Mean minus\ntraining mean (m)", "Standard deviation\nwithin a window (m)", "Time increment\nnorm (m)")[feature])
             axes[row, 0].set_ylabel("ECDF")
         diagnostic_legend(fig)
-        fig.subplots_adjust(left=.155, right=.985, bottom=.105 if is_2018 else .08,
+        fig.subplots_adjust(left=.155, right=.985, bottom=.118 if is_2018 else .09,
                             top=.8 if is_2018 else .837, hspace=.60, wspace=.24)
         for row, name in enumerate(names):
             box = axes[row, 0].get_position()
@@ -278,17 +313,23 @@ def diagnostics(directory, records, reduced):
         fig, axes = plt.subplots(len(names), 2, figsize=(5.5, 1.48 * len(names) + 1.15), squeeze=False)
         frequency = np.arange(1, 97) / 2
         for row, name in enumerate(names):
-            for col, conditions in enumerate((CONDITION_ORDER[:2], CONDITION_ORDER[2:])):
-                ax = axes[row, col]
-                for role in ("train", "test", "PPCA", *conditions, *(a + " means" for a in conditions)):
-                    power = figure_values.power_arrays(reduced[name][role])
-                    condition = role.split()[0]
-                    positive = lambda x: np.ma.masked_less_equal(x, 0)
-                    ax.fill_between(frequency, positive(power.min(0)), positive(power.max(0)), color=COLORS[condition], alpha=.12, linewidth=0)
-                    ax.plot(frequency, positive(np.median(power, axis=0)), color=COLORS[condition],
-                            linestyle="--" if role.endswith(" means") else STYLES.get(role, "-"),
-                            linewidth=.85, marker=MARKERS.get(condition), markevery=([1, 5, 15, 47, 95] if condition in ("no_skip_base", "skip_high") else [0, 3, 11, 31, 79]),
-                            markersize=2.3, markeredgewidth=.5, markerfacecolor="white")
+            for col, ax in enumerate(axes[row]):
+                for role in ROLES:
+                    source = role + " means" if col == 1 and role in CONDITION_ORDER else role
+                    power = figure_values.power_arrays(reduced[name][source])
+                    low = np.ma.masked_less_equal(power.min(0), 0)
+                    high = np.ma.masked_less_equal(power.max(0), 0)
+                    middle = np.ma.masked_less_equal(np.median(power, axis=0), 0)
+                    ax.fill_between(frequency, low, high,
+                                    color=COLORS[role], alpha=.12, linewidth=0)
+                    marks = spectral_marks.get(role)
+                    if marks is not None:
+                        ax.vlines(frequency[marks], low[marks], high[marks], color=COLORS[role],
+                                  linewidth=.65, zorder=1.8)
+                    ax.plot(frequency, middle, color=COLORS[role],
+                            linestyle=STYLES.get(role, "-"), linewidth=handles[role].get_linewidth(),
+                            marker=MARKERS.get(role), markevery=marks, markersize=3.2,
+                            markeredgewidth=.65, markerfacecolor=handles[role].get_markerfacecolor())
                 ax.set_xscale("log")
                 ax.set_yscale("log", nonpositive="mask")
                 ax.set_xlim(.5, 48)
@@ -306,88 +347,90 @@ def diagnostics(directory, records, reduced):
             axes[row, 0].set_ylabel("Bin power (m$^2$)")
         diagnostic_legend(fig, spectra=True)
         fig.subplots_adjust(left=.19, right=.985, bottom=.09 if is_2018 else .07,
-                            top=.74 if is_2018 else .767, hspace=.32, wspace=.34)
+                            top=.805 if is_2018 else .844, hspace=.32, wspace=.34)
         for row, name in enumerate(names):
             box = axes[row, 0].get_position()
             fig.text(.022, (box.y0 + box.y1) / 2,
                      f"{records[name]['station']} / {records[name]['year']}",
                      rotation=90, ha="center", va="center", fontsize=8.5)
-        for col, label in enumerate(("Neural observation variance\n" + r"Base ($\sigma_0^2$)",
-                                     "Neural observation variance\n" + r"High ($25\sigma_0^2$)")):
-            box = axes[0, col].get_position()
-            fig.text((box.x0 + box.x1) / 2, box.y1 + .046, label, ha="center", fontsize=9)
+        for ax, label in zip(axes[0], ("Neural samples with noise", "Decoder means"), strict=True):
+            ax.set_title(label, pad=6)
         save(fig, directory, "dart_spectra_" + group)
 
 
 def variance(directory, records):
     fig, axes = plt.subplots(1, 4, figsize=(5.5, 7.15), sharey=True)
-    labels = []
-    for row, (name, condition) in enumerate((n, a) for n in figure_values.record_order(records) for a in CONDITION_ORDER):
+    names = figure_values.record_order(records)
+    for row, (name, condition) in enumerate((n, c) for n in names for c in CONDITION_ORDER):
         record = records[name]
-        labels.append(CONDITION_LABELS[condition])
-        if condition == CONDITION_ORDER[0]:
-            axes[0].text(-2.75, row + 1.5, f"{record['station']}\n{record['year']}",
-                         transform=axes[0].get_yaxis_transform(), ha="right", va="center", fontsize=8.5)
         ratios, deltas = figure_values.refit_points(record, condition)
         for seed, offset in enumerate((-.2, 0, .2)):
             y = row + offset
             axes[0].plot(ratios[seed], y, marker=MARKERS[condition], color=COLORS[condition], markersize=3, linewidth=0)
             for col in range(3):
                 values = deltas[seed, col]
-                axes[col+1].hlines(y, values.min(), values.max(), color=COLORS[condition], linewidth=.65)
-                axes[col+1].plot(values.mean(), y, marker=MARKERS[condition], color=COLORS[condition], markersize=3, linewidth=0)
+                axes[col+1].hlines(y, values.min(), values.max(), color=COLORS[condition], linewidth=.85)
+                axes[col+1].plot(values.mean(), y, marker="|", color=COLORS[condition],
+                                 markersize=3.4, markeredgewidth=1.05, linewidth=0)
+    fig.subplots_adjust(left=.143, right=.982, bottom=.089, top=.886, wspace=.32)
+    axes[0].set_yticks([4 * i + 1.5 for i in range(len(names))],
+                       [f"{records[n]['station']}\n{records[n]['year']}" for n in names])
+    axes[0].set_ylim(4 * len(names) - .45, -.55)
     for col, ax in enumerate(axes):
-        ax.axvline(1 if col == 0 else 0, color=".55", linewidth=.7, linestyle=":")
-        for boundary in np.arange(3.5, 27, 4):
-            ax.axhline(boundary, color=".6" if boundary == 15.5 else ".85", linewidth=.6,
-                       linestyle=":" if boundary == 15.5 else "-")
-        ax.set_title(("Observation\nvariance ratio", "Full\nwindows", "After mean\nsubtraction", "Time\nincrements")[col])
+        ax.tick_params(axis="y", length=0, pad=6)
+        ax.spines["left"].set_visible(False)
+        ax.axvline(1 if col == 0 else 0, color=".45", linewidth=.7, linestyle=":", zorder=0)
+        for boundary in np.arange(3.5, 4 * len(names) - 1, 4):
+            ax.axhline(boundary, color=".58" if boundary == 15.5 else ".85", linewidth=.6,
+                       linestyle=":" if boundary == 15.5 else "-", zorder=0)
+        ax.set_title(("Variance\nratio", "Full\nwindows", "After mean\nsubtraction", "Time\nincrements")[col])
         if col:
             ax.xaxis.set_major_formatter(FuncFormatter(lambda value, position: f"{value * 1e3:g}"))
-            ax.locator_params(axis="x", nbins=3)
-        if col == 0:
-            ax.set_xlabel(r"$\hat v / v_{\mathrm{original}}$")
+            # Keep the score axes linear so horizontal lengths remain comparable within each panel.
+            ticks = ((-15, 0, 15, 30), (-10, 0, 10, 20), (-3, 0, 3, 6))[col - 1]
+            ax.set_xticks(np.asarray(ticks) / 1000)
     axes[0].set_xscale("log")
     axes[0].set_xticks([.2, 1, 5], ["0.2", "1", "5"])
     axes[0].xaxis.set_minor_formatter(NullFormatter())
-    axes[0].set_yticks(range(len(labels)), labels)
-    axes[0].invert_yaxis()
-    fig.subplots_adjust(left=.42, right=.985, bottom=.09, top=.91, wspace=.35)
-    fig.text(.5, .98, r"Original observation variance: base = $\sigma_0^2$; high = $25\sigma_0^2$",
+    axes[0].set_xlabel(r"$\hat v/v_{\mathrm{original}}$")
+    handles = [Line2D([], [], color=COLORS[c], marker=MARKERS[c], linestyle="none", markersize=4,
+                      label=CONDITION_LABELS[c].replace(" variance", "")) for c in CONDITION_ORDER]
+    fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(.53, .993), ncol=4,
+               columnspacing=1.0, handletextpad=.25, handlelength=.9, frameon=False)
+    fig.text(.637, .021, "Energy score change (replacement − original), in units of $10^{-3}$",
              ha="center", fontsize=8.5)
-    fig.text(.74, .012, "Energy score change ($10^{-3}$)\n(replacement minus original)",
-             ha="center", fontsize=9)
     save(fig, directory, "dart_observation_variance")
 
 
 def ppca_comparison(directory, records):
     """Show all 84 neural fits against PPCA at the same observation variance."""
     fig, axes = plt.subplots(1, 3, figsize=(5.5, 7.15), sharey=True)
-    labels = []
-    for row, (name, condition) in enumerate((n, a) for n in figure_values.record_order(records)
-                                    for a in CONDITION_ORDER):
+    names = figure_values.record_order(records)
+    for row, (name, condition) in enumerate((n, c) for n in names for c in CONDITION_ORDER):
         record = records[name]
-        labels.append(CONDITION_LABELS[condition])
-        if condition == CONDITION_ORDER[0]:
-            axes[0].text(-1.95, row + 1.5, f"{record['station']}\n{record['year']}",
-                         transform=axes[0].get_yaxis_transform(), ha="right", va="center", fontsize=8.5)
         values = figure_values.ppca_comparison_points(record, condition)
         for seed, offset in enumerate((-.2, 0, .2)):
             for col, ax in enumerate(axes):
                 ax.plot(values[seed, col], row + offset, marker=MARKERS[condition], color=COLORS[condition],
                         markersize=3, linewidth=0)
+    fig.subplots_adjust(left=.143, right=.982, bottom=.085, top=.886, wspace=.29)
+    axes[0].set_yticks([4 * i + 1.5 for i in range(len(names))],
+                       [f"{records[n]['station']}\n{records[n]['year']}" for n in names])
+    axes[0].set_ylim(4 * len(names) - .45, -.55)
     for col, ax in enumerate(axes):
-        ax.axvline(0, color=".55", linewidth=.7, linestyle=":")
-        for boundary in np.arange(3.5, 27, 4):
-            ax.axhline(boundary, color=".6" if boundary == 15.5 else ".85", linewidth=.6,
-                       linestyle=":" if boundary == 15.5 else "-")
-        ax.set_title(("Full\nwindows", "After mean\nsubtraction", "Time\nincrements")[col])
-        ax.locator_params(axis="x", nbins=3)
-    axes[0].set_yticks(range(len(labels)), labels)
-    axes[0].invert_yaxis()
-    fig.subplots_adjust(left=.42, right=.985, bottom=.095, top=.94, wspace=.3)
-    fig.text(.71, .018, "Energy score difference: neural minus PPCA\n(dimensionless coordinates)",
-             ha="center", fontsize=9)
+        ax.tick_params(axis="y", length=0, pad=6)
+        ax.spines["left"].set_visible(False)
+        ax.axvline(0, color=".45", linewidth=.7, linestyle=":", zorder=0)
+        for boundary in np.arange(3.5, 4 * len(names) - 1, 4):
+            ax.axhline(boundary, color=".58" if boundary == 15.5 else ".85", linewidth=.6,
+                       linestyle=":" if boundary == 15.5 else "-", zorder=0)
+        ax.set_title(("Full windows", "After mean\nsubtraction", "Time increments")[col])
+        ax.set_xticks(((0, 3, 6, 9), (0, 1, 2), (0, .1, .2, .3))[col])
+    handles = [Line2D([], [], color=COLORS[c], marker=MARKERS[c], linestyle="none", markersize=4,
+                      label=CONDITION_LABELS[c].replace(" variance", "")) for c in CONDITION_ORDER]
+    fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(.53, .993), ncol=4,
+               columnspacing=1.0, handletextpad=.25, handlelength=.9, frameon=False)
+    fig.text(.55, .02, "Energy score difference (VAE − PPCA), dimensionless", ha="center", fontsize=9)
     save(fig, directory, "dart_ppca_comparison")
 
 
@@ -399,10 +442,10 @@ def intervals(directory, records):
                          ("additional", figure_values.RECORDS[4:])):
         original = group == "original"
         fig = plt.figure(figsize=(5.5, 7.15 if original else 6.25))
-        grid = fig.add_gridspec(len(names), 2, left=.23, right=.985,
+        grid = fig.add_gridspec(len(names), 2, left=.175, right=.976,
                                bottom=.05 if original else .065,
-                               top=.88 if original else .85,
-                               hspace=.17 if original else .36, wspace=.14)
+                               top=.865 if original else .85,
+                               hspace=.21 if original else .32, wspace=.16)
         for row, name in enumerate(names):
             record = records[name]
             points = {days: figure_values.interval_points(record, days) for days in (14, 28)}
@@ -413,15 +456,15 @@ def intervals(directory, records):
             score_bounds = lower - score_padding, upper + score_padding
             all_starts = np.concatenate([p["start_unix"] for p in points.values()])
             dates = mdates.date2num(all_starts.astype("datetime64[s]"))
-            padding = max(3., (dates.max() - dates.min()) * .085)
+            padding = max(3., (dates.max() - dates.min()) * .105)
             bounds = dates.min() - padding, dates.max() + padding
             row_box = grid[row, 0].get_position(fig)
-            fig.text(.069, (row_box.y0 + row_box.y1) / 2,
-                     f"{record['station']} / {record['year']}",
-                     rotation=90, ha="center", va="center", fontsize=8.5)
+            fig.text(.022, row_box.y0 + .76 * row_box.height,
+                     f"{record['station']}\n{record['year']}",
+                     ha="left", va="center", fontsize=8.5)
             first_axis = None
             for col, days in enumerate((14, 28)):
-                cell = grid[row, col].subgridspec(2, 1, height_ratios=(.92, 1), hspace=0)
+                cell = grid[row, col].subgridspec(2, 1, height_ratios=(1.13, 1), hspace=0)
                 ax = fig.add_subplot(cell[0], sharey=first_axis)
                 if first_axis is None:
                     first_axis = ax
@@ -433,20 +476,21 @@ def intervals(directory, records):
                 for variance, color in contrasts:
                     for seed, marker in enumerate(seed_markers):
                         # Separate glyphs in physical points, never in UTC dates or score values.
-                        transform = ax.transData + ScaledTranslation(
-                            (-4., 0., 4.)[seed] / 72, 0, fig.dpi_scale_trans)
+                        shift = (-6.8, 0., 6.8)[seed] + (-1.65 if variance == "base" else 1.65)
+                        transform = ax.transData + ScaledTranslation(shift / 72, 0, fig.dpi_scale_trans)
                         ax.plot(starts, values[variance][:, seed], linestyle="none", marker=marker,
                                 color=color, markerfacecolor=color if variance == "base" else "white",
-                                markeredgewidth=.65, markersize=3.5, transform=transform)
-                        if group == "additional":
+                                markeredgewidth=.45, markersize=2.8, transform=transform)
+                        if group == "additional" and variance == "base":
                             for x, value in zip(starts, values[variance][:, seed], strict=True):
                                 if value > 0:
-                                    offset = 3 if value > .1 else (15 if variance == "base" else 1)
-                                    ax.annotate(f"{value:+.3g}", (x, value), xytext=(-8, offset), xycoords=transform,
-                                                textcoords="offset points", ha="right", color=color,
+                                    ax.annotate(f"{value:+.3g}", (x, value), xycoords=transform,
+                                                xytext=(0, 8), textcoords="offset points",
+                                                ha="center", va="bottom", color=color,
                                                 fontsize=8.5, arrowprops={"arrowstyle": "-", "color": color,
-                                                                         "linewidth": .45})
-                ax.axhline(0, color=".5", linewidth=.6, linestyle=":", zorder=0)
+                                                                         "linewidth": .65, "shrinkA": .4,
+                                                                         "shrinkB": 1.6})
+                ax.axhline(0, color=".40", linewidth=.7, linestyle=":", zorder=0)
                 # Display-offset transforms do not reliably participate in autoscaling.
                 # Bind both columns to the complete untransformed values, including zero.
                 ax.set_ylim(score_bounds)
@@ -457,8 +501,8 @@ def intervals(directory, records):
                 ax.set_xlim(bounds)
                 if row == 0:
                     box = ax.get_position()
-                    fig.text((box.x0 + box.x1) / 2, .906 if original else .89,
-                             f"Intervals of {days} days", ha="center", fontsize=9)
+                    fig.text((box.x0 + box.x1) / 2, .888 if original else .873,
+                             f"{days}-day intervals", ha="center", fontsize=9)
                 coverage.set_ylim(0, 1)
                 coverage.set_yticks([])
                 coverage.set_xticks(starts)
@@ -482,10 +526,10 @@ def intervals(directory, records):
         handles += [Line2D([], [], color=".25", marker=marker, linestyle="none", markersize=3.5,
                            label=str(seed)) for seed, marker in zip(figure_values.SEEDS, seed_markers, strict=True)]
         fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(.5, .995), ncol=5,
-                   title="Observation variance / training seed", frameon=False,
+                   frameon=False,
                    columnspacing=1.0, handletextpad=.45)
-        fig.text(.018, .48, "Energy score difference: skip minus no skip", rotation=90,
-                 ha="center", va="center", fontsize=9)
+        fig.text(.54, .934 if original else .926, "Full-window energy score difference (skip − no skip)",
+                 ha="center", fontsize=9)
         save(fig, directory, "dart_intervals_" + group)
 
 
