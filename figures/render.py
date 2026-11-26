@@ -401,6 +401,7 @@ def variance(directory, records):
             ax.axhline(boundary, color=".58" if boundary == 15.5 else ".85", linewidth=.6,
                        linestyle=":" if boundary == 15.5 else "-", zorder=0)
     ratio_ax.set_xscale("log")
+    ratio_ax.margins(x=.075)
     ratio_ax.set_xticks([.2, 1, 5], ["0.2", "1", "5"])
     ratio_ax.xaxis.set_minor_formatter(NullFormatter())
     ratio_ax.axvline(1, color=".45", linewidth=.7, linestyle=":", zorder=0)

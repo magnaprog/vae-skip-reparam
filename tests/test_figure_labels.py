@@ -32,6 +32,29 @@ def assert_separate(boxes):
         assert not first.overlaps(second)
 
 
+def check_marker_clearance(ax, line, positions, min_horizontal_pt=0):
+    """Measure the actual outline against all four axes edges in print points."""
+    px = ax.figure.dpi / 72
+    style = MarkerStyle(line.get_marker())
+    bounds = style.get_path().get_extents(style.get_transform())
+    size = line.get_markersize()
+    stroke = line.get_markeredgewidth() / 2
+    x_stroke = bottom_stroke = top_stroke = stroke
+    if line.get_marker() in ("^", "v"):
+        # The triangular marker has unit height and unit base. Its miter
+        # joins extend farther than a half-stroke at the tips and corners.
+        x_stroke = stroke * (1 + np.sqrt(5)) / 2
+        if line.get_marker() == "^":
+            top_stroke = stroke * np.sqrt(5)
+        else:
+            bottom_stroke = stroke * np.sqrt(5)
+    x, y = positions.T
+    assert np.min((x - ax.bbox.x0) / px + size * bounds.x0 - x_stroke) > min_horizontal_pt
+    assert np.min((ax.bbox.x1 - x) / px - size * bounds.x1 - x_stroke) > min_horizontal_pt
+    assert np.min((y - ax.bbox.y0) / px + size * bounds.y0 - bottom_stroke) > 0
+    assert np.min((ax.bbox.y1 - y) / px - size * bounds.y1 - top_stroke) > 0
+
+
 def check_spectral_markers_and_bins(ax):
     frequency = np.arange(1, 97) / 2
     ticks = [.5, 1, 2, 6, 12, 24, 48]
@@ -39,31 +62,13 @@ def check_spectral_markers_and_bins(ax):
     assert [ax.xaxis.get_major_formatter()(x, i) for i, x in enumerate(ticks)] == [
         "0.5", "1", "2", "6", "12", "24", "48"]
     assert ax.get_xscale() == ax.get_yscale() == "log"
-    points_to_pixels = ax.figure.dpi / 72
     symbols = 0
     for line in ax.lines:
         np.testing.assert_array_equal(line.get_xdata(), frequency)
         if line.get_marker() == "None":
             continue
         positions = line.get_transform().transform(line.get_xydata()[line.get_markevery()])
-        style = MarkerStyle(line.get_marker())
-        bounds = style.get_path().get_extents(style.get_transform())
-        size = line.get_markersize()
-        stroke = line.get_markeredgewidth() / 2
-        x_stroke = bottom_stroke = top_stroke = stroke
-        if line.get_marker() in ("^", "v"):
-            # The triangular marker has unit height and unit base. Its miter
-            # joins extend farther than a half-stroke at the tips and corners.
-            x_stroke = stroke * (1 + np.sqrt(5)) / 2
-            if line.get_marker() == "^":
-                top_stroke = stroke * np.sqrt(5)
-            else:
-                bottom_stroke = stroke * np.sqrt(5)
-        x, y = positions.T
-        assert np.all(x + (size * bounds.x0 - x_stroke) * points_to_pixels > ax.bbox.x0)
-        assert np.all(x + (size * bounds.x1 + x_stroke) * points_to_pixels < ax.bbox.x1)
-        assert np.all(y + (size * bounds.y0 - bottom_stroke) * points_to_pixels > ax.bbox.y0)
-        assert np.all(y + (size * bounds.y1 + top_stroke) * points_to_pixels < ax.bbox.y1)
+        check_marker_clearance(ax, line, positions)
         symbols += len(positions)
     assert symbols == 20
 
@@ -323,6 +328,11 @@ def test_comparison_and_refit_draw_descriptive_labels(monkeypatch, tmp_path, nam
                         assert ax.get_ylim() == fig.axes[0].get_ylim()
                 points = [[line for line in ax.lines if line.get_marker() not in ("None", None)] for ax in fig.axes]
                 assert all(len(lines) == 84 for lines in points)
+                for panel, (ax, lines) in enumerate(zip(fig.axes, points, strict=True)):
+                    for line in lines:
+                        positions = line.get_transform().transform(line.get_xydata())
+                        check_marker_clearance(ax, line, positions, min_horizontal_pt=.5 if panel == 0 else 0)
+                np.testing.assert_array_equal(fig.axes[0].get_xticks(), [.2, 1, 5])
                 for row, (record, condition) in enumerate(itertools.product(names, renderer.CONDITION_ORDER)):
                     ratios, deltas = renderer.figure_values.refit_points(records[record], condition)
                     for seed, offset in enumerate((-.29, 0, .29)):
