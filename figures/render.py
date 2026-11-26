@@ -14,6 +14,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib import font_manager
+from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
 from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 from matplotlib.transforms import ScaledTranslation
@@ -435,7 +436,11 @@ def ppca_comparison(directory, records):
         values = figure_values.ppca_comparison_points(record, condition)
         for seed, offset in enumerate((-.32, 0, .32)):
             for col, ax in enumerate(axes):
-                ax.plot(values[seed, col], row + offset, marker=MARKERS[condition], color=COLORS[condition],
+                score, y = values[seed, col], row + offset
+                bar = LineCollection([[(0, y), (score, y)]], colors=COLORS[condition],
+                                     linewidths=1.55, capstyle="butt", zorder=1)
+                ax.add_collection(bar, autolim=False)  # Keep the original score and zero-guide limits.
+                ax.plot(score, y, marker=MARKERS[condition], color=COLORS[condition],
                         markersize=3, linewidth=0)
     fig.subplots_adjust(left=.143, right=.982, bottom=.085, top=.886, wspace=.29)
     axes[0].set_yticks([4 * i + 1.5 for i in range(len(names))],
