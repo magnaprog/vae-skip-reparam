@@ -14,6 +14,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib import font_manager
+from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
 from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 from matplotlib.transforms import ScaledTranslation
@@ -30,7 +31,7 @@ INPUT_SHA256 = {
 }
 FONT = "DejaVu Serif"
 FONT_SHA = "107244956e9962b9e96faccdc551825e0ae0898ae13737133e1b921a2fd35ffa"
-COLORS = {"no_skip_base": "#0077BB", "skip_base": "#CC3311", "no_skip_high": "#332288", "skip_high": "#009988",
+COLORS = {"no_skip_base": "#0077BB", "skip_base": "#EE3377", "no_skip_high": "#EE7733", "skip_high": "#009988",
           "train": "#888888", "test": "#111111", "PPCA": "#555555"}
 CONDITION_ORDER = figure_values.CONDITIONS
 CONDITION_LABELS = {"no_skip_base": "No skip, base variance", "skip_base": "Skip, base variance",
@@ -233,7 +234,7 @@ def context(directory, summary):
     for ax, name in zip(axes.flat, figure_values.RECORDS[:4]):
         relative = next(path for path in sources if Path(path).name == name + ".txt")
         c = figure_values.read_observed_context(ROOT / relative, sources[relative])
-        ax.scatter(c["days"], c["heights"], s=.65, linewidths=0, color="#0072B2", rasterized=True)
+        ax.scatter(c["days"], c["heights"], s=.65, linewidths=0, color="#0077BB", rasterized=True)
         # Keep endpoint observations fully visible, including midnight on January 1.
         ax.set_xlim(-1, 368 + calendar.isleap(c["year"]))
         ax.set_title(f"{records[name]['station']} / {records[name]['year']}", pad=3)
@@ -435,7 +436,11 @@ def ppca_comparison(directory, records):
         values = figure_values.ppca_comparison_points(record, condition)
         for seed, offset in enumerate((-.32, 0, .32)):
             for col, ax in enumerate(axes):
-                ax.plot(values[seed, col], row + offset, marker=MARKERS[condition], color=COLORS[condition],
+                score, y = values[seed, col], row + offset
+                bar = LineCollection([[(0, y), (score, y)]], colors=COLORS[condition],
+                                     linewidths=1.55, capstyle="butt", zorder=1)
+                ax.add_collection(bar, autolim=False)  # Keep the original score and zero-guide limits.
+                ax.plot(score, y, marker=MARKERS[condition], color=COLORS[condition],
                         markersize=3, linewidth=0)
     fig.subplots_adjust(left=.143, right=.982, bottom=.085, top=.886, wspace=.29)
     axes[0].set_yticks([4 * i + 1.5 for i in range(len(names))],

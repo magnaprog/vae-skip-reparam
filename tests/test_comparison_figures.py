@@ -10,6 +10,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from matplotlib.colors import to_rgba
 from matplotlib.transforms import Bbox
 import numpy as np
 import pytest
@@ -132,11 +133,20 @@ def check_ppca_artists(fig, evidence):
     assert len(fig.axes) == 3
     for panel, ax in enumerate(fig.axes):
         dots = [line for line in ax.lines if line.get_marker() in renderer.MARKERS.values()]
-        assert len(dots) == 84 and not ax.collections  # no interval/CI artists
+        assert len(dots) == len(ax.collections) == 84
+        assert ax.get_xscale() == "linear"
         for row, (name, condition) in enumerate(rows):
             expected = expected_ppca(evidence[name], condition)
             for seed, offset in enumerate((-.32, 0, .32)):
-                point = dots[row * 3 + seed]
+                i = row * 3 + seed
+                point, bar = dots[i], ax.collections[i]
+                y = row + offset
+                np.testing.assert_array_equal(bar.get_segments(), [[[0, y], [expected[seed, panel], y]]])
+                np.testing.assert_array_equal(bar.get_colors(), [to_rgba(renderer.COLORS[condition])])
+                assert bar.get_transform() == ax.transData
+                assert bar.get_capstyle() == "butt" and list(bar.get_linewidths()) == [1.55]
+                assert bar.get_zorder() == 1 and point.get_zorder() == 2
+                assert point.get_markersize() == 3
                 np.testing.assert_array_equal(point.get_xdata(), [expected[seed, panel]])
                 np.testing.assert_array_equal(point.get_ydata(), [row + offset])
                 assert point.get_color() == renderer.COLORS[condition]
@@ -190,6 +200,10 @@ def test_ppca_plot_uses_every_fit_in_explicit_condition_order(data, evidence, mo
     try:
         check_ppca_artists(fig, evidence)
         check_printed_ppca_markers(fig)
+        # Including the new bars in autoscaling changes the prior point-based view.
+        np.testing.assert_allclose([ax.get_xlim() for ax in fig.axes], [
+            (-.4456820255354197, 9.359322536243795), (-.057227421416232466, 2.7120782931443115),
+            (-.01000557254312517, .35283791575446155)], rtol=0, atol=1e-13)
     finally:
         plt.close(fig)
 
@@ -276,8 +290,8 @@ def check_interval_artists(fig, names, records):
                     np.testing.assert_array_equal(shift[:, 1], np.zeros(len(expected_x)))
                     assert line.get_linestyle() == "None"
                     assert line.get_marker() == marker and line.get_markersize() == 2.8
-                    assert line.get_color() == ("#CC3311" if variance == "base" else "#009988")
-                    assert line.get_markerfacecolor() == ("#CC3311" if variance == "base" else "white")
+                    assert line.get_color() == ("#EE3377" if variance == "base" else "#009988")
+                    assert line.get_markerfacecolor() == ("#EE3377" if variance == "base" else "white")
                     total += len(expected_x)
             assert any(list(line.get_ydata()) == [0, 0] for line in ax.lines)
             assert ax.get_xlim() == expected_xlim and ax.get_ylim() == expected_ylim
