@@ -12,6 +12,8 @@ from experiment import atomic_json, read_json, sha256
 from generative_evaluation import unconditional_score_streams
 from optimizer_comparisons import (MODES, ROOT, SEEDS, STREAMS, VARIANCES,
                                    comparison_rows, stream_columns, write_csv)
+from optimizer_intervals import WINDOWS, window_rows
+
 
 PREPARED = ROOT / "data" / "dart_21415_2018.npz"
 PREPARED_SHA = "b1a5f4f8aa0fd6188e493cf4298c53ac5ae321ed70a337b5c6a4e0d5adb1945e"
@@ -111,7 +113,7 @@ def train(directory, train_x, weights, variance, seed, mode, steps, runtime):
     print(f"Completed {directory}", flush=True)
 
 
-def score(checkpoint, data, variance, seed, mode):
+def evaluate_fit(checkpoint, data, variance, seed, mode):
     model = make_model(variance, seed, mode)
     model.load_weights(checkpoint)
     weights = data["eval_weights"]
@@ -124,11 +126,16 @@ def score(checkpoint, data, variance, seed, mode):
         rows.append({"variance_label": variance, "observation_variance": VARIANCES[variance],
                      "mode": mode, "condition": model.condition, "seed": seed, "geometry": geometry,
                      **stream_columns(values[key + "_streams"]), "weights_sha256": digest})
+    return rows, values["energy_per_window"]
+
+
+def score(checkpoint, data, variance, seed, mode):
+    rows, _ = evaluate_fit(checkpoint, data, variance, seed, mode)
     return rows
 
 
 def summarize(fits, data, output):
-    rows, training = [], {}
+    rows, training, per_window = [], {}, {}
     for variance, seed, mode in product(VARIANCES, SEEDS, MODES):
         directory = fits / f"{variance}-{seed}-{mode}"
         checkpoint = directory / "final.weights.h5"
@@ -141,11 +148,15 @@ def summarize(fits, data, output):
         pairing = (receipt["indices_sha256"], receipt["noise_sha256"], receipt["runtime"])
         if training.setdefault(seed, pairing) != pairing:
             raise ValueError(f"Training streams or runtime differ within seed {seed}")
-        rows.extend(score(checkpoint, data, variance, seed, mode))
+        fit_rows, window_scores = evaluate_fit(checkpoint, data, variance, seed, mode)
+        per_window[variance, seed, mode] = window_scores
+        rows.extend(fit_rows)
     comparisons = comparison_rows(rows, ROOT / "results" / "energy_terms_streams.csv")
+    differences = window_rows(data["starts_test"], per_window)
     output.mkdir(parents=True, exist_ok=False)
     write_csv(output / "scores.csv", rows)
     write_csv(output / "comparisons.csv", comparisons)
+    write_csv(output / WINDOWS, differences)
 
 
 def main():
@@ -162,7 +173,7 @@ def main():
         cmd.add_argument("--seed", type=int, choices=SEEDS, required=cmd is one)
         cmd.add_argument("--variance", choices=VARIANCES, required=cmd is one)
         cmd.add_argument("--mode", choices=MODES, required=cmd is one)
-    summary = commands.add_parser("summarize", help="Evaluate the complete grid and write both CSVs")
+    summary = commands.add_parser("summarize", help="Evaluate the complete grid and write scores and paired differences")
     summary.add_argument("--fits", type=Path, required=True)
     summary.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
