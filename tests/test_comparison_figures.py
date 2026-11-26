@@ -142,7 +142,14 @@ def check_ppca_artists(fig, evidence):
                 assert point.get_marker() == renderer.MARKERS[condition]
                 assert point.get_linestyle() == "-" and point.get_linewidth() == 0
         assert any(list(line.get_xdata()) == [0, 0] for line in ax.lines)
-    assert [t.get_text() for t in fig.axes[0].get_yticklabels()] == [renderer.CONDITION_LABELS[condition] for _, condition in rows]
+    axis = fig.axes[0]
+    assert [t.get_text() for t in axis.get_yticklabels()] == [
+        f"{evidence[name]['station']}\n{evidence[name]['year']}" for name in values.RECORDS]
+    np.testing.assert_array_equal(axis.get_yticks(), np.arange(7) * 4 + 1.5)
+    legend, = fig.legends
+    assert [t.get_text() for t in legend.get_texts()] == ["No skip, base", "Skip, base", "No skip, high", "Skip, high"]
+    for handle, condition in zip(legend.legend_handles, ORDER, strict=True):
+        assert handle.get_marker() == renderer.MARKERS[condition] and handle.get_color() == renderer.COLORS[condition]
     assert fig.get_figwidth() == 5.5
 
 
@@ -217,7 +224,7 @@ def check_interval_artists(fig, names, records):
         expected_ylim = (min(scores) - padding, max(scores) + padding)
         dates = [mdates.date2num(datetime.fromtimestamp(item["start_unix"], timezone.utc))
                  for item in all_intervals]
-        padding = max(3., (max(dates) - min(dates)) * .085)
+        padding = max(3., (max(dates) - min(dates)) * .105)
         expected_xlim = (min(dates) - padding, max(dates) + padding)
         for col, days in enumerate(("14", "28")):
             ax, coverage = fig.axes[row * 4 + col * 2:row * 4 + col * 2 + 2]
@@ -234,11 +241,12 @@ def check_interval_artists(fig, names, records):
                     assert lower < min(0., *line.get_ydata()) <= max(0., *line.get_ydata()) < upper
                     xy = np.column_stack((expected_x, line.get_ydata()))
                     shift = line.get_transform().transform(xy) - ax.transData.transform(xy)
-                    np.testing.assert_allclose(shift[:, 0], (-4., 0., 4.)[seed] * fig.dpi / 72,
+                    shift_points = ((-8.45, -1.65, 5.15), (-5.15, 1.65, 8.45))[variance_index][seed]
+                    np.testing.assert_allclose(shift[:, 0], shift_points * fig.dpi / 72,
                                                rtol=0, atol=1e-9)
                     np.testing.assert_array_equal(shift[:, 1], np.zeros(len(expected_x)))
                     assert line.get_linestyle() == "None"
-                    assert line.get_marker() == marker and line.get_markersize() == 3.5
+                    assert line.get_marker() == marker and line.get_markersize() == 2.8
                     assert line.get_color() == ("#CC3311" if variance == "base" else "#009988")
                     assert line.get_markerfacecolor() == ("#CC3311" if variance == "base" else "white")
                     total += len(expected_x)
@@ -287,13 +295,13 @@ def check_interval_layout(fig, names, records):
                        for t in coverage.xaxis.get_major_ticks())
     for row, name in enumerate(names):
         label, = [t for t in fig.texts if t.get_text() ==
-                  f"{records[name]['station']} / {records[name]['year']}"]
-        assert label.get_rotation() == 90 and label.get_fontsize() == 8.5
-        # The station identifies the whole row, including its coverage panel.
+                  f"{records[name]['station']}\n{records[name]['year']}"]
+        assert label.get_rotation() == 0 and label.get_fontsize() == 8.5
+        # A horizontal station label belongs to its score panel at the left.
         top = fig.axes[row * 4].bbox.y1
-        bottom = fig.axes[row * 4 + 1].bbox.y0
+        bottom = fig.axes[row * 4].bbox.y0
         box = label.get_window_extent(draw)
-        assert (box.y0 + box.y1) / 2 == pytest.approx((top + bottom) / 2)
+        assert bottom < box.y0 < box.y1 < top and box.x1 < fig.axes[row * 4].bbox.x0
     boxes = [text.get_window_extent(draw) for text in labels]
     boxes += [legend.get_window_extent(draw) for legend in fig.legends]
     for box in boxes:
@@ -344,8 +352,17 @@ def test_temporal_artists_keep_seed_values_dates_and_coverage(data, evidence, mo
         for row, expected in ((1, ("1", "0.44")), (2, ("10", "5.26"))):
             text = [t.get_text() for t in captured[1].axes[row * 4 + 1].texts]
             assert all(value in text for value in expected)
-        annotations = [t.get_text() for a in captured[1].axes for t in a.texts]
-        assert "+0.0133" in annotations
+        for row, name in enumerate(values.RECORDS[4:]):
+            for col, days in enumerate(("14", "28")):
+                ax = captured[1].axes[4 * row + 2 * col]
+                expected = []
+                for seed in range(3):
+                    for item in evidence[name]["intervals"][days]:
+                        value = item["base"][seed]
+                        if value > 0:
+                            x = mdates.date2num(datetime.fromtimestamp(item["start_unix"], timezone.utc))
+                            expected.append((f"{value:+.3g}", (x, value)))
+                assert [(t.get_text(), t.xy) for t in ax.texts] == expected
     finally:
         for fig in captured:
             plt.close(fig)
@@ -367,6 +384,29 @@ def test_temporal_oracle_rejects_midpoint_coordinates(data, evidence, monkeypatc
     try:
         with pytest.raises(AssertionError):
             check_interval_artists(captured[0], values.RECORDS[:4], evidence)
+    finally:
+        for fig in captured:
+            plt.close(fig)
+
+
+@pytest.mark.parametrize("defect", ["vertical_offset", "swapped_seed_offset", "weight_label"])
+def test_interval_oracle_rejects_moved_scores_and_wrong_weight(data, evidence, monkeypatch, tmp_path, defect):
+    captured = []
+    monkeypatch.setattr(renderer, "save", lambda fig, *args: captured.append(fig))
+    with plt.rc_context(renderer.STYLE):
+        renderer.intervals(tmp_path, data["records"])
+    try:
+        fig = captured[1]
+        ax, coverage = fig.axes[:2]
+        points = [line for line in ax.lines if line.get_marker() in ("o", "s", "^")]
+        if defect == "vertical_offset":
+            points[0].set_transform(points[0].get_transform() + renderer.ScaledTranslation(0, .1, fig.dpi_scale_trans))
+        elif defect == "swapped_seed_offset":
+            points[0].set_transform(points[1].get_transform())
+        else:
+            [t for t in coverage.texts if t.get_transform() is coverage.transData][2].set_text("0")
+        with pytest.raises(AssertionError):
+            check_interval_artists(fig, values.RECORDS[4:], evidence)
     finally:
         for fig in captured:
             plt.close(fig)
