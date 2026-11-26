@@ -30,7 +30,7 @@ INPUT_SHA256 = {
 }
 FONT = "DejaVu Serif"
 FONT_SHA = "107244956e9962b9e96faccdc551825e0ae0898ae13737133e1b921a2fd35ffa"
-COLORS = {"no_skip_base": "#0077BB", "skip_base": "#CC3311", "no_skip_high": "#6A3D9A", "skip_high": "#009988",
+COLORS = {"no_skip_base": "#0077BB", "skip_base": "#CC3311", "no_skip_high": "#332288", "skip_high": "#009988",
           "train": "#888888", "test": "#111111", "PPCA": "#555555"}
 CONDITION_ORDER = figure_values.CONDITIONS
 CONDITION_LABELS = {"no_skip_base": "No skip, base variance", "skip_base": "Skip, base variance",
@@ -230,7 +230,7 @@ def context(directory, summary):
     for ax, name in zip(axes.flat, figure_values.RECORDS[:4]):
         relative = next(path for path in sources if Path(path).name == name + ".txt")
         c = figure_values.read_observed_context(ROOT / relative, sources[relative])
-        ax.scatter(c["days"], c["heights"], s=.35, linewidths=0, color="#008CFF", rasterized=True)
+        ax.scatter(c["days"], c["heights"], s=.65, linewidths=0, color="#008CFF", rasterized=True)
         # Keep endpoint observations fully visible, including midnight on January 1.
         ax.set_xlim(-1, 368 + calendar.isleap(c["year"]))
         ax.set_title(f"{records[name]['station']} / {records[name]['year']}", pad=3)
@@ -312,6 +312,7 @@ def diagnostics(directory, records, reduced):
 
         fig, axes = plt.subplots(len(names), 2, figsize=(5.5, 1.48 * len(names) + 1.15), squeeze=False)
         frequency = np.arange(1, 97) / 2
+        x_padding = (frequency[-1] / frequency[0]) ** .02
         for row, name in enumerate(names):
             for col, ax in enumerate(axes[row]):
                 for role in ROLES:
@@ -332,7 +333,7 @@ def diagnostics(directory, records, reduced):
                             markeredgewidth=.65, markerfacecolor=handles[role].get_markerfacecolor())
                 ax.set_xscale("log")
                 ax.set_yscale("log", nonpositive="mask")
-                ax.set_xlim(.5, 48)
+                ax.set_xlim(frequency[0] / x_padding, frequency[-1] * x_padding)
                 ax.set_xticks([.5, 1, 2, 6, 12, 24, 48], ["0.5", "1", "2", "6", "12", "24", "48"])
                 ax.xaxis.set_minor_formatter(NullFormatter())
                 ax.yaxis.set_major_locator(LogLocator(numticks=4))
