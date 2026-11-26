@@ -8,7 +8,7 @@ python figures/render.py --output-dir runs/figures
 
 Each PDF is 5.5 inches wide, with DejaVu Serif text and STIX math. Labels are 9 pt; ticks and legends are 8.5 pt. Use the versions in [requirements.txt](../requirements.txt) to reproduce the paper's fonts and plotting behavior.
 
-Conditions appear in this order: no skip at base variance, skip at base variance, no skip at high variance, and skip at high variance.
+The four-condition legends use blue upward triangles and red squares for the models without and with a skip connection at base variance. At high variance, the model without a skip connection uses indigo downward triangles and the model with a skip connection uses teal circles. The blue, red, and teal come from Paul Tol’s Vibrant scheme and the indigo from his Muted scheme. [Tol’s color schemes](https://sronpersonalpages.nl/~pault/#sec:qualitative)
 
 ## Values and units
 

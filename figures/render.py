@@ -30,7 +30,7 @@ INPUT_SHA256 = {
 }
 FONT = "DejaVu Serif"
 FONT_SHA = "107244956e9962b9e96faccdc551825e0ae0898ae13737133e1b921a2fd35ffa"
-COLORS = {"no_skip_base": "#0077BB", "skip_base": "#CC3311", "no_skip_high": "#6A3D9A", "skip_high": "#009988",
+COLORS = {"no_skip_base": "#0077BB", "skip_base": "#CC3311", "no_skip_high": "#332288", "skip_high": "#009988",
           "train": "#888888", "test": "#111111", "PPCA": "#555555"}
 CONDITION_ORDER = figure_values.CONDITIONS
 CONDITION_LABELS = {"no_skip_base": "No skip, base variance", "skip_base": "Skip, base variance",
@@ -230,7 +230,7 @@ def context(directory, summary):
     for ax, name in zip(axes.flat, figure_values.RECORDS[:4]):
         relative = next(path for path in sources if Path(path).name == name + ".txt")
         c = figure_values.read_observed_context(ROOT / relative, sources[relative])
-        ax.scatter(c["days"], c["heights"], s=.35, linewidths=0, color="#008CFF", rasterized=True)
+        ax.scatter(c["days"], c["heights"], s=.65, linewidths=0, color="#008CFF", rasterized=True)
         # Keep endpoint observations fully visible, including midnight on January 1.
         ax.set_xlim(-1, 368 + calendar.isleap(c["year"]))
         ax.set_title(f"{records[name]['station']} / {records[name]['year']}", pad=3)
