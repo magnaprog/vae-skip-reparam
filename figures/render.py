@@ -186,21 +186,23 @@ def save(fig, directory, name):
 
 def comparison(directory, records):
     names = figure_values.record_order(records)
-    fig, axes = plt.subplots(1, 3, figsize=(5.5, 2.75), sharey=True,
+    fig, axes = plt.subplots(1, 3, figsize=(5.5, 2.98), sharey=True,
                              gridspec_kw={"width_ratios": (1, 1, 1.18)})
     titles = ("Full windows", "After mean\nsubtraction", "Time increments")
     ticks = ((-1, 0, 1, 2, 3), (-.6, -.3, 0, .3), (-.08, -.04, 0, .04))
     for ax, score, title, tick_values in zip(axes, SCORES, titles, ticks):
         for pair, offset, color, marker, label in (
-                ("skip_base-no_skip_base", -.12, COLORS["skip_base"], "s", r"Base variance ($\sigma_0^2$)"),
-                ("skip_high-no_skip_high", .12, COLORS["skip_high"], "o", r"High variance ($25\sigma_0^2$)")):
+                ("skip_base-no_skip_base", -.115, COLORS["skip_base"], "s", r"Base variance ($\sigma_0^2$)"),
+                ("skip_high-no_skip_high", .315, COLORS["skip_high"], "o", r"High variance ($25\sigma_0^2$)")):
             stats = [records[n]["contrasts"][pair + "/original"]["scores"][score]["optimizer_seeds"] for n in names]
             middle = np.array([s["median"] for s in stats])
             error = np.array([[s["median"] - s["min"] for s in stats], [s["max"] - s["median"] for s in stats]])
-            ax.errorbar(middle, np.arange(7) + offset, xerr=error, fmt=marker,
-                        color=color, markersize=3.6, markeredgewidth=.75,
+            marks = ax.errorbar(middle, np.arange(7) + offset, xerr=error, fmt=marker,
+                        color=color, markersize=2.7, markeredgewidth=.65,
                         markerfacecolor="white" if marker == "o" else color,
-                        linewidth=.85, capsize=1.8, label=label)
+                        linewidth=.78, capsize=.95, label=label)
+            # Show the median directly above its range without covering either endpoint.
+            marks.lines[0].set_transform(ax.transData + ScaledTranslation(0, 3.35 / 72, fig.dpi_scale_trans))
         ax.set_xticks(tick_values)
         xmin, xmax = ax.get_xlim()
         padding = .035 * (xmax - xmin)
@@ -214,12 +216,13 @@ def comparison(directory, records):
         ax.tick_params(axis="y", length=0)
 
     axes[0].set_yticks(np.arange(7), [f"{records[n]['station']}/{records[n]['year']}" for n in names])
-    axes[0].invert_yaxis()
-    handles, labels = axes[0].get_legend_handles_labels()
+    axes[0].set_ylim(6.52, -.62)
+    containers, labels = axes[0].get_legend_handles_labels()
+    handles = [container.lines[0] for container in containers]
     fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(.55, .995),
                ncol=2, frameon=False, borderaxespad=0, handlelength=1.6, columnspacing=2)
     fig.text(.56, .02, "Energy score difference (skip minus no skip)", ha="center", va="bottom")
-    fig.subplots_adjust(left=.155, right=.965, bottom=.20, top=.745, wspace=.16)
+    fig.subplots_adjust(left=.155, right=.965, bottom=.18, top=.756, wspace=.16)
     save(fig, directory, "dart_energy_score_differences")
 
 
@@ -258,6 +261,13 @@ def context(directory, summary):
 
 def diagnostics(directory, records, reduced):
     handles = dict(zip(ROLES, legend_handles(), strict=True))
+    def range_marks(ax, x, low, high, role):
+        color = COLORS[role]
+        ax.vlines(x, low, high, color=color, linewidth=.80, zorder=1.85)
+        # The cap width is in print points. Each endpoint keeps its data coordinates.
+        ax.scatter(np.tile(x, 2), np.ma.concatenate((low, high)), marker="_", s=4.15**2,
+                   color=color, linewidths=.65, zorder=1.95, label="_seed_range_caps")
+
     # Sample different frequency bins for each symbol so nearby curves remain identifiable.
     spectral_marks = dict(zip(CONDITION_ORDER, ([0, 4, 13, 45, 88], [1, 6, 17, 52, 94],
                                                 [2, 8, 21, 60, 82], [3, 10, 27, 68, 77]), strict=True))
@@ -282,12 +292,11 @@ def diagnostics(directory, records, reduced):
                         marks = np.searchsorted(middle[line], np.array([.12, .36, .60, .84]) + offset)
                         marks = np.unique(np.minimum(marks, line.sum() - 1))
                         x_indices = np.flatnonzero(line)[marks]
-                        ax.vlines(grid[x_indices], low[x_indices], high[x_indices],
-                                  color=COLORS[role], linewidth=.65, zorder=1.8)
+                        range_marks(ax, grid[x_indices], low[x_indices], high[x_indices], role)
                     ax.step(grid[line], middle[line], where="post", color=COLORS[role],
                             linestyle=STYLES.get(role, "-"), linewidth=handles[role].get_linewidth(),
-                            marker=MARKERS.get(role), markevery=marks, markersize=3.2,
-                            markeredgewidth=.65, markerfacecolor=handles[role].get_markerfacecolor())
+                            marker=MARKERS.get(role), markevery=marks, markersize=3.0,
+                            markeredgewidth=.60, markerfacecolor=handles[role].get_markerfacecolor())
                 ax.set_ylim(-.025, 1.025)
                 ax.set_yticks([0, .5, 1])
                 if feature:
@@ -325,12 +334,11 @@ def diagnostics(directory, records, reduced):
                                     color=COLORS[role], alpha=.12, linewidth=0)
                     marks = spectral_marks.get(role)
                     if marks is not None:
-                        ax.vlines(frequency[marks], low[marks], high[marks], color=COLORS[role],
-                                  linewidth=.65, zorder=1.8)
+                        range_marks(ax, frequency[marks], low[marks], high[marks], role)
                     ax.plot(frequency, middle, color=COLORS[role],
                             linestyle=STYLES.get(role, "-"), linewidth=handles[role].get_linewidth(),
-                            marker=MARKERS.get(role), markevery=marks, markersize=3.2,
-                            markeredgewidth=.65, markerfacecolor=handles[role].get_markerfacecolor())
+                            marker=MARKERS.get(role), markevery=marks, markersize=3.0,
+                            markeredgewidth=.60, markerfacecolor=handles[role].get_markerfacecolor())
                 ax.set_xscale("log")
                 ax.set_yscale("log", nonpositive="mask")
                 ax.set_xlim(frequency[0] / x_padding, frequency[-1] * x_padding)
@@ -360,45 +368,67 @@ def diagnostics(directory, records, reduced):
 
 
 def variance(directory, records):
-    fig, axes = plt.subplots(1, 4, figsize=(5.5, 7.15), sharey=True)
+    fig = plt.figure(figsize=(5.5, 7.15))
+    groups = fig.add_gridspec(1, 4, left=.111, right=.983, bottom=.093, top=.875,
+                              width_ratios=(.47, 1, 1, 1), wspace=.18)
+    pairs = [groups[col].subgridspec(1, 2, width_ratios=(1.7, 1), wspace=.12)
+             for col in (1, 2, 3)]
+    ratio_ax = fig.add_subplot(groups[0])
+    change_axes = [fig.add_subplot(pair[0], sharey=ratio_ax) for pair in pairs]
+    span_axes = [fig.add_subplot(pair[1], sharey=ratio_ax) for pair in pairs]
     names = figure_values.record_order(records)
     for row, (name, condition) in enumerate((n, c) for n in names for c in CONDITION_ORDER):
-        record = records[name]
-        ratios, deltas = figure_values.refit_points(record, condition)
-        for seed, offset in enumerate((-.2, 0, .2)):
+        ratios, deltas = figure_values.refit_points(records[name], condition)
+        color = COLORS[condition]
+        for seed, offset in enumerate((-.29, 0, .29)):
             y = row + offset
-            axes[0].plot(ratios[seed], y, marker=MARKERS[condition], color=COLORS[condition], markersize=3, linewidth=0)
-            for col in range(3):
+            ratio_ax.plot(ratios[seed], y, marker=MARKERS[condition], color=color, markersize=2.8, markeredgewidth=.65, linewidth=0)
+            for col, (change, span) in enumerate(zip(change_axes, span_axes)):
                 values = deltas[seed, col]
-                axes[col+1].hlines(y, values.min(), values.max(), color=COLORS[condition], linewidth=.85)
-                axes[col+1].plot(values.mean(), y, marker="|", color=COLORS[condition],
-                                 markersize=3.4, markeredgewidth=1.05, linewidth=0)
-    fig.subplots_adjust(left=.143, right=.982, bottom=.089, top=.886, wspace=.32)
-    axes[0].set_yticks([4 * i + 1.5 for i in range(len(names))],
-                       [f"{records[n]['station']}\n{records[n]['year']}" for n in names])
-    axes[0].set_ylim(4 * len(names) - .45, -.55)
-    for col, ax in enumerate(axes):
-        ax.tick_params(axis="y", length=0, pad=6)
+                low, high = values.min(), values.max()
+                change.hlines(y, low, high, color=color, linewidth=.8)
+                change.plot(values.mean(), y, marker="|", color=color, markersize=3.2,
+                            markeredgewidth=.8, linewidth=0)
+                span.plot(high - low, y, marker=".", color=color, markersize=3.6, markeredgewidth=0,
+                          linewidth=0)
+    ratio_ax.set_yticks([4 * i + 1.5 for i in range(len(names))],
+                        [f"{records[n]['station']}\n{records[n]['year']}" for n in names])
+    ratio_ax.set_ylim(4 * len(names) - .45, -.55)
+    for ax in fig.axes:
+        ax.tick_params(axis="y", length=0, pad=3, labelleft=ax is ratio_ax)
         ax.spines["left"].set_visible(False)
-        ax.axvline(1 if col == 0 else 0, color=".45", linewidth=.7, linestyle=":", zorder=0)
         for boundary in np.arange(3.5, 4 * len(names) - 1, 4):
             ax.axhline(boundary, color=".58" if boundary == 15.5 else ".85", linewidth=.6,
                        linestyle=":" if boundary == 15.5 else "-", zorder=0)
-        ax.set_title(("Variance\nratio", "Full\nwindows", "After mean\nsubtraction", "Time\nincrements")[col])
-        if col:
-            ax.xaxis.set_major_formatter(FuncFormatter(lambda value, position: f"{value * 1e3:g}"))
-            # Keep the score axes linear so horizontal lengths remain comparable within each panel.
-            ticks = ((-15, 0, 15, 30), (-10, 0, 10, 20), (-3, 0, 3, 6))[col - 1]
-            ax.set_xticks(np.asarray(ticks) / 1000)
-    axes[0].set_xscale("log")
-    axes[0].set_xticks([.2, 1, 5], ["0.2", "1", "5"])
-    axes[0].xaxis.set_minor_formatter(NullFormatter())
-    axes[0].set_xlabel(r"$\hat v/v_{\mathrm{original}}$")
+    ratio_ax.set_xscale("log")
+    ratio_ax.set_xticks([.2, 1, 5], ["0.2", "1", "5"])
+    ratio_ax.xaxis.set_minor_formatter(NullFormatter())
+    ratio_ax.axvline(1, color=".45", linewidth=.7, linestyle=":", zorder=0)
+    ratio_ax.set_title("Variance\nratio", pad=3)
+    ratio_ax.set_xlabel(r"$\hat v/v_{\mathrm{original}}$")
+    titles = ("Full windows", "After mean\nsubtraction", "Time increments")
+    for col, (change, span) in enumerate(zip(change_axes, span_axes)):
+        change.axvline(0, color=".35", linewidth=.73, linestyle=":", zorder=0)
+        ticks = ((-20, 0, 20), (-10, 0, 10), (-3, 0, 3))[col]
+        change.set_xticks(np.asarray(ticks) / 1000, [str(t).replace("-", "−") for t in ticks])
+        change.set_title("Change", pad=3, fontsize=8.5)
+        span.set_facecolor(".965")
+        span.set_xscale("log")
+        span.set_xlim(4.5e-6, 5e-3)
+        span.set_xticks([1e-5, 1e-3], ["0.01", "1"])
+        span.set_xticks([1e-4], minor=True)
+        span.xaxis.set_minor_formatter(NullFormatter())
+        span.axvline(1e-4, color=".83", linewidth=.5, zorder=0)
+        span.set_title("Range", pad=3, fontsize=8.5)
+        mid = (change.get_position().x0 + span.get_position().x1) / 2
+        fig.text(mid, .915, titles[col], ha="center", va="bottom", fontsize=9)
     handles = [Line2D([], [], color=COLORS[c], marker=MARKERS[c], linestyle="none", markersize=4,
                       label=CONDITION_LABELS[c].replace(" variance", "")) for c in CONDITION_ORDER]
     fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(.53, .993), ncol=4,
                columnspacing=1.0, handletextpad=.25, handlelength=.9, frameon=False)
-    fig.text(.637, .021, "Energy score change (replacement − original), in units of $10^{-3}$",
+    fig.text(.581, .033, "Energy score change (replacement − original)",
+             ha="center", fontsize=8.5)
+    fig.text(.581, .011, r"Change and range width in units of $10^{-3}$ (range width on a log scale)",
              ha="center", fontsize=8.5)
     save(fig, directory, "dart_observation_variance")
 
@@ -410,7 +440,7 @@ def ppca_comparison(directory, records):
     for row, (name, condition) in enumerate((n, c) for n in names for c in CONDITION_ORDER):
         record = records[name]
         values = figure_values.ppca_comparison_points(record, condition)
-        for seed, offset in enumerate((-.2, 0, .2)):
+        for seed, offset in enumerate((-.32, 0, .32)):
             for col, ax in enumerate(axes):
                 ax.plot(values[seed, col], row + offset, marker=MARKERS[condition], color=COLORS[condition],
                         markersize=3, linewidth=0)

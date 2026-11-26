@@ -10,6 +10,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from matplotlib.transforms import Bbox
 import numpy as np
 import pytest
 
@@ -134,7 +135,7 @@ def check_ppca_artists(fig, evidence):
         assert len(dots) == 84 and not ax.collections  # no interval/CI artists
         for row, (name, condition) in enumerate(rows):
             expected = expected_ppca(evidence[name], condition)
-            for seed, offset in enumerate((-.2, 0, .2)):
+            for seed, offset in enumerate((-.32, 0, .32)):
                 point = dots[row * 3 + seed]
                 np.testing.assert_array_equal(point.get_xdata(), [expected[seed, panel]])
                 np.testing.assert_array_equal(point.get_ydata(), [row + offset])
@@ -153,6 +154,33 @@ def check_ppca_artists(fig, evidence):
     assert fig.get_figwidth() == 5.5
 
 
+def check_printed_ppca_markers(fig):
+    """Keep the stroked glyphs distinct and inside the axes at 396 pt."""
+    fig.canvas.draw()
+    assert fig.get_figwidth() * 72 == 396
+    for ax in fig.axes:
+        boxes = []
+        for point in ax.lines:
+            marker = point.get_marker()
+            if marker not in renderer.MARKERS.values():
+                continue
+            x, y = point.get_transform().transform(point.get_xydata())[0]
+            half = point.get_markeredgewidth() / 2
+            # Square and circle extend half a stroke. A triangular outline
+            # extends farther at its tip and at the two mitered base corners.
+            side = half * (1 + np.sqrt(5)) / 2 if marker in ("^", "v") else half
+            bottom = half * np.sqrt(5) if marker == "v" else half
+            top = half * np.sqrt(5) if marker == "^" else half
+            radius = point.get_markersize() / 2
+            px = fig.dpi / 72
+            box = Bbox.from_extents(x - (radius + side) * px, y - (radius + bottom) * px,
+                                    x + (radius + side) * px, y + (radius + top) * px)
+            assert ax.bbox.contains(*box.min) and ax.bbox.contains(*box.max)
+            boxes.append(box)
+        assert len(boxes) == 84
+        assert all(not a.overlaps(b) for a, b in itertools.combinations(boxes, 2))
+
+
 def test_ppca_plot_uses_every_fit_in_explicit_condition_order(data, evidence, monkeypatch, tmp_path):
     captured = []
     monkeypatch.setattr(renderer, "save", lambda fig, *args: captured.append(fig))
@@ -161,6 +189,7 @@ def test_ppca_plot_uses_every_fit_in_explicit_condition_order(data, evidence, mo
     fig, = captured
     try:
         check_ppca_artists(fig, evidence)
+        check_printed_ppca_markers(fig)
     finally:
         plt.close(fig)
 
