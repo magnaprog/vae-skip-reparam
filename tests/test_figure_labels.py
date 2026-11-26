@@ -6,7 +6,8 @@ from datetime import date
 from pathlib import Path
 import re
 
-from matplotlib.collections import LineCollection
+from matplotlib.collections import LineCollection, PathCollection
+from matplotlib.colors import to_hex
 import matplotlib.pyplot as plt
 from matplotlib.markers import MarkerStyle
 import numpy as np
@@ -65,6 +66,39 @@ def check_spectral_markers_and_bins(ax):
         assert np.all(y + (size * bounds.y1 + top_stroke) * points_to_pixels < ax.bbox.y1)
         symbols += len(positions)
     assert symbols == 20
+
+
+def check_printed_seed_ranges(ax, marks_per_role):
+    stems = [c for c in ax.collections if isinstance(c, LineCollection)]
+    caps = [c for c in ax.collections if isinstance(c, PathCollection)]
+    assert len(stems) == len(caps) == 4
+    for (_, color, _, _), stem, cap in zip(DIAGNOSTIC_ROLES[3:], stems, caps, strict=True):
+        line, = [line for line in ax.lines if line.get_color() == color]
+        assert cap.get_label() == "_seed_range_caps"
+        assert to_hex(stem.get_colors()[0]) == to_hex(cap.get_edgecolors()[0]) == color.lower()
+        assert stem.get_visible() and cap.get_visible() and cap.get_clip_on()
+        assert stem.get_zorder() < cap.get_zorder() < line.get_zorder()
+        assert line.get_markersize() == 3 and line.get_markeredgewidth() == .60
+        np.testing.assert_array_equal(stem.get_linewidths(), [.80])
+        np.testing.assert_array_equal(cap.get_linewidths(), [.65])
+        segments = np.asarray(stem.get_segments())
+        assert segments.shape == (marks_per_role, 2, 2)
+        expected = np.concatenate((segments[:, 0], segments[:, 1]))
+        np.testing.assert_array_equal(cap.get_offsets(), expected)
+        np.testing.assert_array_equal(cap.get_offset_transform().transform(expected),
+                                      ax.transData.transform(expected))
+        path, = cap.get_paths()
+        # A horizontal stroke in physical points, anchored on the data endpoint.
+        vertices = path.vertices
+        np.testing.assert_allclose(vertices[:, 1], 0, atol=1e-15)
+        np.testing.assert_array_equal(np.sort(vertices[:, 0]), [-.5, .5])
+        width, = np.sqrt(cap.get_sizes())
+        assert width == 4.15 and width > line.get_markersize() + line.get_markeredgewidth()
+        px = ax.figure.dpi / 72
+        x, y = ax.transData.transform(expected).T
+        assert min(x) - width / 2 * px > ax.bbox.x0 and max(x) + width / 2 * px < ax.bbox.x1
+        half_stroke = cap.get_linewidths()[0] / 2 * px
+        assert min(y) - half_stroke > ax.bbox.y0 and max(y) + half_stroke < ax.bbox.y1
 
 
 def check_spectrum_pair(axes, case):
@@ -156,6 +190,7 @@ def test_diagnostic_station_labels_are_separate_from_axis_labels(monkeypatch, tm
                     assert ax.get_ylabel() == ("Bin power (m$^2$)" if spectra else "ECDF")
                     assert ax.yaxis.label.get_fontsize() == 9
                 for ax in fig.axes:
+                    check_printed_seed_ranges(ax, 5 if spectra else 4)
                     for label, color, style, marker in DIAGNOSTIC_ROLES:
                         line, = [line for line in ax.lines if line.get_color() == color]
                         assert line.get_linestyle() == style and line.get_marker() == (marker or "None")
@@ -211,6 +246,32 @@ def test_context_gap_matches_complete_utc_dates_between_observations(monkeypatch
         plt.close(fig)
 
 
+def check_comparison_ranges(fig, records):
+    for ax, score in zip(fig.axes, ("full_window", "without_window_mean", "time_differences"), strict=True):
+        for container, pair, offset in zip(ax.containers, ("skip_base-no_skip_base", "skip_high-no_skip_high"),
+                                          (-.115, .315), strict=True):
+            stats = [records[n]["contrasts"][pair + "/original"]["scores"][score]["optimizer_seeds"]
+                     for n in renderer.figure_values.RECORDS]
+            mark, (left, right), (bars,) = container.lines
+            medians = np.array([v["median"] for v in stats])
+            minima = np.array([v["min"] for v in stats])
+            maxima = np.array([v["max"] for v in stats])
+            # Matplotlib reconstructs the two x coordinates from asymmetric errors.
+            endpoints = (medians - (medians - minima), medians + (maxima - medians))
+            rows = np.arange(len(stats)) + offset
+            np.testing.assert_array_equal(mark.get_xydata(), np.column_stack((medians, rows)))
+            for k, cap in enumerate((left, right)):
+                expected = np.column_stack((endpoints[k], rows))
+                np.testing.assert_array_equal(cap.get_xydata(), expected)
+                np.testing.assert_array_equal(np.asarray(bars.get_segments())[:, k, :], expected)
+                np.testing.assert_array_equal(cap.get_transform().transform(expected), ax.transData.transform(expected))
+            xy = mark.get_xydata()
+            shift = (mark.get_transform().transform(xy) - ax.transData.transform(xy)) * 72 / fig.dpi
+            np.testing.assert_allclose(shift, np.tile([0, 3.35], (len(rows), 1)), rtol=0, atol=1e-10)
+            assert 3.35 > (mark.get_markersize() + mark.get_markeredgewidth() +
+                           left.get_markersize() + left.get_markeredgewidth()) / 2
+
+
 @pytest.mark.parametrize("name", ["comparison", "variance"])
 def test_comparison_and_refit_draw_descriptive_labels(monkeypatch, tmp_path, name):
     records = json.loads((FIGURES / "summary.json").read_text())["records"]
@@ -223,6 +284,7 @@ def test_comparison_and_refit_draw_descriptive_labels(monkeypatch, tmp_path, nam
             fig.canvas.draw()
             draw = fig.canvas.get_renderer()
             if name == "comparison":
+                check_comparison_ranges(fig, records)
                 assert any("Energy score difference" in text.get_text() and "skip minus no skip" in text.get_text()
                            for text in fig.texts)
                 legend, = fig.legends
@@ -246,30 +308,37 @@ def test_comparison_and_refit_draw_descriptive_labels(monkeypatch, tmp_path, nam
                     assert handle.get_marker() == renderer.MARKERS[condition]
                     assert handle.get_color() == renderer.COLORS[condition]
                 assert fig.axes[0].get_xscale() == "log"
-                for ax in fig.axes[1:]:
-                    assert ax.get_xscale() == "linear"
-                    ticks = [float(t.get_text().replace("−", "-")) for t in ax.get_xticklabels()]
-                    np.testing.assert_allclose(ticks, ax.get_xticks() * 1000, rtol=0, atol=1e-12)
-                points = [[line for line in ax.lines if line.get_marker() in
-                           (("|",) if panel else renderer.MARKERS.values())] for panel, ax in enumerate(fig.axes)]
+                assert len(fig.axes) == 7
+                changes, ranges = fig.axes[1:4], fig.axes[4:]
+                for col, (change, width) in enumerate(zip(changes, ranges, strict=True)):
+                    assert change.get_title() == "Change" and width.get_title() == "Range"
+                    assert change.get_xscale() == "linear" and width.get_xscale() == "log"
+                    assert change.get_position().x1 < width.get_position().x0
+                    if col < 2:
+                        assert width.get_position().x1 < changes[col+1].get_position().x0
+                    assert width.get_xlim() == ranges[0].get_xlim()
+                    for ax in (change, width):
+                        ticks = [float(t.get_text().replace("−", "-")) for t in ax.get_xticklabels()]
+                        np.testing.assert_allclose(ticks, ax.get_xticks() * 1000, rtol=0, atol=1e-12)
+                        assert ax.get_ylim() == fig.axes[0].get_ylim()
+                points = [[line for line in ax.lines if line.get_marker() not in ("None", None)] for ax in fig.axes]
                 assert all(len(lines) == 84 for lines in points)
-                for row, (record, condition) in enumerate((record, condition)
-                        for record in renderer.figure_values.record_order(records) for condition in ("no_skip_base", "skip_base", "no_skip_high", "skip_high")):
+                for row, (record, condition) in enumerate(itertools.product(names, renderer.CONDITION_ORDER)):
                     ratios, deltas = renderer.figure_values.refit_points(records[record], condition)
-                    for seed, offset in enumerate((-.2, 0, .2)):
-                        index = row * 3 + seed
-                        for panel, lines in enumerate(points):
+                    for seed, offset in enumerate((-.29, 0, .29)):
+                        index, y = row * 3 + seed, row + offset
+                        fits = deltas[seed]
+                        expected = [ratios[seed], *fits.mean(axis=1), *np.ptp(fits, axis=1)]
+                        symbols = [renderer.MARKERS[condition], "|", "|", "|", ".", ".", "."]
+                        for lines, x, marker in zip(points, expected, symbols, strict=True):
                             point = lines[index]
-                            expected = ratios[seed] if panel == 0 else deltas[seed, panel - 1].mean()
-                            np.testing.assert_array_equal(point.get_xdata(), [expected])
-                            np.testing.assert_array_equal(point.get_ydata(), [row + offset])
-                            assert point.get_color() == renderer.COLORS[condition]
-                            assert point.get_marker() == ("|" if panel else renderer.MARKERS[condition])
-                            if panel:
-                                values = deltas[seed, panel - 1]
-                                segment, = fig.axes[panel].collections[index].get_segments()
-                                np.testing.assert_array_equal(segment, [[values.min(), row + offset],
-                                                                       [values.max(), row + offset]])
+                            np.testing.assert_array_equal(point.get_xydata(), [[x, y]])
+                            assert point.get_color() == renderer.COLORS[condition] and point.get_marker() == marker
+                        for change, width, stream in zip(changes, ranges, fits, strict=True):
+                            low, high = stream.min(), stream.max()
+                            segment, = change.collections[index].get_segments()
+                            np.testing.assert_array_equal(segment, [[low, y], [high, y]])
+                            assert 0 < width.get_xlim()[0] < high - low < width.get_xlim()[1]
                 assert_separate([text.get_window_extent(draw) for text in labels + fig.axes[0].texts])
                 footer = fig.texts[-1].get_window_extent(draw)
                 for ax in fig.axes[1:]:

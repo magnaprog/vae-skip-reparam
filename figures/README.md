@@ -26,15 +26,17 @@ The four original station-years use equal window weights. The annual context plo
 
 ## Curves and comparisons
 
+In the skip comparison, each training seed contributes one score difference, averaged over three common sampling streams. The symbol marks the median of those three differences. The capped line directly below it runs from the smallest to the largest seed difference.
+
 Curves average three sampling streams within each fit. Neural curves show the median and full range across three training seeds at each feature value or frequency. The probabilistic principal component analysis (PPCA) curves average streams from one fit whose noise variance is estimated from the training covariance.
 
-Empirical distribution functions retain ties and the zero left limit. In the window standard deviation column, the horizontal line at probability 0.5 locates the median. On the ECDFs and spectra, shading spans the lowest and highest values across training seeds. Short vertical segments mark that range at the neural symbols.
+Empirical distribution functions retain ties and the zero left limit. In the window standard deviation column, the horizontal line at probability 0.5 locates the median. On the ECDFs and spectra, shading spans the lowest and highest values across training seeds. At each neural symbol, the horizontal caps mark the lowest and highest values across the three fits. The caps can look like a single stroke when the fits agree closely.
 
 The spectra compare neural samples with observation noise (left) and decoder means at prior latent samples (right). Each column shows all four neural conditions and repeats the same training, test, and PPCA spectra. The two columns for each station share frequency and power limits. Powers are averaged in linear units before plotting on logarithmic axes.
 
 The PPCA comparison shows all three neural fits at each skip and variance setting. Each point is one neural fit's mean score across streams minus the PPCA mean at the same observation variance. PPCA and neural models use separate sampling streams. Absolute scores in [comparisons.json](comparisons.json) cover every neural fit and all five baseline settings, including diagonal Gaussian baselines and PPCA with variance estimated from the training covariance.
 
-In the variance replacement figure, symbols at left give the replacement variance divided by the original variance. In each score column, the vertical tick marks one fit's mean score change across three scoring streams, and the horizontal segment spans those three changes.
+In the variance replacement figure, symbols at left give the replacement variance divided by the original variance. In each Change panel, a vertical tick marks one fit’s mean score change across three common sampling streams. The horizontal segment runs from the smallest to the largest change. In the adjacent Range panel, a dot gives the largest change minus the smallest on a logarithmic scale. Both panels use units of $10^{-3}$. The tables give the mean and endpoints for each fit and the changes in each stream. [Fit summaries](../results/variance_changes_fits.csv) · [Stream values](../results/variance_changes_streams.csv)
 
 The interval figures show energy score differences for full windows, separately for each training seed, along with window counts and each interval's share of total test weight. At each date, marker pairs run left to right in seed order (42, 1729, and 31415), with base variance filled and high variance open. Intervals of 14 and 28 days are aligned to the start of the first eligible training window. Their endpoints are stored as Unix seconds. Each window belongs to the interval containing its start. Weighting the interval differences by those shares and summing recovers the difference over the full test partition. Windows can overlap, and both interval lengths use the same observations.
 
