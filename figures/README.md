@@ -32,7 +32,7 @@ In the skip comparison, each training seed contributes one score difference, ave
 
 Curves average three sampling streams within each fit. Neural curves show the median and full range across three training seeds at each feature value or frequency. The probabilistic principal component analysis (PPCA) curves average streams from one fit whose noise variance is estimated from the training covariance.
 
-Empirical distribution functions retain ties and the zero left limit. In the window standard deviation column, the horizontal line at probability 0.5 locates the median. On the ECDFs and spectra, shading spans the lowest and highest values across training seeds. At each neural symbol, the horizontal caps mark the lowest and highest values across the three fits. The caps can look like a single stroke when the fits agree closely.
+Empirical distribution functions retain ties and the zero left limit. In the window standard deviation column, the horizontal line at probability 0.5 locates the median. On the ECDFs and spectra, shading spans the lowest and highest values across training seeds. Symbols identify the four model conditions on their median curves.
 
 The spectra compare neural samples with observation noise (left) and decoder means at prior latent samples (right). Each column shows all four neural conditions and repeats the same training, test, and PPCA spectra. The two columns for each station share frequency and power limits. Powers are averaged in linear units before plotting on logarithmic axes.
 

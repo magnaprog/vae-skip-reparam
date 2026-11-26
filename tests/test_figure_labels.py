@@ -6,7 +6,7 @@ from datetime import date
 from pathlib import Path
 import re
 
-from matplotlib.collections import LineCollection, PathCollection
+from matplotlib.collections import FillBetweenPolyCollection
 from matplotlib.colors import to_hex
 import matplotlib.pyplot as plt
 from matplotlib.markers import MarkerStyle
@@ -76,37 +76,23 @@ def check_spectral_markers_and_bins(ax):
     assert symbols == 20
 
 
-def check_printed_seed_ranges(ax, marks_per_role):
-    stems = [c for c in ax.collections if isinstance(c, LineCollection)]
-    caps = [c for c in ax.collections if isinstance(c, PathCollection)]
-    assert len(stems) == len(caps) == 4
-    for (_, color, _, _), stem, cap in zip(DIAGNOSTIC_ROLES[3:], stems, caps, strict=True):
-        line, = [line for line in ax.lines if line.get_color() == color]
-        assert cap.get_label() == "_seed_range_caps"
-        assert to_hex(stem.get_colors()[0]) == to_hex(cap.get_edgecolors()[0]) == color.lower()
-        assert stem.get_visible() and cap.get_visible() and cap.get_clip_on()
-        assert stem.get_zorder() < cap.get_zorder() < line.get_zorder()
+def check_seed_bands(ax, spectra):
+    # Each panel has a shaded band for every role, including the reference curves.
+    assert len(ax.collections) == 7
+    for role, band in zip(renderer.ROLES, ax.collections, strict=True):
+        assert isinstance(band, FillBetweenPolyCollection)
+        assert to_hex(band.get_facecolors()[0]) == renderer.COLORS[role].lower()
+        assert band.get_alpha() == (.12 if spectra else .13) and band.get_visible()
+    for i, role in enumerate(renderer.CONDITION_ORDER):
+        line, = [line for line in ax.lines if line.get_color() == renderer.COLORS[role]]
         assert line.get_markersize() == 3 and line.get_markeredgewidth() == .60
-        np.testing.assert_array_equal(stem.get_linewidths(), [.80])
-        np.testing.assert_array_equal(cap.get_linewidths(), [.65])
-        segments = np.asarray(stem.get_segments())
-        assert segments.shape == (marks_per_role, 2, 2)
-        expected = np.concatenate((segments[:, 0], segments[:, 1]))
-        np.testing.assert_array_equal(cap.get_offsets(), expected)
-        np.testing.assert_array_equal(cap.get_offset_transform().transform(expected),
-                                      ax.transData.transform(expected))
-        path, = cap.get_paths()
-        # A horizontal stroke in physical points, anchored on the data endpoint.
-        vertices = path.vertices
-        np.testing.assert_allclose(vertices[:, 1], 0, atol=1e-15)
-        np.testing.assert_array_equal(np.sort(vertices[:, 0]), [-.5, .5])
-        width, = np.sqrt(cap.get_sizes())
-        assert width == 4.15 and width > line.get_markersize() + line.get_markeredgewidth()
-        px = ax.figure.dpi / 72
-        x, y = ax.transData.transform(expected).T
-        assert min(x) - width / 2 * px > ax.bbox.x0 and max(x) + width / 2 * px < ax.bbox.x1
-        half_stroke = cap.get_linewidths()[0] / 2 * px
-        assert min(y) - half_stroke > ax.bbox.y0 and max(y) + half_stroke < ax.bbox.y1
+        if spectra:
+            indices = ([0, 4, 13, 45, 88], [1, 6, 17, 52, 94],
+                       [2, 8, 21, 60, 82], [3, 10, 27, 68, 77])[i]
+        else:
+            probabilities = np.array([.12, .36, .60, .84]) + .05 * i
+            indices = np.searchsorted(line.get_ydata(), probabilities)
+        np.testing.assert_array_equal(line.get_markevery(), indices)
 
 
 def check_spectrum_pair(axes, case):
@@ -114,9 +100,7 @@ def check_spectrum_pair(axes, case):
     left, right = axes
     assert left.get_xlim() == right.get_xlim() and left.get_ylim() == right.get_ylim()
     for column, ax in enumerate(axes):
-        bars = [item for item in ax.collections if isinstance(item, LineCollection)]
-        assert len(bars) == 4
-        for role, line in zip(("train", "test", *renderer.CONDITION_ORDER, "PPCA"), ax.lines, strict=True):
+        for role, line, band in zip(renderer.ROLES, ax.lines, ax.collections, strict=True):
             neural = role in renderer.CONDITION_ORDER
             key = role + " means" if column == 1 and neural else role
             powers = np.array([np.mean([stream["power"] for stream in fit], axis=0)
@@ -124,11 +108,11 @@ def check_spectrum_pair(axes, case):
             np.testing.assert_array_equal(line.get_xdata(), frequency)
             np.testing.assert_array_equal(line.get_ydata(), np.median(powers, axis=0))
             assert line.get_color() == renderer.COLORS[role]
-            if neural:
-                bar = bars[renderer.CONDITION_ORDER.index(role)]
-                for i, segment in zip(line.get_markevery(), bar.get_segments(), strict=True):
-                    np.testing.assert_array_equal(segment, [[frequency[i], powers[:, i].min()],
-                                                            [frequency[i], powers[:, i].max()]])
+            expected = FillBetweenPolyCollection("x", frequency, np.ma.masked_less_equal(powers.min(0), 0),
+                                                 np.ma.masked_less_equal(powers.max(0), 0))
+            for actual, reference in zip(band.get_paths(), expected.get_paths(), strict=True):
+                np.testing.assert_array_equal(actual.vertices, reference.vertices)
+                np.testing.assert_array_equal(actual.codes, reference.codes)
 
 
 @pytest.mark.parametrize("height,spectra", [(7.03, False), (5.51, False),
@@ -190,6 +174,7 @@ def test_diagnostic_station_labels_are_separate_from_axis_labels(monkeypatch, tm
                         for column, axis in enumerate(fig.axes[row * 3:row * 3 + 3]):
                             guides = [line for line in axis.lines if list(line.get_ydata()) == [.5, .5]]
                             assert len(guides) == int(column == 1)
+                            assert len(axis.lines) == len(renderer.ROLES) + len(guides)
                     station, = [t for t in fig.texts if t.get_text() == f"{record['station']} / {record['year']}"]
                     assert station.get_rotation() == 90 and station.get_fontsize() == 8.5
                     box = station.get_window_extent(draw)
@@ -198,7 +183,7 @@ def test_diagnostic_station_labels_are_separate_from_axis_labels(monkeypatch, tm
                     assert ax.get_ylabel() == ("Bin power (m$^2$)" if spectra else "ECDF")
                     assert ax.yaxis.label.get_fontsize() == 9
                 for ax in fig.axes:
-                    check_printed_seed_ranges(ax, 5 if spectra else 4)
+                    check_seed_bands(ax, spectra)
                     for label, color, style, marker in DIAGNOSTIC_ROLES:
                         line, = [line for line in ax.lines if line.get_color() == color]
                         assert line.get_linestyle() == style and line.get_marker() == (marker or "None")
