@@ -233,7 +233,7 @@ def context(directory, summary):
     for ax, name in zip(axes.flat, figure_values.RECORDS[:4]):
         relative = next(path for path in sources if Path(path).name == name + ".txt")
         c = figure_values.read_observed_context(ROOT / relative, sources[relative])
-        ax.scatter(c["days"], c["heights"], s=.65, linewidths=0, color="#008CFF", rasterized=True)
+        ax.scatter(c["days"], c["heights"], s=.65, linewidths=0, color="#0072B2", rasterized=True)
         # Keep endpoint observations fully visible, including midnight on January 1.
         ax.set_xlim(-1, 368 + calendar.isleap(c["year"]))
         ax.set_title(f"{records[name]['station']} / {records[name]['year']}", pad=3)
@@ -250,7 +250,7 @@ def context(directory, summary):
             first = date.fromordinal(day_zero + int(last_observed) + 1)
             last = date.fromordinal(day_zero + int(next_observed) - 1)
             midpoint = (last_observed + next_observed + 1) / 2
-            label = f"T=1 gap\n{first.day} {calendar.month_abbr[first.month]} to\n{last.day} {calendar.month_abbr[last.month]}"
+            label = f"T=1 gap\n{calendar.month_abbr[first.month]} {first.day} to\n{calendar.month_abbr[last.month]} {last.day}"
             ax.text(midpoint, .51, label,
                     transform=ax.get_xaxis_transform(), ha="center", va="center", fontsize=8, color=".25")
     fig.supylabel("Equivalent water column height (m)", x=.012, fontsize=9)
@@ -376,10 +376,12 @@ def variance(directory, records):
     ratio_ax = fig.add_subplot(groups[0])
     change_axes = [fig.add_subplot(pair[0], sharey=ratio_ax) for pair in pairs]
     span_axes = [fig.add_subplot(pair[1], sharey=ratio_ax) for pair in pairs]
+    range_marker_sizes = {"^": 3.35, "s": 2.6, "v": 3.35, "o": 2.95}
     names = figure_values.record_order(records)
     for row, (name, condition) in enumerate((n, c) for n in names for c in CONDITION_ORDER):
         ratios, deltas = figure_values.refit_points(records[name], condition)
         color = COLORS[condition]
+        marker = MARKERS[condition]
         for seed, offset in enumerate((-.29, 0, .29)):
             y = row + offset
             ratio_ax.plot(ratios[seed], y, marker=MARKERS[condition], color=color, markersize=2.8, markeredgewidth=.65, linewidth=0)
@@ -389,8 +391,8 @@ def variance(directory, records):
                 change.hlines(y, low, high, color=color, linewidth=.8)
                 change.plot(values.mean(), y, marker="|", color=color, markersize=3.2,
                             markeredgewidth=.8, linewidth=0)
-                span.plot(high - low, y, marker=".", color=color, markersize=3.6, markeredgewidth=0,
-                          linewidth=0)
+                span.plot(high - low, y, marker=marker, color=color,
+                          markersize=range_marker_sizes[marker], markeredgewidth=.15, linewidth=0)
     ratio_ax.set_yticks([4 * i + 1.5 for i in range(len(names))],
                         [f"{records[n]['station']}\n{records[n]['year']}" for n in names])
     ratio_ax.set_ylim(4 * len(names) - .45, -.55)
@@ -415,7 +417,7 @@ def variance(directory, records):
         change.set_title("Change", pad=3, fontsize=8.5)
         span.set_facecolor(".965")
         span.set_xscale("log")
-        span.set_xlim(4.5e-6, 5e-3)
+        span.set_xlim(4.5e-6, 6e-3)
         span.set_xticks([1e-5, 1e-3], ["0.01", "1"])
         span.set_xticks([1e-4], minor=True)
         span.xaxis.set_minor_formatter(NullFormatter())
