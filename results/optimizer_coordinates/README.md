@@ -15,7 +15,7 @@ All other parameters use Adam at 0.001 and epsilon 1e-7. With a skip of 0.8 the 
 
 ## Data and results
 
-The supplied [prepared arrays](../../data/dart_21415_2018.npz) are the exact training and evaluation input. Chronological partitions contain 1,227 training, 364 validation, and 215 test windows of 192 consecutive observations each. The six four-hourly UTC start times receive equal total weight within each partition. The archive includes normalization, window starts, and test weights. The raw source, SHA-256 digests, and preparation details are in the [data guide](../../data/README.md#station-21415-follow-up).
+The supplied [prepared arrays](../../data/dart_21415_2018.npz) are the exact training and evaluation input. Chronological partitions contain 1,227 training, 364 validation, and 215 test windows of 192 consecutive observations each. The six UTC start times are four hours apart and each receives equal total weight within each partition. The archive includes normalization, window starts, and test weights. The raw source, SHA-256 digests, and preparation details are in the [data guide](../../data/README.md#station-21415-follow-up).
 
 [The score table](scores.csv) gives three geometries per final fit and binds each fit to the SHA-256 of its weights. To generate each of its 1,024 windows, a stream draws a latent vector from the prior, decodes it, and adds Gaussian observation noise. The energy score compares full windows (`joint`), windows after mean subtraction (`centered`), or time increments (`increment`). [The comparison table](comparisons.csv) subtracts weighted test scores within each variance, training seed, geometry, and prior stream, then averages the three differences. The interaction is the matched-minus-original Adam difference under observation-norm clipping minus that difference under residual-norm clipping.
 
@@ -39,7 +39,7 @@ python src/optimizer_coordinates.py --gpu-uuid GPU-REPLACE-ME summarize \
     --fits runs/optimizer/fits --output runs/optimizer/evaluation
 ```
 
-Omitting `--gpu-uuid` runs on CPU. For a quick check, train two steps and evaluate that checkpoint with the same scoring rule. The complete-grid summary accepts only 10,000-step fits. Each fit writes its final HDF5 weights, per-step clipping and update measurements, and a completion record. A retraining run may follow a different numerical path across hardware or software versions.
+Omitting `--gpu-uuid` runs on CPU. For a quick check, train two steps and evaluate that checkpoint with the same scoring rule. The complete-grid summary accepts only fits trained for 10,000 steps. Each fit writes its final HDF5 weights, per-step clipping and update measurements, and a completion record. A retraining run may follow a different numerical path across hardware or software versions.
 
 ```sh
 python src/optimizer_coordinates.py train --fits runs/optimizer/smoke \
@@ -53,7 +53,7 @@ python src/optimizer_coordinates.py score --variance base --seed 42 --mode nativ
 
 For each of the 12 comparisons, [output_update_windows.csv](output_update_windows.csv) gives the difference in full-window energy score on each of 215 test windows. The sign is `matched` minus `original` at the same clipping norm, variance, and training seed. Each row averages the differences across prior streams 71001, 71002, and 71003. The reducer matches each row to its test window by UTC start time in Unix seconds, using `window_start_unix` in the CSV and `starts_test` in the prepared archive.
 
-[output_update_intervals.csv](output_update_intervals.csv) groups windows by start time in the existing 14-day intervals measured from the archive’s `reassignment_block_origin`. Each row gives the test weight in that interval and the mean score difference within it, outside it, and across the full test set. Each mean renormalizes `eval_weights` over the windows it includes. Omitting any interval preserved all 12 positive full-test differences. Three differences reversed sign within the final interval, which contained one window. These overlapping summaries describe one station-year.
+[output_update_intervals.csv](output_update_intervals.csv) groups windows by start time in the existing intervals of 14 days measured from the archive’s `reassignment_block_origin`. Each row gives the test weight in that interval and the mean score difference within it, outside it, and across the full test set. Each mean renormalizes `eval_weights` over the windows it includes. Omitting any interval preserved all 12 positive full-test differences. Three differences reversed sign within the final interval, which contained one window. These overlapping summaries describe one station-year.
 
 Run the reducer from the repository root with Python and NumPy to reproduce all 60 rows.
 

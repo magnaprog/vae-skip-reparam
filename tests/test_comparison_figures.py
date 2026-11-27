@@ -322,6 +322,11 @@ def check_interval_layout(fig, names, records):
     draw = fig.canvas.get_renderer()
     labels = list(fig.texts)
     plots = fig.axes[::2]
+    for ax, heading in zip(plots[:2], ("Intervals of 14 days", "Intervals of 28 days"), strict=True):
+        title, = [text for text in labels if text.get_text() == heading]
+        box = title.get_window_extent(draw)
+        assert (box.x0 + box.x1) / 2 == pytest.approx((ax.bbox.x0 + ax.bbox.x1) / 2)
+        assert box.y0 > ax.bbox.y1
     for ax, coverage in zip(plots, fig.axes[1::2], strict=True):
         labels.extend(coverage.texts)
         labels.extend(t.label1 for t in ax.yaxis._update_ticks() if t.label1.get_visible())
