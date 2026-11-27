@@ -349,7 +349,33 @@ def check_refit_drawing(fig, records):
             boxes.append(point.get_window_extent(fig.canvas.get_renderer()).padded(
                 point.get_markeredgewidth() * np.sqrt(5) * fig.dpi / 144))
         assert_separate(boxes)
-    texts = [*fig.texts, *score_axes[-1].get_xticklabels(), *legend.get_texts()]
+    # Three regular-weight score titles separate the metrics. Each title belongs
+    # to the mean-change axis, leaving the width row visibly paired with it.
+    draw = fig.canvas.get_renderer()
+    previous_axis = ratio
+    headings = []
+    expected = ("Full windows", "After mean subtraction", "Time increments")
+    for label, change, width in zip(expected, score_axes[::2], score_axes[1::2], strict=True):
+        assert change.get_title(loc="left") == label
+        title, = [t for t in change.get_children() if isinstance(t, plt.Text) and t.get_text() == label]
+        assert title.get_fontsize() == 9 and title.get_fontweight() == "normal"
+        assert title.get_fontfamily() == ["DejaVu Serif"]
+        box = title.get_window_extent(draw)
+        assert box.x0 == pytest.approx(change.bbox.x0)
+        scale = 72 / fig.dpi
+        own_title_gap = (box.y0 - change.bbox.y1) * scale
+        previous_title_gap = (previous_axis.bbox.y0 - box.y1) * scale
+        assert 0 < own_title_gap < previous_title_gap
+        pair_gap = (change.bbox.y0 - width.bbox.y1) * scale
+        assert 10 < pair_gap < (previous_axis.bbox.y0 - change.bbox.y1) * scale
+        headings.append(title)
+        previous_axis = width
+
+    station_ticks = score_axes[-1].get_xticklabels()
+    assert all(t.get_fontsize() == 8.5 for t in station_ticks)
+    seed_note, = [t for t in fig.texts if "Seeds 42" in t.get_text()]
+    assert seed_note.get_fontsize() == 8.5
+    texts = [*fig.texts, *headings, *station_ticks, *legend.get_texts()]
     texts.extend(t for ax in fig.axes for t in [ax.yaxis.label, *ax.get_yticklabels()])
     assert_separate([t.get_window_extent(fig.canvas.get_renderer()) for t in texts if t.get_text()])
 

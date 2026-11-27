@@ -364,6 +364,44 @@ def test_temporal_dates_counts_and_weights_are_separate_at_print_width(data, evi
             plt.close(fig)
 
 
+def check_positive_callouts(fig, evidence):
+    fig.canvas.draw()
+    draw = fig.canvas.get_renderer()
+    pt = 72 / fig.dpi
+    offsets = {"dart_21415_2018": {"base": (0, 8), "high": (-28, 4)},
+               "dart_21418_2018": {"base": (-20, 8), "high": (23, 8)}}
+    count = 0
+    for row, name in enumerate(values.RECORDS[4:]):
+        for col, days in enumerate(("14", "28")):
+            ax = fig.axes[4 * row + 2 * col]
+            points = [line for line in ax.lines if line.get_marker() in ("o", "s", "^")]
+            expected = []
+            for variance_index, variance in enumerate(("base", "high")):
+                for seed in range(3):
+                    for item in evidence[name]["intervals"][days]:
+                        value = item[variance][seed]
+                        if value > 0:
+                            x = mdates.date2num(datetime.fromtimestamp(item["start_unix"], timezone.utc))
+                            expected.append((x, value, variance, points[3 * variance_index + seed]))
+            boxes = []
+            for note, (x, value, variance, point) in zip(ax.texts, expected, strict=True):
+                assert note.get_text() == f"{value:+.3g}" and note.xy == (x, value)
+                assert note.get_color() == point.get_color()
+                assert note.get_anncoords() == "offset points" and note.get_position() == offsets[name][variance]
+                target = point.get_transform().transform((x, value))
+                np.testing.assert_array_equal(note.xycoords.transform(note.xy), target)
+                arrow = note.arrow_patch
+                assert arrow.get_visible()
+                tip = arrow.get_transform().transform(arrow.get_path().vertices[-1])
+                assert np.linalg.norm(tip - target) * pt == pytest.approx(1.6, abs=.02)
+                boxes.append(plt.Text.get_window_extent(note, draw))
+                count += 1
+            for a, b in itertools.combinations(boxes, 2):
+                gap = max(a.x0 - b.x1, b.x0 - a.x1, a.y0 - b.y1, b.y0 - a.y1)
+                assert gap * pt > 4
+    assert count == 4
+
+
 def test_temporal_artists_keep_seed_values_dates_and_coverage(data, evidence, monkeypatch, tmp_path):
     captured = []
     monkeypatch.setattr(renderer, "save", lambda fig, *args: captured.append(fig))
@@ -388,17 +426,7 @@ def test_temporal_artists_keep_seed_values_dates_and_coverage(data, evidence, mo
         for row, expected in ((1, ("1", "0.44")), (2, ("10", "5.26"))):
             text = [t.get_text() for t in captured[1].axes[row * 4 + 1].texts]
             assert all(value in text for value in expected)
-        for row, name in enumerate(values.RECORDS[4:]):
-            for col, days in enumerate(("14", "28")):
-                ax = captured[1].axes[4 * row + 2 * col]
-                expected = []
-                for seed in range(3):
-                    for item in evidence[name]["intervals"][days]:
-                        value = item["base"][seed]
-                        if value > 0:
-                            x = mdates.date2num(datetime.fromtimestamp(item["start_unix"], timezone.utc))
-                            expected.append((f"{value:+.3g}", (x, value)))
-                assert [(t.get_text(), t.xy) for t in ax.texts] == expected
+        check_positive_callouts(captured[1], evidence)
     finally:
         for fig in captured:
             plt.close(fig)
