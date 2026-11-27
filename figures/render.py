@@ -636,7 +636,7 @@ def intervals(directory, records):
                 if row == 0:
                     box = ax.get_position()
                     fig.text((box.x0 + box.x1) / 2, .888 if original else .873,
-                             f"{days}-day intervals", ha="center", fontsize=9)
+                             f"Intervals of {days} days", ha="center", fontsize=9)
                 coverage.set_ylim(0, 1)
                 coverage.set_yticks([])
                 coverage.set_xticks(starts)
