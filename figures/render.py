@@ -582,7 +582,7 @@ def intervals(directory, records):
         fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(.5, .995), ncol=5,
                    frameon=False,
                    columnspacing=1.0, handletextpad=.45)
-        fig.text(.54, .934 if original else .926, "Full-window energy score difference (skip − no skip)",
+        fig.text(.54, .934 if original else .926, "Energy score difference for full windows (skip − no skip)",
                  ha="center", fontsize=9)
         save(fig, directory, "dart_intervals_" + group)
 
