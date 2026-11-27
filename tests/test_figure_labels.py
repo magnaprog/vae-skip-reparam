@@ -238,7 +238,7 @@ def test_context_bands_key_and_observations(monkeypatch, tmp_path):
         draw = fig.canvas.get_renderer()
         legend, = fig.legends
         assert [t.get_text() for t in legend.get_texts()] == [
-            "Routine height", "Day without a usable routine height"]
+            "Observation", "Missing data"]
         point, swatch = legend.legend_handles
         assert to_hex(point.get_markerfacecolor()) == "#008cff"
         assert not legend.get_frame_on()
