@@ -362,8 +362,12 @@ def check_refit_drawing(fig, records):
         assert title.get_fontfamily() == ["DejaVu Serif"]
         box = title.get_window_extent(draw)
         assert box.x0 == pytest.approx(change.bbox.x0)
-        assert change.bbox.y1 < box.y0 < box.y1 < previous_axis.bbox.y0
-        assert 0 < change.bbox.y0 - width.bbox.y1 < previous_axis.bbox.y0 - change.bbox.y1
+        scale = 72 / fig.dpi
+        own_title_gap = (box.y0 - change.bbox.y1) * scale
+        previous_title_gap = (previous_axis.bbox.y0 - box.y1) * scale
+        assert 0 < own_title_gap < previous_title_gap
+        pair_gap = (change.bbox.y0 - width.bbox.y1) * scale
+        assert 10 < pair_gap < (previous_axis.bbox.y0 - change.bbox.y1) * scale
         headings.append(title)
         previous_axis = width
 
