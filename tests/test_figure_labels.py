@@ -23,9 +23,9 @@ spec.loader.exec_module(renderer)
 
 DIAGNOSTIC_ROLES = (
     ("Training data", "#888888", ":", None), ("Test data", "#111111", "-", None),
-    ("PPCA", "#555555", "-.", None), ("No skip, base variance", "#0077BB", "-", "^"),
+    ("PPCA", "#555555", "-.", None), ("No skip, base variance", "#0077BB", "-", "s"),
     ("Skip, base variance", "#CC3311", "-", "s"), ("No skip, high variance", "#6A3D9A", "-", "^"),
-    ("Skip, high variance", "#009988", "-", "s"))
+    ("Skip, high variance", "#009988", "-", "^"))
 
 
 def assert_separate(boxes):
@@ -135,7 +135,7 @@ def test_condition_legends_fit_without_codes(height, spectra, dpi):
                 assert handle.get_color() == color and handle.get_linestyle() == style
                 assert handle.get_marker() == (marker or "None")
                 if marker:
-                    assert handle.get_markerfacecolor() == (color if "base" in label else "white")
+                    assert handle.get_markerfacecolor() == (color if label.startswith("Skip,") else "white")
             boxes = [legend.get_window_extent(fig.canvas.get_renderer()) for legend in fig.legends]
             for box in boxes:
                 assert fig.bbox.contains(box.x0, box.y0)
@@ -189,7 +189,7 @@ def test_diagnostic_station_labels_are_separate_from_axis_labels(monkeypatch, tm
                         line, = [line for line in ax.lines if line.get_color() == color]
                         assert line.get_linestyle() == style and line.get_marker() == (marker or "None")
                         if marker:
-                            assert line.get_markerfacecolor() == (color if "base" in label else "white")
+                            assert line.get_markerfacecolor() == (color if label.startswith("Skip,") else "white")
                     if spectra:
                         check_spectral_markers_and_bins(ax)
                     if ax.get_ylabel():
@@ -261,7 +261,7 @@ def test_context_bands_key_and_observations(monkeypatch, tmp_path):
                 assert (patch.get_y(), patch.get_height()) == (0, 1)
                 assert patch.get_data_transform() == ax.get_xaxis_transform()
                 assert patch.get_visible() and patch.get_zorder() < points.get_zorder()
-                assert patch.get_facecolor() == swatch.get_facecolor() == (.84, .84, .84, 1)
+                assert patch.get_facecolor() == swatch.get_facecolor() == (.88, .88, .88, 1)
                 assert patch.get_edgecolor()[-1] == 0 and patch.get_linewidth() == 0
     finally:
         plt.close(fig)
@@ -288,33 +288,34 @@ def check_comparison_ranges(fig, records):
                 np.testing.assert_array_equal(cap.get_transform().transform(expected), ax.transData.transform(expected))
             np.testing.assert_array_equal(mark.get_transform().transform(mark.get_xydata()),
                                           ax.transData.transform(mark.get_xydata()))
-            color, face = ("#CC3311", "#CC3311") if offset < 0 else ("#009988", "white")
-            assert mark.get_marker() == "o" and mark.get_markeredgecolor() == color
-            assert mark.get_markerfacecolor() == face
-            assert mark.get_markersize() == 2.5 and mark.get_markeredgewidth() == .6
+            color, marker = ("#CC3311", "s") if offset < 0 else ("#009988", "^")
+            assert mark.get_marker() == marker and mark.get_markeredgecolor() == color
+            assert mark.get_markerfacecolor() == color and mark.get_markerfacecoloralt() == "white"
+            assert mark.get_fillstyle() == "left"
+            assert mark.get_markersize() == 3.2 and mark.get_markeredgewidth() == .38
             assert left.get_markersize() == right.get_markersize() == 4
             assert left.get_marker() == right.get_marker() == "|"
 
 
 def check_comparison_legend(legend):
     # The two keys must actually draw the median in the middle of a capped range.
-    for key, color, face in zip(legend.findobj(DrawingArea), ("#CC3311", "#009988"), ("#CC3311", "white"), strict=True):
+    for key, color, marker in zip(legend.findobj(DrawingArea), ("#CC3311", "#009988"), ("s", "^"), strict=True):
         rail, = key.findobj(LineCollection)
         segment, = rail.get_segments()
         lines = key.findobj(Line2D)
-        median, = [p for p in lines if p.get_marker() == "o"]
-        assert median.get_markeredgecolor() == color and median.get_markerfacecolor() == face
+        median, = [p for p in lines if p.get_marker() == marker]
+        assert median.get_markeredgecolor() == color and median.get_markerfacecolor() == color
+        assert median.get_fillstyle() == "left" and median.get_markerfacecoloralt() == "white"
         caps = [p.get_xydata()[0] for p in lines if p.get_marker() == "|"]
         np.testing.assert_array_equal(caps, segment)
         np.testing.assert_array_equal(median.get_xydata()[0], segment.mean(axis=0))
         assert segment[0, 0] < segment[1, 0] and segment[0, 1] == segment[1, 1]
 
 
-def check_bar_interiors(ax, bars):
+def check_bar_interiors(ax, bars, caps):
     """Measure the decorative LineCollections against the true bar ends in print points."""
     decorations = iter(c for c in ax.collections if c.get_zorder() != 3)
-    short_skip = 0
-    for bar in bars:
+    for bar, cap in zip(bars, caps, strict=True):
         color = bar.get_color()
         high = color in ("#6A3D9A", "#009988")
         skip = color in ("#CC3311", "#009988")
@@ -322,36 +323,47 @@ def check_bar_interiors(ax, bars):
         x = ends[0, 0]
         bottom, top = sorted(ends[:, 1])
         assert bar.get_linewidth() == 3
-        if high:
+        if not skip:
             interior = next(decorations)
             assert interior.get_zorder() == 2.3 and interior.get_capstyle() == "butt"
             assert to_hex(interior.get_colors()[0]) == "#ffffff"
-            np.testing.assert_allclose(interior.get_linewidths(), [1.56])
+            channel_width, = interior.get_linewidths()
+            np.testing.assert_allclose(channel_width, 3 - 2 * min(.72, (top - bottom) / 2))
             segment, = interior.get_segments()
             actual = ax.transData.transform(segment) * 72 / ax.figure.dpi
-            np.testing.assert_allclose(actual, [[x, bottom + .72], [x, top - .72]], rtol=0, atol=1e-9)
-        if skip:
+            inset = min(.72, (top - bottom) / 5)
+            assert bottom < actual[0, 1] < actual[1, 1] < top
+            np.testing.assert_allclose(actual, [[x, bottom + inset], [x, top - inset]], rtol=0, atol=1e-9)
+        covered = []
+        if high:
             count = max(0, 1 + int(np.floor((top - bottom - 2 * 1.46) / 4.2)))
-            if count == 0:
-                assert not high
-                short_skip += 1
-                continue
+            assert count >= 1
             hatch = next(decorations)
             assert hatch.get_zorder() == 2.5 and hatch.get_capstyle() == "butt"
-            assert to_hex(hatch.get_colors()[0]) == (color.lower() if high else "#ffe7db")
+            assert to_hex(hatch.get_colors()[0]) == ("#ffffff" if skip else color.lower())
             np.testing.assert_array_equal(hatch.get_linewidths(), [.54])
             paths = np.array([ax.transData.transform(seg) for seg in hatch.get_segments()]) * 72 / ax.figure.dpi
             assert paths.shape == (count, 2, 2)
             np.testing.assert_allclose(paths[:, :, 0], np.tile([x - 1.16, x + 1.16], (count, 1)), atol=1e-9, rtol=0)
             midpoints = paths[:, :, 1].mean(axis=1)
             np.testing.assert_allclose(np.diff(midpoints), 4.2, atol=1e-9, rtol=0)
+            covered.extend((v - 1.10, v + 1.10) for v in midpoints)
             assert midpoints.mean() == pytest.approx((bottom + top) / 2)
             np.testing.assert_allclose(np.diff(paths[:, :, 1], axis=1), 1.66, atol=1e-9, rtol=0)
             # Even a half stroke beyond the centerline stays inside the true bar.
             assert paths[:, :, 1].min() - .27 > bottom and paths[:, :, 1].max() + .27 < top
             assert np.max(np.abs(paths[:, :, 0] - x)) + .27 < 1.5
+        if not skip:
+            # Probe along an edge of the white channel, outside the central whisker stem.
+            assert channel_width > .47
+            lower, upper = actual[:, 1]
+            if channel_width <= cap.get_markersize() + cap.get_markeredgewidth():
+                cap_y = ax.transData.transform(cap.get_xydata())[:, 1] * 72 / ax.figure.dpi
+                half = cap.get_markeredgewidth() / 2
+                covered.extend((value - half, value + half) for value in cap_y)
+            cuts = np.unique(np.clip([lower, upper, *(side for region in covered for side in region)], lower, upper))
+            assert any(all(not (a <= y <= b) for a, b in covered) for y in (cuts[:-1] + cuts[1:]) / 2)
     assert next(decorations, None) is None
-    return short_skip
 
 
 def check_refit_drawing(fig, records):
@@ -367,7 +379,7 @@ def check_refit_drawing(fig, records):
     for h, label, key, c in zip(legend.legend_handles, legend.get_texts(), legend.findobj(DrawingArea),
                                 renderer.CONDITION_ORDER, strict=True):
         assert h.get_marker() == renderer.MARKERS[c] and h.get_color() == renderer.COLORS[c]
-        assert h.get_markerfacecolor() == ("white" if c.endswith("_high") else renderer.COLORS[c])
+        assert h.get_markerfacecolor() == (renderer.COLORS[c] if c.startswith("skip_") else "white")
         assert h.get_markeredgecolor() == renderer.COLORS[c] and h.get_markeredgewidth() == .7
         assert h.get_markersize() == 4
         assert label.get_text() == renderer.CONDITION_LABELS[c].replace(" variance", "")
@@ -375,11 +387,11 @@ def check_refit_drawing(fig, records):
         assert symbol is h
         edge = renderer.COLORS[c].lower()
         assert to_hex(swatch.get_edgecolor()) == edge and swatch.get_linewidth() > 0
-        assert to_hex(swatch.get_facecolor()) == ("#ffffff" if c.endswith("_high") else edge)
+        assert to_hex(swatch.get_facecolor()) == (edge if c.startswith("skip_") else "#ffffff")
         assert swatch.get_height() > swatch.get_width()
-        assert len(stripes) == (2 if c.startswith("skip_") else 0)
+        assert len(stripes) == (2 if c.endswith("_high") else 0)
         for stripe in stripes:
-            assert to_hex(stripe.get_color()) == (edge if c.endswith("_high") else "#ffe7db")
+            assert to_hex(stripe.get_color()) == ("#ffffff" if c.startswith("skip_") else edge)
             assert np.diff(stripe.get_xdata())[0] > 0 and np.diff(stripe.get_ydata())[0] > 0
 
     colors = [renderer.COLORS[c] for c in renderer.CONDITION_ORDER]
@@ -388,7 +400,6 @@ def check_refit_drawing(fig, records):
 
     ratios = colored_lines(ratio)
     panels = []
-    short_skip = 0
     for change, width in zip(score_axes[::2], score_axes[1::2], strict=True):
         assert change.get_yscale() == "linear" and width.get_yscale() == "log"
         assert [change.get_ylabel(), width.get_ylabel()] == ["Mean\nchange", "Range\nwidth"]
@@ -399,25 +410,24 @@ def check_refit_drawing(fig, records):
             np.testing.assert_allclose(ticks, ax.get_yticks() * 1000, rtol=0, atol=1e-12)
         bars = colored_lines(change)
         whiskers = [c for c in change.collections if c.get_zorder() == 3]
-        short_skip += check_bar_interiors(change, bars)
         caps = [line for line in change.lines if line.get_marker() == "_"]
+        check_bar_interiors(change, bars, caps)
         widths = colored_lines(width)
         assert len(bars) == len(whiskers) == len(caps) == len(widths) == len(ratios) == 84
         panels.append((bars, whiskers, caps, widths))
 
-    assert short_skip == 10
     for group, (record, condition) in enumerate(itertools.product(names, renderer.CONDITION_ORDER)):
         values, streams = renderer.figure_values.refit_points(records[record], condition)
-        symbol = "^" if condition.startswith("no_skip") else "s"
+        symbol = "s" if condition.endswith("_base") else "^"
         color = renderer.COLORS[condition]
-        is_high = condition.endswith("_high")
-        face = "white" if is_high else color
+        skip = condition.startswith("skip_")
+        face = color if skip else "white"
         for seed in range(3):
             i = 3 * group + seed
             x = names.index(record) * 7.08 + condition.startswith("skip_") * 3.48 + seed
             point = ratios[i]
             assert point.get_markerfacecolor() == face and point.get_markeredgecolor() == color
-            assert point.get_markersize() == 3.3 and point.get_markeredgewidth() == (.60 if is_high else .29)
+            assert point.get_markersize() == 3.3 and point.get_markeredgewidth() == (.29 if skip else .60)
             assert point._marker.get_joinstyle() == "miter"
             np.testing.assert_array_equal(point.get_xydata(), [[x, values[seed]]])
             assert point.get_marker() == symbol and point.get_color() == color
@@ -436,7 +446,7 @@ def check_refit_drawing(fig, records):
                 np.testing.assert_array_equal(width.get_xydata(), [[x + offset, high - low]])
                 assert width.get_marker() == symbol and width.get_color() == color
                 assert width.get_markerfacecolor() == face and width.get_markeredgecolor() == color
-                assert width.get_markersize() == 2.55 and width.get_markeredgewidth() == (.40 if is_high else .14)
+                assert width.get_markersize() == 2.42 and width.get_markeredgewidth() == (.14 if skip else .40)
                 assert width._marker.get_joinstyle() == "round"
 
     for ax in (ratio, *score_axes[1::2]):

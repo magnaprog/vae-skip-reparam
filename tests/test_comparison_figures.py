@@ -141,13 +141,13 @@ def check_ppca_artists(fig, evidence):
                 point = dots[i]
                 assert point.get_zorder() == 2
                 assert point.get_markersize() == 3
-                assert point.get_markeredgewidth() == (.6 if condition.endswith("_high") else 1.)
+                assert point.get_markeredgewidth() == (.6 if condition.startswith("no_skip_") else 1.)
                 np.testing.assert_array_equal(point.get_xdata(), [expected[seed, panel]])
                 np.testing.assert_array_equal(point.get_ydata(), [row + offset])
                 assert point.get_color() == renderer.COLORS[condition]
-                assert point.get_marker() == ("^" if condition.startswith("no_skip") else "s")
+                assert point.get_marker() == ("s" if condition.endswith("_base") else "^")
                 assert point.get_markeredgecolor() == renderer.COLORS[condition]
-                assert point.get_markerfacecolor() == (renderer.COLORS[condition] if condition.endswith("_base") else "white")
+                assert point.get_markerfacecolor() == (renderer.COLORS[condition] if condition.startswith("skip_") else "white")
                 assert point.get_linestyle() == "-" and point.get_linewidth() == 0
         assert any(list(line.get_xdata()) == [0, 0] for line in ax.lines)
     axis = fig.axes[0]
@@ -157,10 +157,10 @@ def check_ppca_artists(fig, evidence):
     legend, = fig.legends
     assert [t.get_text() for t in legend.get_texts()] == ["No skip, base", "Skip, base", "No skip, high", "Skip, high"]
     for handle, condition in zip(legend.legend_handles, ORDER, strict=True):
-        assert handle.get_marker() == ("^" if condition.startswith("no_skip") else "s")
-        assert handle.get_markeredgewidth() == (.6 if condition.endswith("_high") else 1.)
+        assert handle.get_marker() == ("s" if condition.endswith("_base") else "^")
+        assert handle.get_markeredgewidth() == (.6 if condition.startswith("no_skip_") else 1.)
         assert handle.get_markeredgecolor() == renderer.COLORS[condition]
-        assert handle.get_markerfacecolor() == (renderer.COLORS[condition] if condition.endswith("_base") else "white")
+        assert handle.get_markerfacecolor() == (renderer.COLORS[condition] if condition.startswith("skip_") else "white")
     assert fig.get_figwidth() == 5.5
 
 
@@ -275,7 +275,7 @@ def check_interval_artists(fig, names, records):
             lines = [line for line in ax.lines if line.get_marker() in ("o", "s", "^")]
             assert len(lines) == 6 and not ax.collections
             for variance_index, variance in enumerate(("base", "high")):
-                for seed, marker in enumerate(("o", "s", "^")):
+                for seed in range(3):
                     line = lines[variance_index * 3 + seed]
                     np.testing.assert_array_equal(line.get_xdata(), expected_x)
                     np.testing.assert_array_equal(line.get_ydata(), [i[variance][seed] for i in source])
@@ -288,9 +288,12 @@ def check_interval_artists(fig, names, records):
                                                rtol=0, atol=1e-9)
                     np.testing.assert_array_equal(shift[:, 1], np.zeros(len(expected_x)))
                     assert line.get_linestyle() == "None"
-                    assert line.get_marker() == marker and line.get_markersize() == 2.8
+                    assert line.get_marker() == ("s" if variance == "base" else "^")
+                    assert line.get_markersize() == 3.0 and line.get_markeredgewidth() == .28
+                    assert line._marker.get_joinstyle() == "round"
                     assert line.get_color() == ("#CC3311" if variance == "base" else "#009988")
-                    assert line.get_markerfacecolor() == ("#CC3311" if variance == "base" else "white")
+                    assert line.get_markerfacecolor() == line.get_color() and line.get_markerfacecoloralt() == "white"
+                    assert line.get_fillstyle() == "left"
                     total += len(expected_x)
             assert any(list(line.get_ydata()) == [0, 0] for line in ax.lines)
             assert ax.get_xlim() == expected_xlim and ax.get_ylim() == expected_ylim
@@ -420,7 +423,13 @@ def test_temporal_artists_keep_seed_values_dates_and_coverage(data, evidence, mo
         assert check_interval_artists(captured[1], values.RECORDS[4:], evidence) == (144, 24)
         for fig in captured:
             assert [t.get_text() for t in fig.legends[0].get_texts()] == [
-                "Base variance", "High variance", "42", "1729", "31415"]
+                "Base variance", "High variance"]
+            assert any(t.get_text() == "At each date, seed pairs run left to right (42, 1729, 31415)."
+                       for t in fig.texts)
+            for h, marker, color in zip(fig.legends[0].legend_handles, ("s", "^"), ("#CC3311", "#009988"), strict=True):
+                assert h.get_marker() == marker and h.get_markeredgecolor() == color
+                assert h.get_fillstyle() == "left" and h.get_markerfacecolor() == color
+                assert h.get_markerfacecoloralt() == "white"
             for ax in fig.axes:
                 assert all(t.get_fontsize() == 8.5 for t in ax.get_xticklabels() + ax.get_yticklabels()
                            if t.get_visible())

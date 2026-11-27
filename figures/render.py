@@ -39,7 +39,7 @@ COLORS = {"no_skip_base": "#0077BB", "skip_base": "#CC3311", "no_skip_high": "#6
 CONDITION_ORDER = figure_values.CONDITIONS
 CONDITION_LABELS = {"no_skip_base": "No skip, base variance", "skip_base": "Skip, base variance",
                     "no_skip_high": "No skip, high variance", "skip_high": "Skip, high variance"}
-MARKERS = {"no_skip_base": "^", "skip_base": "s", "no_skip_high": "^", "skip_high": "s"}
+MARKERS = {"no_skip_base": "s", "skip_base": "s", "no_skip_high": "^", "skip_high": "^"}
 STYLES = {"train": ":", "test": "-", "PPCA": "-."}
 ROLES = ("train", "test", *CONDITION_ORDER, "PPCA")
 SCORES = figure_values.SCORES
@@ -158,7 +158,7 @@ def step_support(grid, *curves):
 
 
 def marker_face(condition):
-    return COLORS[condition] if condition.endswith("_base") else "white"
+    return COLORS[condition] if condition.startswith("skip_") else "white"
 
 
 def legend_handles(roles=ROLES, multiline=False):
@@ -205,9 +205,10 @@ def comparison(directory, records):
             stats = [records[n]["contrasts"][pair + "/original"]["scores"][score]["optimizer_seeds"] for n in names]
             middle = np.array([s["median"] for s in stats])
             error = np.array([[s["median"] - s["min"] for s in stats], [s["max"] - s["median"] for s in stats]])
-            ax.errorbar(middle, np.arange(7) + offset, xerr=error, fmt="o", color=COLORS[condition],
-                        markerfacecolor=marker_face(condition),
-                        markersize=2.5, markeredgewidth=.6, linewidth=.78, capsize=2, label=label)
+            ax.errorbar(middle, np.arange(7) + offset, xerr=error, fmt="s" if condition.endswith("_base") else "^",
+                        color=COLORS[condition], fillstyle="left",
+                        markerfacecolor=COLORS[condition], markerfacecoloralt="white",
+                        markersize=3.2, markeredgewidth=.38, linewidth=.78, capsize=2, label=label)
         ax.set_xticks(tick_values)
         xmin, xmax = ax.get_xlim()
         padding = .035 * (xmax - xmin)
@@ -245,7 +246,7 @@ def context(directory, summary):
     fig, axes = plt.subplots(2, 2, figsize=(5.5, height))
     records = summary["records"]
     sources = summary["annual_sources"]
-    shade = ".84"
+    shade = ".88"
     for ax, name in zip(axes.flat, figure_values.RECORDS[:4]):
         relative = next(path for path in sources if Path(path).name == name + ".txt")
         c = figure_values.read_observed_context(ROOT / relative, sources[relative])
@@ -399,11 +400,14 @@ def variance(directory, records):
         length = abs(mean) / y_per_pt
         bottom, top = sorted((0., mean))
         border = 0.72
-        if is_high and length > 2 * border:
-            interior = [[(x, bottom + border * y_per_pt), (x, top - border * y_per_pt)]]
-            ax.add_collection(LineCollection(interior, colors="white", linewidths=3 - 2 * border,
+        if not skip and length > 0:
+            # Keep a white interior even when the whole bar is shorter than two borders.
+            end_inset = min(border, length / 5)
+            side_inset = min(border, length / 2)
+            interior = [[(x, bottom + end_inset * y_per_pt), (x, top - end_inset * y_per_pt)]]
+            ax.add_collection(LineCollection(interior, colors="white", linewidths=3 - 2 * side_inset,
                                              capstyle="butt", zorder=2.3), autolim=False)
-        if skip:
+        if is_high:
             # Center complete diagonals symmetrically between the two ends.
             # Keep even the stroke edges inside the true bar rectangle.
             pitch = 4.2
@@ -415,7 +419,7 @@ def variance(directory, records):
                         (x + 1.16 * x_per_pt, mean / 2 + (v + half_rise) * y_per_pt)]
                        for v in centers]
             if strokes:
-                hatch_color = color if is_high else "#FFE7DB"
+                hatch_color = "white" if skip else color
                 ax.add_collection(LineCollection(strokes, colors=hatch_color, linewidths=0.54,
                                                  capstyle="butt", zorder=2.5), autolim=False)
 
@@ -469,7 +473,7 @@ def variance(directory, records):
             for seed in range(len(figure_values.SEEDS)):
                 x = row * record_step + skip * skip_offset + seed
                 ratio.plot(x, ratios[seed], marker=marker, color=color, linestyle="none",
-                           markersize=3.3, markeredgewidth=.60 if is_high else .29, markerfacecolor=face)
+                           markersize=3.3, markeredgewidth=.29 if skip else .60, markerfacecolor=face)
                 for score, (change, width) in enumerate(panels):
                     values = deltas[seed, score]
                     low, high = values.min(), values.max()
@@ -480,7 +484,7 @@ def variance(directory, records):
                     change.plot([x, x], [low, high], marker="_", linestyle="none",
                                 markersize=1.7, markeredgewidth=.44, color=".20", zorder=3)
                     width.plot(x + width_offset, high - low, marker=MarkerStyle(marker, joinstyle="round"), color=color,
-                               markersize=2.55, markeredgewidth=0.4 if is_high else 0.14,
+                               markersize=2.42, markeredgewidth=.14 if skip else .40,
                                markerfacecolor=face, linestyle="none")
 
     station_axis = panels[-1][1]
@@ -491,8 +495,8 @@ def variance(directory, records):
         """Draw a condition symbol and a sample of its signed bar."""
         def create_artists(self, legend, original, xd, yd, width, height, font_size, transform):
             color = original.get_color()
-            is_high = original.get_markerfacecolor() == "white"
-            skip = original.get_marker() == "s"
+            skip = original.get_markerfacecolor() != "white"
+            is_high = original.get_marker() == "^"
             cy = (height - yd) / 2
             mx = -xd + 2.4
             symbol = Line2D([mx], [cy], marker=original.get_marker(), linestyle="none",
@@ -502,13 +506,13 @@ def variance(directory, records):
                 return Line2D(x, y, color=ink, linewidth=weight, solid_capstyle="butt",
                               transform=transform)
             bx = -xd + 10.1
-            swatch = Rectangle((bx - 1.85, cy - 4.5), 3.7, 9.0, facecolor="white" if is_high else color,
+            swatch = Rectangle((bx - 1.85, cy - 4.5), 3.7, 9.0, facecolor=color if skip else "white",
                                edgecolor=color, linewidth=.72, transform=transform)
             sample = [symbol, swatch]
-            if skip:
+            if is_high:
                 for dy in (-2.1, 2.1):
                     sample.append(stroke([bx - 1.55, bx + 1.55], [cy + dy - 1.04, cy + dy + 1.04],
-                                         color if is_high else "#FFE7DB", .64))
+                                         "white" if skip else color, .64))
             return sample
 
     handles = [Line2D([], [], marker=MARKERS[c], color=COLORS[c], linestyle="none",
@@ -537,7 +541,7 @@ def ppca_comparison(directory, records):
                 score, y = values[seed, col], row + offset
                 ax.plot(score, y, marker=MARKERS[condition], color=COLORS[condition],
                         markersize=3, linewidth=0, markerfacecolor=marker_face(condition),
-                        markeredgewidth=.6 if condition.endswith("_high") else 1.0)
+                        markeredgewidth=.6 if condition.startswith("no_skip_") else 1.0)
     fig.subplots_adjust(left=.143, right=.982, bottom=.085, top=.886, wspace=.29)
     axes[0].set_yticks([4 * i + 1.5 for i in range(len(names))],
                        [f"{records[n]['station']}\n{records[n]['year']}" for n in names])
@@ -552,7 +556,7 @@ def ppca_comparison(directory, records):
         ax.set_title(("Full windows", "After mean\nsubtraction", "Time increments")[col])
         ax.set_xticks(((0, 3, 6, 9), (0, 1, 2), (0, .1, .2, .3))[col])
     handles = [Line2D([], [], color=COLORS[c], marker=MARKERS[c], markerfacecolor=marker_face(c),
-                      linestyle="none", markersize=4, markeredgewidth=.6 if c.endswith("_high") else 1.0,
+                      linestyle="none", markersize=4, markeredgewidth=.6 if c.startswith("no_skip_") else 1.0,
                       label=CONDITION_LABELS[c].replace(" variance", "")) for c in CONDITION_ORDER]
     fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(.53, .993), ncol=4,
                columnspacing=1.0, handletextpad=.25, handlelength=.9, frameon=False)
@@ -562,8 +566,7 @@ def ppca_comparison(directory, records):
 
 def intervals(directory, records):
     """Plot dated interval means, with counts and evaluation-weight shares."""
-    seed_markers = ("o", "s", "^")
-    contrasts = (("base", COLORS["skip_base"]), ("high", COLORS["skip_high"]))
+    contrasts = (("base", "s", COLORS["skip_base"]), ("high", "^", COLORS["skip_high"]))
     for group, names in (("original", figure_values.RECORDS[:4]),
                          ("additional", figure_values.RECORDS[4:])):
         original = group == "original"
@@ -576,7 +579,7 @@ def intervals(directory, records):
             record = records[name]
             points = {days: figure_values.interval_points(record, days) for days in (14, 28)}
             all_scores = np.concatenate([np.array([0.])] + [p[variance].ravel()
-                                         for p in points.values() for variance, _ in contrasts])
+                                         for p in points.values() for variance, _, _ in contrasts])
             lower, upper = all_scores.min(), all_scores.max()
             score_padding = (upper - lower) * .18 or .1
             score_bounds = lower - score_padding, upper + score_padding
@@ -599,14 +602,15 @@ def intervals(directory, records):
                 coverage = fig.add_subplot(cell[1], sharex=ax)
                 values = points[days]
                 starts = mdates.date2num(values["start_unix"].astype("datetime64[s]"))
-                for variance, color in contrasts:
-                    for seed, marker in enumerate(seed_markers):
+                for variance, marker, color in contrasts:
+                    for seed in range(len(figure_values.SEEDS)):
                         # Separate glyphs in physical points, never in UTC dates or score values.
                         shift = (-6.8, 0., 6.8)[seed] + (-1.65 if variance == "base" else 1.65)
                         transform = ax.transData + ScaledTranslation(shift / 72, 0, fig.dpi_scale_trans)
-                        ax.plot(starts, values[variance][:, seed], linestyle="none", marker=marker,
-                                color=color, markerfacecolor=color if variance == "base" else "white",
-                                markeredgewidth=.45, markersize=2.8, transform=transform)
+                        ax.plot(starts, values[variance][:, seed], linestyle="none",
+                                marker=MarkerStyle(marker, fillstyle="left", joinstyle="round"),
+                                color=color, fillstyle="left", markerfacecolor=color, markerfacecoloralt="white",
+                                markeredgewidth=.28, markersize=3.0, transform=transform)
                         if group == "additional":
                             for x, value in zip(starts, values[variance][:, seed], strict=True):
                                 if value > 0:
@@ -651,14 +655,15 @@ def intervals(directory, records):
                     for y, label in ((.70, "Start (UTC)"), (.32, "Windows"), (.06, "Weight (%)")):
                         coverage.text(-.04, y, label, transform=coverage.transAxes,
                                       ha="right", va="center", fontsize=8.5)
-        handles = [Line2D([], [], color=color, marker="o", linestyle="none", markersize=3.5,
-                          markerfacecolor=color if variance == "base" else "white",
-                          label=variance.capitalize() + " variance") for variance, color in contrasts]
-        handles += [Line2D([], [], color=".25", marker=marker, linestyle="none", markersize=3.5,
-                           label=str(seed)) for seed, marker in zip(figure_values.SEEDS, seed_markers, strict=True)]
-        fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(.5, .995), ncol=5,
-                   frameon=False,
-                   columnspacing=1.0, handletextpad=.45)
+        handles = [Line2D([], [], color=color, marker=marker, linestyle="none", markersize=4.3,
+                          fillstyle="left", markerfacecolor=color, markerfacecoloralt="white",
+                          markeredgewidth=.45, label=variance.capitalize() + " variance")
+                   for variance, marker, color in contrasts]
+        fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(.5, 1 - 3 / (72 * fig.get_figheight())), ncol=2,
+                   frameon=False, borderaxespad=0, borderpad=0, columnspacing=1.6, handletextpad=.4, handlelength=1)
+        fig.text(.5, 1 - 20 / (72 * fig.get_figheight()),
+                 "At each date, seed pairs run left to right (42, 1729, 31415).",
+                 ha="center", va="center", fontsize=8.5)
         fig.text(.54, .934 if original else .926, "Energy score difference for full windows (skip − no skip)",
                  ha="center", fontsize=9)
         save(fig, directory, "dart_intervals_" + group)
