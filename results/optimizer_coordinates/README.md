@@ -30,7 +30,7 @@ mkdir -p runs/optimizer
 python src/optimizer_comparisons.py --output runs/optimizer/comparisons.csv
 ```
 
-To train, use the Python 3.11 environment in the [training guide](../../TRAINING.md). Run the example on a GPU reserved for your use, replacing the UUID with its actual value. Each fit needs a fresh output directory. Supply `--seed` to run twelve fits on one device, or omit it to run all 36 sequentially on that device. The summarizer verifies all fit identities, final weight digests, and common training streams before writing scores, comparisons, and the per-window output-update differences.
+To train, use the Python 3.11 environment in the [training guide](../../TRAINING.md). Run the example on a GPU reserved for your use, replacing the UUID with its actual value. Each fit needs a fresh output directory. Supply `--seed` to run twelve fits on one device, or omit it to run all 36 sequentially on that device. The summarizer checks the mode, observation variance, seed, and step count in each fit’s completion record and verifies the SHA-256 hash of the final weights. Before writing scores, comparisons, and per-window differences, it compares the recorded hashes of the minibatch indices and posterior noise across fits with the same seed.
 
 ```sh
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=2
@@ -51,7 +51,7 @@ python src/optimizer_coordinates.py score --variance base --seed 42 --mode nativ
 
 ## Retrospective interval check
 
-For each of the 12 comparisons, [output_update_windows.csv](output_update_windows.csv) gives the difference in full-window energy score on each of 215 test windows. The sign is `matched` minus `original` at the same clipping norm, variance, and training seed. Each row averages the differences across prior streams 71001, 71002, and 71003. The UTC start time in Unix seconds identifies the window in the prepared archive.
+For each of the 12 comparisons, [output_update_windows.csv](output_update_windows.csv) gives the difference in full-window energy score on each of 215 test windows. The sign is `matched` minus `original` at the same clipping norm, variance, and training seed. Each row averages the differences across prior streams 71001, 71002, and 71003. The reducer matches each row to its test window by UTC start time in Unix seconds, using `window_start_unix` in the CSV and `starts_test` in the prepared archive.
 
 [output_update_intervals.csv](output_update_intervals.csv) groups windows by start time in the existing 14-day intervals measured from the archive’s `reassignment_block_origin`. Each row gives the test weight in that interval and the mean score difference within it, outside it, and across the full test set. Each mean renormalizes `eval_weights` over the windows it includes. Omitting any interval preserved all 12 positive full-test differences. Three differences reversed sign within the final interval, which contained one window. These overlapping summaries describe one station-year.
 

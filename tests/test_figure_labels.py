@@ -261,7 +261,7 @@ def test_context_bands_key_and_observations(monkeypatch, tmp_path):
                 assert (patch.get_y(), patch.get_height()) == (0, 1)
                 assert patch.get_data_transform() == ax.get_xaxis_transform()
                 assert patch.get_visible() and patch.get_zorder() < points.get_zorder()
-                assert patch.get_facecolor() == swatch.get_facecolor() == (.88, .88, .88, 1)
+                assert patch.get_facecolor() == swatch.get_facecolor() == (.92, .92, .92, 1)
                 assert patch.get_edgecolor()[-1] == 0 and patch.get_linewidth() == 0
     finally:
         plt.close(fig)
@@ -290,8 +290,8 @@ def check_comparison_ranges(fig, records):
                                           ax.transData.transform(mark.get_xydata()))
             color, marker = ("#CC3311", "s") if offset < 0 else ("#009988", "^")
             assert mark.get_marker() == marker and mark.get_markeredgecolor() == color
-            assert mark.get_markerfacecolor() == color and mark.get_markerfacecoloralt() == "white"
-            assert mark.get_fillstyle() == "left"
+            assert mark.get_markerfacecolor() == color
+            assert mark.get_fillstyle() == "full"
             assert mark.get_markersize() == 3.2 and mark.get_markeredgewidth() == .38
             assert left.get_markersize() == right.get_markersize() == 4
             assert left.get_marker() == right.get_marker() == "|"
@@ -305,7 +305,7 @@ def check_comparison_legend(legend):
         lines = key.findobj(Line2D)
         median, = [p for p in lines if p.get_marker() == marker]
         assert median.get_markeredgecolor() == color and median.get_markerfacecolor() == color
-        assert median.get_fillstyle() == "left" and median.get_markerfacecoloralt() == "white"
+        assert median.get_fillstyle() == "full"
         caps = [p.get_xydata()[0] for p in lines if p.get_marker() == "|"]
         np.testing.assert_array_equal(caps, segment)
         np.testing.assert_array_equal(median.get_xydata()[0], segment.mean(axis=0))

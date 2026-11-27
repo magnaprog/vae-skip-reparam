@@ -292,8 +292,8 @@ def check_interval_artists(fig, names, records):
                     assert line.get_markersize() == 3.0 and line.get_markeredgewidth() == .28
                     assert line._marker.get_joinstyle() == "round"
                     assert line.get_color() == ("#CC3311" if variance == "base" else "#009988")
-                    assert line.get_markerfacecolor() == line.get_color() and line.get_markerfacecoloralt() == "white"
-                    assert line.get_fillstyle() == "left"
+                    assert line.get_markerfacecolor() == line.get_color()
+                    assert line.get_fillstyle() == "full"
                     total += len(expected_x)
             assert any(list(line.get_ydata()) == [0, 0] for line in ax.lines)
             assert ax.get_xlim() == expected_xlim and ax.get_ylim() == expected_ylim
@@ -428,8 +428,7 @@ def test_temporal_artists_keep_seed_values_dates_and_coverage(data, evidence, mo
                        for t in fig.texts)
             for h, marker, color in zip(fig.legends[0].legend_handles, ("s", "^"), ("#CC3311", "#009988"), strict=True):
                 assert h.get_marker() == marker and h.get_markeredgecolor() == color
-                assert h.get_fillstyle() == "left" and h.get_markerfacecolor() == color
-                assert h.get_markerfacecoloralt() == "white"
+                assert h.get_fillstyle() == "full" and h.get_markerfacecolor() == color
             for ax in fig.axes:
                 assert all(t.get_fontsize() == 8.5 for t in ax.get_xticklabels() + ax.get_yticklabels()
                            if t.get_visible())

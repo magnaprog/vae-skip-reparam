@@ -206,8 +206,7 @@ def comparison(directory, records):
             middle = np.array([s["median"] for s in stats])
             error = np.array([[s["median"] - s["min"] for s in stats], [s["max"] - s["median"] for s in stats]])
             ax.errorbar(middle, np.arange(7) + offset, xerr=error, fmt="s" if condition.endswith("_base") else "^",
-                        color=COLORS[condition], fillstyle="left",
-                        markerfacecolor=COLORS[condition], markerfacecoloralt="white",
+                        color=COLORS[condition], markerfacecolor=COLORS[condition],
                         markersize=3.2, markeredgewidth=.38, linewidth=.78, capsize=2, label=label)
         ax.set_xticks(tick_values)
         xmin, xmax = ax.get_xlim()
@@ -246,7 +245,7 @@ def context(directory, summary):
     fig, axes = plt.subplots(2, 2, figsize=(5.5, height))
     records = summary["records"]
     sources = summary["annual_sources"]
-    shade = ".88"
+    shade = ".92"
     for ax, name in zip(axes.flat, figure_values.RECORDS[:4]):
         relative = next(path for path in sources if Path(path).name == name + ".txt")
         c = figure_values.read_observed_context(ROOT / relative, sources[relative])
@@ -608,8 +607,8 @@ def intervals(directory, records):
                         shift = (-6.8, 0., 6.8)[seed] + (-1.65 if variance == "base" else 1.65)
                         transform = ax.transData + ScaledTranslation(shift / 72, 0, fig.dpi_scale_trans)
                         ax.plot(starts, values[variance][:, seed], linestyle="none",
-                                marker=MarkerStyle(marker, fillstyle="left", joinstyle="round"),
-                                color=color, fillstyle="left", markerfacecolor=color, markerfacecoloralt="white",
+                                marker=MarkerStyle(marker, joinstyle="round"),
+                                color=color, markerfacecolor=color,
                                 markeredgewidth=.28, markersize=3.0, transform=transform)
                         if group == "additional":
                             for x, value in zip(starts, values[variance][:, seed], strict=True):
@@ -656,7 +655,7 @@ def intervals(directory, records):
                         coverage.text(-.04, y, label, transform=coverage.transAxes,
                                       ha="right", va="center", fontsize=8.5)
         handles = [Line2D([], [], color=color, marker=marker, linestyle="none", markersize=4.3,
-                          fillstyle="left", markerfacecolor=color, markerfacecoloralt="white",
+                          markerfacecolor=color,
                           markeredgewidth=.45, label=variance.capitalize() + " variance")
                    for variance, marker, color in contrasts]
         fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(.5, 1 - 3 / (72 * fig.get_figheight())), ncol=2,
