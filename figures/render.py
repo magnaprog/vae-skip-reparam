@@ -14,8 +14,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib import font_manager
+from matplotlib.collections import LineCollection
+from matplotlib.legend_handler import HandlerBase
 from matplotlib.lines import Line2D
 from matplotlib.markers import MarkerStyle
+from matplotlib.patches import Patch, Rectangle
 from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 from matplotlib.transforms import ScaledTranslation
 import numpy as np
@@ -227,13 +230,27 @@ def comparison(directory, records):
     save(fig, directory, "dart_energy_score_differences")
 
 
+def missing_day_spans(days, year):
+    """Return half-open day-of-year intervals with no routine observations."""
+    calendar_days = np.arange(1, 366 + calendar.isleap(year))
+    missing = ~np.isin(calendar_days, np.floor(days))
+    boundaries = np.flatnonzero(np.diff(np.r_[False, missing, False])) + 1
+    return boundaries.reshape(-1, 2)
+
+
 def context(directory, summary):
-    fig, axes = plt.subplots(2, 2, figsize=(5.5, 4.6))
+    # Reserve 56 pixels at the 250-dpi export resolution to keep the observation rasters aligned.
+    height = 4.6 + 56 / 250
+    plot_fraction = 4.6 / height
+    fig, axes = plt.subplots(2, 2, figsize=(5.5, height))
     records = summary["records"]
     sources = summary["annual_sources"]
+    shade = ".84"
     for ax, name in zip(axes.flat, figure_values.RECORDS[:4]):
         relative = next(path for path in sources if Path(path).name == name + ".txt")
         c = figure_values.read_observed_context(ROOT / relative, sources[relative])
+        for start, stop in missing_day_spans(c["days"], c["year"]):
+            ax.axvspan(start, stop, facecolor=shade, edgecolor="none", linewidth=0, zorder=0)
         ax.scatter(c["days"], c["heights"], s=.65, linewidths=0, color="#008CFF", rasterized=True)
         # Keep endpoint observations fully visible, including midnight on January 1.
         ax.set_xlim(-1, 368 + calendar.isleap(c["year"]))
@@ -242,21 +259,15 @@ def context(directory, summary):
                       for m in (1, 4, 7, 10)]
         ax.set_xticks(month_days, ["Jan", "Apr", "Jul", "Oct"])
         ax.ticklabel_format(axis="y", style="plain", useOffset=False)
-        if name == "52403t2020":
-            # Mark only complete UTC dates between the two bordering observations.
-            observed_days = np.unique(np.floor(c["days"]).astype(int))
-            gap = np.argmax(np.diff(observed_days))
-            last_observed, next_observed = observed_days[gap:gap + 2]
-            day_zero = date(c["year"], 1, 1).toordinal() - 1
-            first = date.fromordinal(day_zero + int(last_observed) + 1)
-            last = date.fromordinal(day_zero + int(next_observed) - 1)
-            midpoint = (last_observed + next_observed + 1) / 2
-            label = f"T=1 gap\n{calendar.month_abbr[first.month]} {first.day} to\n{calendar.month_abbr[last.month]} {last.day}"
-            ax.text(midpoint, .51, label,
-                    transform=ax.get_xaxis_transform(), ha="center", va="center", fontsize=8, color=".25")
-    fig.supylabel("Equivalent water column height (m)", x=.012, fontsize=9)
-    fig.supxlabel("Month (UTC)", y=.018, fontsize=9)
-    fig.subplots_adjust(left=.147, right=.985, bottom=.109, top=.953, hspace=.38, wspace=.43)
+    handles = [Line2D([], [], linestyle="none", marker="o", markersize=3.2, markeredgecolor="none",
+                      color="#008CFF", label="Routine height"),
+               Patch(facecolor=shade, edgecolor="none", label="Day without a usable routine height")]
+    fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(.55, .996), ncol=2,
+               frameon=False, handlelength=1.25, handletextpad=.45, columnspacing=1.2, borderaxespad=0)
+    fig.supylabel("Equivalent water column height (m)", x=.012, y=.5 * plot_fraction, fontsize=9)
+    fig.supxlabel("Month (UTC)", y=.018 * plot_fraction, fontsize=9)
+    fig.subplots_adjust(left=.147, right=.985, bottom=.109 * plot_fraction, top=.953 * plot_fraction,
+                        hspace=.38, wspace=.43)
     save(fig, directory, "dart_original_height_records")
 
 
@@ -380,6 +391,34 @@ def variance(directory, records):
         change.set_title(title, loc="center", pad=4.5)
         panels.append((change, width))
 
+    def decorate_bar(ax, x, mean, color, is_high, skip):
+        # Convert the decorative stroke width and spacing from print points.
+        # The original bar supplies the exact silhouette at zero and the mean.
+        x_per_pt = np.ptp(ax.get_xlim()) / (right - left)
+        y_per_pt = np.ptp(ax.get_ylim()) / change_height
+        length = abs(mean) / y_per_pt
+        bottom, top = sorted((0., mean))
+        border = 0.72
+        if is_high and length > 2 * border:
+            interior = [[(x, bottom + border * y_per_pt), (x, top - border * y_per_pt)]]
+            ax.add_collection(LineCollection(interior, colors="white", linewidths=3 - 2 * border,
+                                             capstyle="butt", zorder=2.3), autolim=False)
+        if skip:
+            # Center complete diagonals symmetrically between the two ends.
+            # Keep even the stroke edges inside the true bar rectangle.
+            pitch = 4.2
+            half_rise = 0.83
+            margin = half_rise + .63
+            count = max(0, 1 + int(np.floor((length - 2 * margin) / pitch)))
+            centers = (np.arange(count) - (count - 1) / 2) * pitch
+            strokes = [[(x - 1.16 * x_per_pt, mean / 2 + (v - half_rise) * y_per_pt),
+                        (x + 1.16 * x_per_pt, mean / 2 + (v + half_rise) * y_per_pt)]
+                       for v in centers]
+            if strokes:
+                hatch_color = color if is_high else "#FFE7DB"
+                ax.add_collection(LineCollection(strokes, colors=hatch_color, linewidths=0.54,
+                                                 capstyle="butt", zorder=2.5), autolim=False)
+
     skip_offset = 3.48
     record_step = 7.08
     last_position = (len(names) - 1) * record_step + skip_offset + 2
@@ -436,6 +475,7 @@ def variance(directory, records):
                     low, high = values.min(), values.max()
                     change.plot([x, x], [0, values.mean()], color=color, linewidth=3.0,
                                 solid_capstyle="butt", zorder=2)
+                    decorate_bar(change, x, values.mean(), color, is_high, skip)
                     change.vlines(x, low, high, color=".20", linewidth=.47, zorder=3)
                     change.plot([x, x], [low, high], marker="_", linestyle="none",
                                 markersize=1.7, markeredgewidth=.44, color=".20", zorder=3)
@@ -447,12 +487,37 @@ def variance(directory, records):
     centers = [i * record_step + (skip_offset + 2) / 2 for i in range(len(names))]
     station_axis.set_xticks(centers, [f"{records[n]['station']}\n{records[n]['year']}" for n in names])
     station_axis.tick_params(axis="x", length=0, pad=3)
+    class ConditionKey(HandlerBase):
+        """Draw a condition symbol and a sample of its signed bar."""
+        def create_artists(self, legend, original, xd, yd, width, height, font_size, transform):
+            color = original.get_color()
+            is_high = original.get_markerfacecolor() == "white"
+            skip = original.get_marker() == "s"
+            cy = (height - yd) / 2
+            mx = -xd + 2.4
+            symbol = Line2D([mx], [cy], marker=original.get_marker(), linestyle="none",
+                            markersize=4, markeredgewidth=.7, color=color,
+                            markerfacecolor=original.get_markerfacecolor(), transform=transform)
+            def stroke(x, y, ink, weight):
+                return Line2D(x, y, color=ink, linewidth=weight, solid_capstyle="butt",
+                              transform=transform)
+            bx = -xd + 10.1
+            swatch = Rectangle((bx - 1.85, cy - 4.5), 3.7, 9.0, facecolor="white" if is_high else color,
+                               edgecolor=color, linewidth=.72, transform=transform)
+            sample = [symbol, swatch]
+            if skip:
+                for dy in (-2.1, 2.1):
+                    sample.append(stroke([bx - 1.55, bx + 1.55], [cy + dy - 1.04, cy + dy + 1.04],
+                                         color if is_high else "#FFE7DB", .64))
+            return sample
+
     handles = [Line2D([], [], marker=MARKERS[c], color=COLORS[c], linestyle="none",
                       markersize=4, markeredgewidth=.7, markerfacecolor=marker_face(c),
                       label=CONDITION_LABELS[c].replace(" variance", ""))
                for c in CONDITION_ORDER]
     fig.legend(handles=handles, bbox_to_anchor=(.52, .996), loc="upper center", ncol=4,
-               frameon=False, columnspacing=1.1, handletextpad=.3, handlelength=1)
+               frameon=False, columnspacing=1.0, handletextpad=.3, handlelength=1.45,
+               handler_map={Line2D: ConditionKey()})
     fig.text(.52, .046, "No skip, then skip within each station. Seeds 42, 1729, and 31415 in each group.",
              fontsize=8.5, ha="center")
     fig.text(.52, .018, r"Score units $10^{-3}$. Variance ratio and range width on logarithmic scales.",
