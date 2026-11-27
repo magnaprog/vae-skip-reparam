@@ -260,8 +260,8 @@ def context(directory, summary):
         ax.set_xticks(month_days, ["Jan", "Apr", "Jul", "Oct"])
         ax.ticklabel_format(axis="y", style="plain", useOffset=False)
     handles = [Line2D([], [], linestyle="none", marker="o", markersize=3.2, markeredgecolor="none",
-                      color="#008CFF", label="Routine height"),
-               Patch(facecolor=shade, edgecolor="none", label="Day without a usable routine height")]
+                      color="#008CFF", label="Observation"),
+               Patch(facecolor=shade, edgecolor="none", label="Missing data")]
     fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(.55, .996), ncol=2,
                frameon=False, handlelength=1.25, handletextpad=.45, columnspacing=1.2, borderaxespad=0)
     fig.supylabel("Equivalent water column height (m)", x=.012, y=.5 * plot_fraction, fontsize=9)
