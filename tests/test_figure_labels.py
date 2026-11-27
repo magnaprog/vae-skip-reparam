@@ -209,7 +209,24 @@ def test_diagnostic_station_labels_are_separate_from_axis_labels(monkeypatch, tm
                 plt.close(fig)
 
 
-def test_context_gap_matches_complete_utc_dates_between_observations(monkeypatch, tmp_path):
+@pytest.mark.parametrize(("year", "days", "spans"), [
+    (2019, [], [(1, 366)]),
+    (2020, [0.99, 2.5, 2.75, 365.99, 367.0], [(1, 2), (3, 365), (366, 367)]),
+    (2020, np.delete(np.arange(1, 367) + .5, 59), [(60, 61)]),  # February 29
+    (2019, np.arange(1, 366) + .999, []),
+])
+def test_missing_day_spans_cover_the_calendar(year, days, spans):
+    assert renderer.missing_day_spans(days, year).tolist() == [list(pair) for pair in spans]
+
+
+def test_context_bands_key_and_observations(monkeypatch, tmp_path):
+    # The right edge is midnight following the last empty day.
+    limits = {
+        "23461t2022": [("2022-05-20", "2022-05-26"), ("2022-06-08", "2022-11-18")],
+        "44402t2016": [],
+        "46407t2011": [("2011-03-11", "2011-03-12")],
+        "52403t2020": [("2020-03-28", "2020-08-14"), ("2020-12-09", "2021-01-01")],
+    }
     summary = json.loads((FIGURES / "summary.json").read_text())
     captured = []
     monkeypatch.setattr(renderer, "save", lambda fig, *args: captured.append(fig))
@@ -217,25 +234,35 @@ def test_context_gap_matches_complete_utc_dates_between_observations(monkeypatch
         renderer.context(tmp_path, summary)
     fig, = captured
     try:
-        assert len(fig.axes) == 4
-        for panel in fig.axes:
-            observations, = panel.collections
-            np.testing.assert_array_equal(observations.get_sizes(), [.65])
-            np.testing.assert_array_equal(observations.get_facecolors(), [renderer.matplotlib.colors.to_rgba("#008CFF")])
-            assert observations.get_rasterized()
-        ax = fig.axes[3]
-        assert ax.get_title().replace(" ", "") == "52403/2020"
-        assert ax.get_xscale() == "linear"
-        points, = ax.collections
-        days = np.unique(np.floor(points.get_offsets()[:, 0]).astype(int))
-        start = (date(2020, 3, 28) - date(2020, 1, 1)).days + 1
-        end = (date(2020, 8, 13) - date(2020, 1, 1)).days + 1
-        assert start - 1 in days and end + 1 in days and not np.any((start <= days) & (days <= end))
-        text, = ax.texts
-        assert text.get_text() == "T=1 gap\nMar 28 to\nAug 13"
         fig.canvas.draw()
-        box = text.get_window_extent(fig.canvas.get_renderer()).transformed(ax.transData.inverted())
-        assert start <= box.x0 < box.x1 <= end + 1
+        draw = fig.canvas.get_renderer()
+        legend, = fig.legends
+        assert [t.get_text() for t in legend.get_texts()] == [
+            "Routine height", "Day without a usable routine height"]
+        point, swatch = legend.legend_handles
+        assert to_hex(point.get_markerfacecolor()) == "#008cff"
+        assert not legend.get_frame_on()
+        assert legend.get_window_extent(draw).y1 <= fig.bbox.y1
+        for ax, (record, spans) in zip(fig.axes, limits.items(), strict=True):
+            assert ax.get_title().replace(" / ", "t") == record
+            assert ax.title.get_window_extent(draw).y1 < legend.get_window_extent(draw).y0
+            assert ax.get_xscale() == "linear" and not ax.texts
+            source = next(path for path in summary["annual_sources"] if Path(path).stem == record)
+            observed = renderer.figure_values.read_observed_context(
+                renderer.ROOT / source, summary["annual_sources"][source])
+            points, = ax.collections
+            np.testing.assert_array_equal(points.get_offsets(), np.c_[observed["days"], observed["heights"]])
+            np.testing.assert_array_equal(points.get_sizes(), [.65])
+            assert points.get_rasterized() and to_hex(points.get_facecolors()[0]) == "#008cff"
+            origin = date(observed["year"], 1, 1)
+            for patch, (first, stop) in zip(ax.patches, spans, strict=True):
+                left, right = [(date.fromisoformat(d) - origin).days + 1 for d in (first, stop)]
+                assert (patch.get_x(), patch.get_width()) == (left, right - left)
+                assert (patch.get_y(), patch.get_height()) == (0, 1)
+                assert patch.get_data_transform() == ax.get_xaxis_transform()
+                assert patch.get_visible() and patch.get_zorder() < points.get_zorder()
+                assert patch.get_facecolor() == swatch.get_facecolor() == (.84, .84, .84, 1)
+                assert patch.get_edgecolor()[-1] == 0 and patch.get_linewidth() == 0
     finally:
         plt.close(fig)
 
@@ -283,6 +310,50 @@ def check_comparison_legend(legend):
         assert segment[0, 0] < segment[1, 0] and segment[0, 1] == segment[1, 1]
 
 
+def check_bar_interiors(ax, bars):
+    """Measure the decorative LineCollections against the true bar ends in print points."""
+    decorations = iter(c for c in ax.collections if c.get_zorder() != 3)
+    short_skip = 0
+    for bar in bars:
+        color = bar.get_color()
+        high = color in ("#6A3D9A", "#009988")
+        skip = color in ("#CC3311", "#009988")
+        ends = ax.transData.transform(bar.get_xydata()) * 72 / ax.figure.dpi
+        x = ends[0, 0]
+        bottom, top = sorted(ends[:, 1])
+        assert bar.get_linewidth() == 3
+        if high:
+            interior = next(decorations)
+            assert interior.get_zorder() == 2.3 and interior.get_capstyle() == "butt"
+            assert to_hex(interior.get_colors()[0]) == "#ffffff"
+            np.testing.assert_allclose(interior.get_linewidths(), [1.56])
+            segment, = interior.get_segments()
+            actual = ax.transData.transform(segment) * 72 / ax.figure.dpi
+            np.testing.assert_allclose(actual, [[x, bottom + .72], [x, top - .72]], rtol=0, atol=1e-9)
+        if skip:
+            count = max(0, 1 + int(np.floor((top - bottom - 2 * 1.46) / 4.2)))
+            if count == 0:
+                assert not high
+                short_skip += 1
+                continue
+            hatch = next(decorations)
+            assert hatch.get_zorder() == 2.5 and hatch.get_capstyle() == "butt"
+            assert to_hex(hatch.get_colors()[0]) == (color.lower() if high else "#ffe7db")
+            np.testing.assert_array_equal(hatch.get_linewidths(), [.54])
+            paths = np.array([ax.transData.transform(seg) for seg in hatch.get_segments()]) * 72 / ax.figure.dpi
+            assert paths.shape == (count, 2, 2)
+            np.testing.assert_allclose(paths[:, :, 0], np.tile([x - 1.16, x + 1.16], (count, 1)), atol=1e-9, rtol=0)
+            midpoints = paths[:, :, 1].mean(axis=1)
+            np.testing.assert_allclose(np.diff(midpoints), 4.2, atol=1e-9, rtol=0)
+            assert midpoints.mean() == pytest.approx((bottom + top) / 2)
+            np.testing.assert_allclose(np.diff(paths[:, :, 1], axis=1), 1.66, atol=1e-9, rtol=0)
+            # Even a half stroke beyond the centerline stays inside the true bar.
+            assert paths[:, :, 1].min() - .27 > bottom and paths[:, :, 1].max() + .27 < top
+            assert np.max(np.abs(paths[:, :, 0] - x)) + .27 < 1.5
+    assert next(decorations, None) is None
+    return short_skip
+
+
 def check_refit_drawing(fig, records):
     names = renderer.figure_values.record_order(records)
     ratio, *score_axes = fig.axes
@@ -293,12 +364,23 @@ def check_refit_drawing(fig, records):
         f"{records[n]['station']}\n{records[n]['year']}" for n in names]
     np.testing.assert_array_equal(score_axes[-1].get_xticks(), np.arange(7) * 7.08 + (3.48 + 2) / 2)
     legend, = fig.legends
-    for h, c in zip(legend.legend_handles, renderer.CONDITION_ORDER, strict=True):
+    for h, label, key, c in zip(legend.legend_handles, legend.get_texts(), legend.findobj(DrawingArea),
+                                renderer.CONDITION_ORDER, strict=True):
         assert h.get_marker() == renderer.MARKERS[c] and h.get_color() == renderer.COLORS[c]
         assert h.get_markerfacecolor() == ("white" if c.endswith("_high") else renderer.COLORS[c])
         assert h.get_markeredgecolor() == renderer.COLORS[c] and h.get_markeredgewidth() == .7
         assert h.get_markersize() == 4
-        assert h.get_label() == renderer.CONDITION_LABELS[c].replace(" variance", "")
+        assert label.get_text() == renderer.CONDITION_LABELS[c].replace(" variance", "")
+        symbol, swatch, *stripes = key.get_children()
+        assert symbol is h
+        edge = renderer.COLORS[c].lower()
+        assert to_hex(swatch.get_edgecolor()) == edge and swatch.get_linewidth() > 0
+        assert to_hex(swatch.get_facecolor()) == ("#ffffff" if c.endswith("_high") else edge)
+        assert swatch.get_height() > swatch.get_width()
+        assert len(stripes) == (2 if c.startswith("skip_") else 0)
+        for stripe in stripes:
+            assert to_hex(stripe.get_color()) == (edge if c.endswith("_high") else "#ffe7db")
+            assert np.diff(stripe.get_xdata())[0] > 0 and np.diff(stripe.get_ydata())[0] > 0
 
     colors = [renderer.COLORS[c] for c in renderer.CONDITION_ORDER]
     def colored_lines(ax):
@@ -306,6 +388,7 @@ def check_refit_drawing(fig, records):
 
     ratios = colored_lines(ratio)
     panels = []
+    short_skip = 0
     for change, width in zip(score_axes[::2], score_axes[1::2], strict=True):
         assert change.get_yscale() == "linear" and width.get_yscale() == "log"
         assert [change.get_ylabel(), width.get_ylabel()] == ["Mean\nchange", "Range\nwidth"]
@@ -314,12 +397,15 @@ def check_refit_drawing(fig, records):
             np.testing.assert_array_equal(ax.get_xlim(), ratio.get_xlim())
             ticks = [float(t.get_text().replace("−", "-")) for t in ax.get_yticklabels()]
             np.testing.assert_allclose(ticks, ax.get_yticks() * 1000, rtol=0, atol=1e-12)
-        bars, whiskers = colored_lines(change), change.collections
+        bars = colored_lines(change)
+        whiskers = [c for c in change.collections if c.get_zorder() == 3]
+        short_skip += check_bar_interiors(change, bars)
         caps = [line for line in change.lines if line.get_marker() == "_"]
         widths = colored_lines(width)
         assert len(bars) == len(whiskers) == len(caps) == len(widths) == len(ratios) == 84
         panels.append((bars, whiskers, caps, widths))
 
+    assert short_skip == 10
     for group, (record, condition) in enumerate(itertools.product(names, renderer.CONDITION_ORDER)):
         values, streams = renderer.figure_values.refit_points(records[record], condition)
         symbol = "^" if condition.startswith("no_skip") else "s"
