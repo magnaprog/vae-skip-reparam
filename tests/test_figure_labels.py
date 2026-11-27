@@ -356,13 +356,15 @@ def check_refit_drawing(fig, records):
     headings = []
     expected = ("Full windows", "After mean subtraction", "Time increments")
     for label, change, width in zip(expected, score_axes[::2], score_axes[1::2], strict=True):
-        assert change.get_title(loc="left") == label
-        title, = [t for t in change.get_children() if isinstance(t, plt.Text) and t.get_text() == label]
+        title = change.title
+        assert title.get_text() == label
         assert title.get_fontsize() == 9 and title.get_fontweight() == "normal"
         assert title.get_fontfamily() == ["DejaVu Serif"]
         box = title.get_window_extent(draw)
-        assert box.x0 == pytest.approx(change.bbox.x0)
+        assert (box.x0 + box.x1) / 2 == pytest.approx((change.bbox.x0 + change.bbox.x1) / 2)
         scale = 72 / fig.dpi
+        anchor_y = title.get_transform().transform(title.get_position())[1]
+        assert (anchor_y - change.bbox.y1) * scale == pytest.approx(4.5)
         own_title_gap = (box.y0 - change.bbox.y1) * scale
         previous_title_gap = (previous_axis.bbox.y0 - box.y1) * scale
         assert 0 < own_title_gap < previous_title_gap
