@@ -371,7 +371,7 @@ def variance(directory, records):
         change_bottom = top - change_height
         change = strip(change_bottom, change_height)
         width = strip(change_bottom - row_gap - width_height, width_height)
-        change.set_title(title, loc="left", pad=2.5)
+        change.set_title(title, loc="center", pad=4.5)
         panels.append((change, width))
 
     skip_offset = 3.48
