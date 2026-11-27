@@ -365,11 +365,14 @@ def variance(directory, records):
 
     ratio = strip(461, 43)
     panels = []
+    change_height, width_height, row_gap = 64, 32, 11
     for title, top in zip(("Full windows", "After mean subtraction", "Time increments"),
-                          (441, 308, 175), strict=True):
-        fig.text(left / page_width, top / page_height, title, fontsize=10,
-                 weight="bold", va="center")
-        panels.append((strip(top - 77, 67), strip(top - 117.5, 32)))
+                          (431, 297, 163), strict=True):
+        change_bottom = top - change_height
+        change = strip(change_bottom, change_height)
+        width = strip(change_bottom - row_gap - width_height, width_height)
+        change.set_title(title, loc="left", pad=2.5)
+        panels.append((change, width))
 
     skip_offset = 3.48
     record_step = 7.08
@@ -434,14 +437,14 @@ def variance(directory, records):
     station_axis = panels[-1][1]
     centers = [i * record_step + (skip_offset + 2) / 2 for i in range(len(names))]
     station_axis.set_xticks(centers, [f"{records[n]['station']}\n{records[n]['year']}" for n in names])
-    station_axis.tick_params(axis="x", length=0, pad=3, labelsize=8.4)
+    station_axis.tick_params(axis="x", length=0, pad=3)
     handles = [Line2D([], [], marker=MARKERS[c], color=COLORS[c], linestyle="none",
                       markersize=4, label=CONDITION_LABELS[c].replace(" variance", ""))
                for c in CONDITION_ORDER]
     fig.legend(handles=handles, bbox_to_anchor=(.52, .996), loc="upper center", ncol=4,
                frameon=False, columnspacing=1.1, handletextpad=.3, handlelength=1)
     fig.text(.52, .046, "No skip, then skip within each station. Seeds 42, 1729, and 31415 in each group.",
-             fontsize=8.2, ha="center")
+             fontsize=8.5, ha="center")
     fig.text(.52, .018, r"Score units $10^{-3}$. Variance ratio and range width on logarithmic scales.",
              fontsize=9, ha="center")
     save(fig, directory, "dart_observation_variance")
@@ -527,11 +530,16 @@ def intervals(directory, records):
                         ax.plot(starts, values[variance][:, seed], linestyle="none", marker=marker,
                                 color=color, markerfacecolor=color if variance == "base" else "white",
                                 markeredgewidth=.45, markersize=2.8, transform=transform)
-                        if group == "additional" and variance == "base":
+                        if group == "additional":
                             for x, value in zip(starts, values[variance][:, seed], strict=True):
                                 if value > 0:
+                                    # Keep the last pair's labels inside the column.
+                                    if x == starts[-1]:
+                                        offset = (0, 8) if variance == "base" else (-28, 4)
+                                    else:
+                                        offset = (-20, 8) if variance == "base" else (23, 8)
                                     ax.annotate(f"{value:+.3g}", (x, value), xycoords=transform,
-                                                xytext=(0, 8), textcoords="offset points",
+                                                xytext=offset, textcoords="offset points",
                                                 ha="center", va="bottom", color=color,
                                                 fontsize=8.5, arrowprops={"arrowstyle": "-", "color": color,
                                                                          "linewidth": .65, "shrinkA": .4,
