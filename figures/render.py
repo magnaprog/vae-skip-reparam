@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib import font_manager
 from matplotlib.lines import Line2D
+from matplotlib.markers import MarkerStyle
 from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 from matplotlib.transforms import ScaledTranslation
 import numpy as np
@@ -35,7 +36,7 @@ COLORS = {"no_skip_base": "#0077BB", "skip_base": "#CC3311", "no_skip_high": "#6
 CONDITION_ORDER = figure_values.CONDITIONS
 CONDITION_LABELS = {"no_skip_base": "No skip, base variance", "skip_base": "Skip, base variance",
                     "no_skip_high": "No skip, high variance", "skip_high": "Skip, high variance"}
-MARKERS = {"no_skip_base": "^", "skip_base": "s", "no_skip_high": "v", "skip_high": "o"}
+MARKERS = {"no_skip_base": "^", "skip_base": "s", "no_skip_high": "^", "skip_high": "s"}
 STYLES = {"train": ":", "test": "-", "PPCA": "-."}
 ROLES = ("train", "test", *CONDITION_ORDER, "PPCA")
 SCORES = figure_values.SCORES
@@ -153,6 +154,10 @@ def step_support(grid, *curves):
     return keep
 
 
+def marker_face(condition):
+    return COLORS[condition] if condition.endswith("_base") else "white"
+
+
 def legend_handles(roles=ROLES, multiline=False):
     labels = {"train": "Training data", "test": "Test data", "PPCA": "PPCA", **CONDITION_LABELS}
     if multiline:
@@ -160,7 +165,7 @@ def legend_handles(roles=ROLES, multiline=False):
     widths = {"train": 1.20, "test": 1.08, "PPCA": .94}
     return [Line2D([], [], color=COLORS[k], linestyle=STYLES.get(k, "-"),
                    marker=MARKERS.get(k), markersize=3.8, markeredgewidth=.65,
-                   markerfacecolor=COLORS[k] if k in CONDITION_ORDER[:2] else "white",
+                   markerfacecolor=marker_face(k),
                    label=labels.get(k, k),
                    linewidth=widths.get(k, .82)) for k in roles]
 
@@ -191,13 +196,14 @@ def comparison(directory, records):
     titles = ("Full windows", "After mean\nsubtraction", "Time increments")
     ticks = ((-1, 0, 1, 2, 3), (-.6, -.3, 0, .3), (-.08, -.04, 0, .04))
     for ax, score, title, tick_values in zip(axes, SCORES, titles, ticks):
-        for pair, offset, color, marker, label in (
-                ("skip_base-no_skip_base", -.15, COLORS["skip_base"], "s", r"Base variance ($\sigma_0^2$)"),
-                ("skip_high-no_skip_high", .15, COLORS["skip_high"], "o", r"High variance ($25\sigma_0^2$)")):
+        for pair, offset, condition, label in (
+                ("skip_base-no_skip_base", -.15, "skip_base", r"Base variance ($\sigma_0^2$)"),
+                ("skip_high-no_skip_high", .15, "skip_high", r"High variance ($25\sigma_0^2$)")):
             stats = [records[n]["contrasts"][pair + "/original"]["scores"][score]["optimizer_seeds"] for n in names]
             middle = np.array([s["median"] for s in stats])
             error = np.array([[s["median"] - s["min"] for s in stats], [s["max"] - s["median"] for s in stats]])
-            ax.errorbar(middle, np.arange(7) + offset, xerr=error, fmt=marker, color=color,
+            ax.errorbar(middle, np.arange(7) + offset, xerr=error, fmt="o", color=COLORS[condition],
+                        markerfacecolor=marker_face(condition),
                         markersize=2.5, markeredgewidth=.6, linewidth=.78, capsize=2, label=label)
         ax.set_xticks(tick_values)
         xmin, xmax = ax.get_xlim()
@@ -417,12 +423,14 @@ def variance(directory, records):
             ratios, deltas = figure_values.refit_points(records[name], condition)
             color = COLORS[condition]
             marker = MARKERS[condition]
+            is_high = condition.endswith("_high")
+            face = marker_face(condition)
             skip = condition.startswith("skip_")
             width_offset = -.25 if condition.endswith("_base") else .25
             for seed in range(len(figure_values.SEEDS)):
                 x = row * record_step + skip * skip_offset + seed
                 ratio.plot(x, ratios[seed], marker=marker, color=color, linestyle="none",
-                           markersize=3.3, markeredgewidth=.29)
+                           markersize=3.3, markeredgewidth=.60 if is_high else .29, markerfacecolor=face)
                 for score, (change, width) in enumerate(panels):
                     values = deltas[seed, score]
                     low, high = values.min(), values.max()
@@ -431,15 +439,17 @@ def variance(directory, records):
                     change.vlines(x, low, high, color=".20", linewidth=.47, zorder=3)
                     change.plot([x, x], [low, high], marker="_", linestyle="none",
                                 markersize=1.7, markeredgewidth=.44, color=".20", zorder=3)
-                    width.plot(x + width_offset, high - low, marker=marker, color=color,
-                               markersize=2.55, markeredgewidth=.14, linestyle="none")
+                    width.plot(x + width_offset, high - low, marker=MarkerStyle(marker, joinstyle="round"), color=color,
+                               markersize=2.55, markeredgewidth=0.4 if is_high else 0.14,
+                               markerfacecolor=face, linestyle="none")
 
     station_axis = panels[-1][1]
     centers = [i * record_step + (skip_offset + 2) / 2 for i in range(len(names))]
     station_axis.set_xticks(centers, [f"{records[n]['station']}\n{records[n]['year']}" for n in names])
     station_axis.tick_params(axis="x", length=0, pad=3)
     handles = [Line2D([], [], marker=MARKERS[c], color=COLORS[c], linestyle="none",
-                      markersize=4, label=CONDITION_LABELS[c].replace(" variance", ""))
+                      markersize=4, markeredgewidth=.7, markerfacecolor=marker_face(c),
+                      label=CONDITION_LABELS[c].replace(" variance", ""))
                for c in CONDITION_ORDER]
     fig.legend(handles=handles, bbox_to_anchor=(.52, .996), loc="upper center", ncol=4,
                frameon=False, columnspacing=1.1, handletextpad=.3, handlelength=1)
@@ -461,7 +471,8 @@ def ppca_comparison(directory, records):
             for col, ax in enumerate(axes):
                 score, y = values[seed, col], row + offset
                 ax.plot(score, y, marker=MARKERS[condition], color=COLORS[condition],
-                        markersize=3, linewidth=0)
+                        markersize=3, linewidth=0, markerfacecolor=marker_face(condition),
+                        markeredgewidth=.6 if condition.endswith("_high") else 1.0)
     fig.subplots_adjust(left=.143, right=.982, bottom=.085, top=.886, wspace=.29)
     axes[0].set_yticks([4 * i + 1.5 for i in range(len(names))],
                        [f"{records[n]['station']}\n{records[n]['year']}" for n in names])
@@ -475,7 +486,8 @@ def ppca_comparison(directory, records):
                        linestyle=":" if boundary == 15.5 else "-", zorder=0)
         ax.set_title(("Full windows", "After mean\nsubtraction", "Time increments")[col])
         ax.set_xticks(((0, 3, 6, 9), (0, 1, 2), (0, .1, .2, .3))[col])
-    handles = [Line2D([], [], color=COLORS[c], marker=MARKERS[c], linestyle="none", markersize=4,
+    handles = [Line2D([], [], color=COLORS[c], marker=MARKERS[c], markerfacecolor=marker_face(c),
+                      linestyle="none", markersize=4, markeredgewidth=.6 if c.endswith("_high") else 1.0,
                       label=CONDITION_LABELS[c].replace(" variance", "")) for c in CONDITION_ORDER]
     fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(.53, .993), ncol=4,
                columnspacing=1.0, handletextpad=.25, handlelength=.9, frameon=False)

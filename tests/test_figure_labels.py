@@ -11,7 +11,6 @@ from matplotlib.lines import Line2D
 from matplotlib.offsetbox import DrawingArea
 from matplotlib.colors import to_hex
 import matplotlib.pyplot as plt
-from matplotlib.markers import MarkerStyle
 import numpy as np
 import pytest
 
@@ -25,8 +24,8 @@ spec.loader.exec_module(renderer)
 DIAGNOSTIC_ROLES = (
     ("Training data", "#888888", ":", None), ("Test data", "#111111", "-", None),
     ("PPCA", "#555555", "-.", None), ("No skip, base variance", "#0077BB", "-", "^"),
-    ("Skip, base variance", "#CC3311", "-", "s"), ("No skip, high variance", "#6A3D9A", "-", "v"),
-    ("Skip, high variance", "#009988", "-", "o"))
+    ("Skip, base variance", "#CC3311", "-", "s"), ("No skip, high variance", "#6A3D9A", "-", "^"),
+    ("Skip, high variance", "#009988", "-", "s"))
 
 
 def assert_separate(boxes):
@@ -37,12 +36,12 @@ def assert_separate(boxes):
 def check_marker_clearance(ax, line, positions, min_horizontal_pt=0, min_vertical_pt=0):
     """Measure the actual outline against all four axes edges in print points."""
     px = ax.figure.dpi / 72
-    style = MarkerStyle(line.get_marker())
+    style = line._marker  # get_marker() returns the symbol code without its join style.
     bounds = style.get_path().get_extents(style.get_transform())
     size = line.get_markersize()
     stroke = line.get_markeredgewidth() / 2
     x_stroke = bottom_stroke = top_stroke = stroke
-    if line.get_marker() in ("^", "v"):
+    if line.get_marker() in ("^", "v") and style.get_joinstyle() == "miter":
         # The triangular marker has unit height and unit base. Its miter
         # joins extend farther than a half-stroke at the tips and corners.
         x_stroke = stroke * (1 + np.sqrt(5)) / 2
@@ -262,7 +261,9 @@ def check_comparison_ranges(fig, records):
                 np.testing.assert_array_equal(cap.get_transform().transform(expected), ax.transData.transform(expected))
             np.testing.assert_array_equal(mark.get_transform().transform(mark.get_xydata()),
                                           ax.transData.transform(mark.get_xydata()))
-            assert mark.get_markerfacecolor() == mark.get_color()
+            color, face = ("#CC3311", "#CC3311") if offset < 0 else ("#009988", "white")
+            assert mark.get_marker() == "o" and mark.get_markeredgecolor() == color
+            assert mark.get_markerfacecolor() == face
             assert mark.get_markersize() == 2.5 and mark.get_markeredgewidth() == .6
             assert left.get_markersize() == right.get_markersize() == 4
             assert left.get_marker() == right.get_marker() == "|"
@@ -270,12 +271,12 @@ def check_comparison_ranges(fig, records):
 
 def check_comparison_legend(legend):
     # The two keys must actually draw the median in the middle of a capped range.
-    for key, symbol, color in zip(legend.findobj(DrawingArea), ("s", "o"), ("#CC3311", "#009988"), strict=True):
+    for key, color, face in zip(legend.findobj(DrawingArea), ("#CC3311", "#009988"), ("#CC3311", "white"), strict=True):
         rail, = key.findobj(LineCollection)
         segment, = rail.get_segments()
         lines = key.findobj(Line2D)
-        median, = [p for p in lines if p.get_marker() == symbol]
-        assert median.get_color() == median.get_markerfacecolor() == color
+        median, = [p for p in lines if p.get_marker() == "o"]
+        assert median.get_markeredgecolor() == color and median.get_markerfacecolor() == face
         caps = [p.get_xydata()[0] for p in lines if p.get_marker() == "|"]
         np.testing.assert_array_equal(caps, segment)
         np.testing.assert_array_equal(median.get_xydata()[0], segment.mean(axis=0))
@@ -294,6 +295,9 @@ def check_refit_drawing(fig, records):
     legend, = fig.legends
     for h, c in zip(legend.legend_handles, renderer.CONDITION_ORDER, strict=True):
         assert h.get_marker() == renderer.MARKERS[c] and h.get_color() == renderer.COLORS[c]
+        assert h.get_markerfacecolor() == ("white" if c.endswith("_high") else renderer.COLORS[c])
+        assert h.get_markeredgecolor() == renderer.COLORS[c] and h.get_markeredgewidth() == .7
+        assert h.get_markersize() == 4
         assert h.get_label() == renderer.CONDITION_LABELS[c].replace(" variance", "")
 
     colors = [renderer.COLORS[c] for c in renderer.CONDITION_ORDER]
@@ -318,11 +322,17 @@ def check_refit_drawing(fig, records):
 
     for group, (record, condition) in enumerate(itertools.product(names, renderer.CONDITION_ORDER)):
         values, streams = renderer.figure_values.refit_points(records[record], condition)
-        symbol, color = renderer.MARKERS[condition], renderer.COLORS[condition]
+        symbol = "^" if condition.startswith("no_skip") else "s"
+        color = renderer.COLORS[condition]
+        is_high = condition.endswith("_high")
+        face = "white" if is_high else color
         for seed in range(3):
             i = 3 * group + seed
             x = names.index(record) * 7.08 + condition.startswith("skip_") * 3.48 + seed
             point = ratios[i]
+            assert point.get_markerfacecolor() == face and point.get_markeredgecolor() == color
+            assert point.get_markersize() == 3.3 and point.get_markeredgewidth() == (.60 if is_high else .29)
+            assert point._marker.get_joinstyle() == "miter"
             np.testing.assert_array_equal(point.get_xydata(), [[x, values[seed]]])
             assert point.get_marker() == symbol and point.get_color() == color
             for score, (bars, whiskers, caps, widths) in enumerate(panels):
@@ -339,15 +349,19 @@ def check_refit_drawing(fig, records):
                 offset = -.25 if condition.endswith("_base") else .25
                 np.testing.assert_array_equal(width.get_xydata(), [[x + offset, high - low]])
                 assert width.get_marker() == symbol and width.get_color() == color
-                assert width.get_markerfacecolor() == width.get_markeredgecolor() == color
+                assert width.get_markerfacecolor() == face and width.get_markeredgecolor() == color
+                assert width.get_markersize() == 2.55 and width.get_markeredgewidth() == (.40 if is_high else .14)
+                assert width._marker.get_joinstyle() == "round"
 
     for ax in (ratio, *score_axes[1::2]):
         boxes = []
         for point in colored_lines(ax):
             position = point.get_transform().transform(point.get_xydata())
             check_marker_clearance(ax, point, position, .5, .5)
-            boxes.append(point.get_window_extent(fig.canvas.get_renderer()).padded(
-                point.get_markeredgewidth() * np.sqrt(5) * fig.dpi / 144))
+            # A quarter point on each outline enforces a half-point gap between neighbors.
+            join = np.sqrt(5) if point.get_marker() == "^" and point._marker.get_joinstyle() == "miter" else 1
+            padding = (.5 * point.get_markeredgewidth() * join + .25) * fig.dpi / 72
+            boxes.append(point.get_window_extent(fig.canvas.get_renderer()).padded(padding))
         assert_separate(boxes)
     # Three regular-weight score titles separate the metrics. Each title belongs
     # to the mean-change axis, leaving the width row visibly paired with it.

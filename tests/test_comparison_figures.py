@@ -141,10 +141,13 @@ def check_ppca_artists(fig, evidence):
                 point = dots[i]
                 assert point.get_zorder() == 2
                 assert point.get_markersize() == 3
+                assert point.get_markeredgewidth() == (.6 if condition.endswith("_high") else 1.)
                 np.testing.assert_array_equal(point.get_xdata(), [expected[seed, panel]])
                 np.testing.assert_array_equal(point.get_ydata(), [row + offset])
                 assert point.get_color() == renderer.COLORS[condition]
-                assert point.get_marker() == renderer.MARKERS[condition]
+                assert point.get_marker() == ("^" if condition.startswith("no_skip") else "s")
+                assert point.get_markeredgecolor() == renderer.COLORS[condition]
+                assert point.get_markerfacecolor() == (renderer.COLORS[condition] if condition.endswith("_base") else "white")
                 assert point.get_linestyle() == "-" and point.get_linewidth() == 0
         assert any(list(line.get_xdata()) == [0, 0] for line in ax.lines)
     axis = fig.axes[0]
@@ -154,7 +157,10 @@ def check_ppca_artists(fig, evidence):
     legend, = fig.legends
     assert [t.get_text() for t in legend.get_texts()] == ["No skip, base", "Skip, base", "No skip, high", "Skip, high"]
     for handle, condition in zip(legend.legend_handles, ORDER, strict=True):
-        assert handle.get_marker() == renderer.MARKERS[condition] and handle.get_color() == renderer.COLORS[condition]
+        assert handle.get_marker() == ("^" if condition.startswith("no_skip") else "s")
+        assert handle.get_markeredgewidth() == (.6 if condition.endswith("_high") else 1.)
+        assert handle.get_markeredgecolor() == renderer.COLORS[condition]
+        assert handle.get_markerfacecolor() == (renderer.COLORS[condition] if condition.endswith("_base") else "white")
     assert fig.get_figwidth() == 5.5
 
 

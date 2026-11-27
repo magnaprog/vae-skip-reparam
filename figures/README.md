@@ -8,7 +8,7 @@ python figures/render.py --output-dir runs/figures
 
 Each PDF is 5.5 inches wide, with DejaVu Serif text and STIX math. Labels are 9 pt; ticks and legends are 8.5 pt. Use the versions in [requirements.txt](../requirements.txt) to reproduce the paper's fonts and plotting behavior.
 
-At base variance, a blue upward triangle identifies the model without a skip connection and a red square identifies the model with one. At high variance, the corresponding symbols are a violet downward triangle and a teal circle.
+In Figures 3, 4, and 7–10, triangles identify models without the skip connection and squares identify models with it. The blue triangle and red square are filled at base variance. The violet triangle and teal square are open at high variance.
 
 ## Values and units
 
@@ -28,7 +28,7 @@ The three 2018 records give equal total weight to each of six Coordinated Univer
 
 ## Curves and comparisons
 
-In the skip comparison, each training seed contributes one score difference, averaged over three common sampling streams. The capped line runs from the smallest to the largest seed difference, with a symbol at the median.
+Figure 1 subtracts the energy score without the skip connection from the score with it. Each training seed contributes one difference averaged over three common sampling streams. The capped line spans the three seed differences. A filled circle marks their median at base variance and an open circle marks it at high variance.
 
 Curves average three sampling streams within each fit. Neural curves show the median and full range across three training seeds at each feature value or frequency. The probabilistic principal component analysis (PPCA) curves average streams from one fit whose noise variance is estimated from the training covariance.
 
@@ -40,6 +40,6 @@ The PPCA comparison shows all three neural fits for each combination of skip coe
 
 For each record and training seed, Figure 4 pairs base and high variance separately for models with and without the skip connection. The top symbols give the replacement variance divided by the original variance. For each score, a bar runs from zero to the mean score change across three common sampling streams. The whisker at its tip spans the smallest and largest changes. In the row below, a symbol gives the difference between these endpoints on a logarithmic scale. Base variance is on the left and high variance on the right within each pair of width symbols. The score axes are labeled in units of $10^{-3}$. The tables give the mean and endpoints for each fit and the changes in each stream. [Fit summaries](../results/variance_changes_fits.csv) · [Stream values](../results/variance_changes_streams.csv)
 
-The interval figures show energy score differences for full windows, separately for each training seed, along with window counts and each interval's share of total test weight. At each date, marker pairs run left to right in seed order (42, 1729, and 31415), with base variance filled and high variance open. Intervals of 14 and 28 days are aligned to the start of the first eligible training window. Their endpoints are stored as Unix seconds. Each window belongs to the interval containing its start. Weighting the interval differences by those shares and summing recovers the difference over the full test partition. Windows can overlap, and both interval lengths use the same observations.
+The interval figures show energy score differences for full windows, separately for each training seed, along with window counts and each interval's share of total test weight. At each date, the pairs run left to right by training seed, with circles for 42, squares for 1729, and triangles for 31415. Each pair has a filled symbol for base variance and an open symbol for high variance. Intervals of 14 and 28 days are aligned to the start of the first eligible training window. Their endpoints are stored as Unix seconds. Each window belongs to the interval containing its start. Weighting the interval differences by those shares and summing recovers the difference over the full test partition. Windows can overlap, and both interval lengths use the same observations.
 
 To repeat model evaluation, you need complete generated windows and network weights, which are outside this release.
