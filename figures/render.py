@@ -184,9 +184,9 @@ def diagnostic_legend(fig, spectra=False):
                loc="upper center", bbox_to_anchor=(.5, 1 - .29 / height), ncol=4,
                frameon=False, columnspacing=1.1, handlelength=2, borderaxespad=0)
 
-def save(fig, directory, name):
+def save(fig, directory, name, *, dpi=250):
     # Do not tight-crop: every output is 396 PDF points wide, matching the paper.
-    fig.savefig(directory / (name + ".pdf"), dpi=250, metadata={
+    fig.savefig(directory / (name + ".pdf"), dpi=dpi, metadata={
         "Title": name, "Author": "", "Creator": "VAE skip reparameterization",
         "CreationDate": None, "ModDate": None})
     plt.close(fig)
@@ -239,8 +239,8 @@ def missing_day_spans(days, year):
 
 
 def context(directory, summary):
-    # Reserve 56 pixels at the 250-dpi export resolution to keep the observation rasters aligned.
-    height = 4.6 + 56 / 250
+    # Keep the original legend height of 0.224 inches (112 pixels at 500 dpi).
+    height = 4.6 + 112 / 500
     plot_fraction = 4.6 / height
     fig, axes = plt.subplots(2, 2, figsize=(5.5, height))
     records = summary["records"]
@@ -268,7 +268,7 @@ def context(directory, summary):
     fig.supxlabel("Month (UTC)", y=.018 * plot_fraction, fontsize=9)
     fig.subplots_adjust(left=.147, right=.985, bottom=.109 * plot_fraction, top=.953 * plot_fraction,
                         hspace=.38, wspace=.43)
-    save(fig, directory, "dart_original_height_records")
+    save(fig, directory, "dart_original_height_records", dpi=500)
 
 
 def diagnostics(directory, records, reduced):
