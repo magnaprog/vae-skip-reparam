@@ -229,11 +229,17 @@ def test_context_bands_key_and_observations(monkeypatch, tmp_path):
     }
     summary = json.loads((FIGURES / "summary.json").read_text())
     captured = []
-    monkeypatch.setattr(renderer, "save", lambda fig, *args: captured.append(fig))
+
+    def capture_pdf(fig, path, *, dpi, metadata):
+        captured.append((fig, dpi))
+
+    monkeypatch.setattr(plt.Figure, "savefig", capture_pdf)
     with plt.rc_context(renderer.STYLE):
         renderer.context(tmp_path, summary)
-    fig, = captured
+    (fig, dpi), = captured
     try:
+        assert dpi == 500
+        np.testing.assert_allclose(fig.get_size_inches(), (5.5, 4.824), rtol=0, atol=1e-12)
         fig.canvas.draw()
         draw = fig.canvas.get_renderer()
         legend, = fig.legends
