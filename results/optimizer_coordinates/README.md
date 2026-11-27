@@ -11,7 +11,7 @@ This follow-up revisits the 2018 record at station 21415 from the seven-record s
 | `original_obs` | Observation, skip 0.8 | 0.005, 2e-8 | Observation |
 | `original_res` | Observation, skip 0.8 | 0.005, 2e-8 | Residual |
 
-All other parameters use Adam at 0.001 and epsilon 1e-7. With a skip of 0.8 the residual output parameters are 0.2 times their observation-coordinate equivalents. Expressing their gradients in residual coordinates multiplies them by five before measuring the global norm. The resulting clipping factor (cap 10) applies to every layer. The two Adam settings change together.
+All other parameters use Adam at 0.001 and epsilon 1e-7. With a skip of 0.8 the residual output parameters are 0.2 times their observation-coordinate equivalents. Expressing their gradients in residual coordinates multiplies them by five before measuring the global norm. The resulting clipping factor (cap 10) applies to every layer. The two Adam configurations for the output layer differ in both learning rate and epsilon.
 
 ## Data and results
 

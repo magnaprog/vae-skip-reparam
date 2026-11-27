@@ -44,9 +44,9 @@ Select a condition with `--condition`. The base observation variance is estimate
 
 The names `base` and `high` refer to observation variance. For skip coefficient `alpha` and `b = 1 - alpha`, the residual is `b*x - f(z)`, and `observation_variance = residual_variance / b**2`. A skip coefficient of 0.8 gives `b = 0.2`, so residual variance is 0.04 times observation variance. These are conditional noise variances; the generator's marginal variance also includes variation in its decoder mean.
 
-The run directory contains preparation settings, copies of the training code, training histories, network weights and evaluations. Rerunning an interrupted fit creates a new attempt directory and starts training with reinitialized optimizer and random number state.
+The run directory records how the datasets were prepared and contains copies of the training code, training histories, network weights, and evaluations. Rerunning an interrupted fit creates a new attempt directory and starts training with reinitialized optimizer and random number state.
 
-The paper evaluates another 36 fits on three DART records from 2018, bringing the DART total to 84. This release includes their scores and figure inputs. The [optimizer follow-up](results/optimizer_coordinates/README.md) repeats the two native training procedures at 21415 and crosses the output-layer Adam settings with the clipping norm. Its launcher and inputs cover that station in 2018.
+The paper evaluates another 36 fits on three DART records from 2018, bringing the DART total to 84. This release includes their scores and figure inputs. The [optimizer follow-up](results/optimizer_coordinates/README.md) repeats the two original training procedures at 21415 and compares two Adam configurations for the decoder output layer. With each configuration, one procedure computes the global gradient norm in observation coordinates and the other computes it in residual coordinates before clipping. Its launcher and inputs cover that station in 2018.
 
 Numerical helpers require finite arrays, nonnegative weights with positive total weight, and finite positive observation variances.
 
